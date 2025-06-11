@@ -1,6 +1,37 @@
 version: '3.9'
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_USERNAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    depends_on:
+      - postgres
+    ports:
+      - "8090:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - app-network
+    restart: always
+
   eureka:
     image: steeltoeoss/eureka-server
     container_name: eureka-server
@@ -25,11 +56,66 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_JWT_SECRET=${DB_JWT_SECRET}
-      - DB_URL_USERS=${DB_URL_USERS}
-#    volumes:
-#      - ./common-config:/config-repo
+    networks:
+      - app-network
+    restart: always
 
+  user-service:
+    image: user-service
+    container_name: user-service
+    depends_on:
+      - eureka
+      - config-server
+      - postgres
+    ports:
+      - "7010:7010"
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - app-network
+    restart: always
+
+  idea-service:
+    image: idea-service
+    container_name: idea-service
+    depends_on:
+      - eureka
+      - config-server
+      - postgres
+    ports:
+      - "7020:7020"
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - app-network
+    restart: always
+
+  ai-service:
+    image: ai-service
+    container_name: ai-service
+    depends_on:
+      - eureka
+      - config-server
+      - postgres
+    ports:
+      - "7030:7030"
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - app-network
+    restart: always
+
+  api-gateway:
+    image: api-gateway
+    container_name: api-gateway
+    depends_on:
+      - eureka
+      - config-server
+    ports:
+      - "8080:8080"
     networks:
       - app-network
     restart: always
@@ -37,5 +123,9 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
 
 
