@@ -9,9 +9,12 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/StiffMedal30/common-config
-          searchPaths: '{application}'
+          uri: git@bitbucket.org:novaflow/common-config.git
           clone-on-start: true
+          ignore-local-ssh-settings: true
+          private-key: ${CONFIG_SERVER_SSH_KEY}
+          strict-host-key-checking: false
+          searchPaths: '{application}'
 
 eureka:
   client:
