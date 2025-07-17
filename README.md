@@ -43,7 +43,7 @@ Warning: this is a one-way operation.
 
 Ejects from the Create React App setup for full control over configuration.
 
-4. **Notes**
+### Notes
 
 For detailed React and Create React App docs, see:
 
