@@ -1,0 +1,26 @@
+{
+  "themes": [
+    {
+      "name": "Charcoal",
+      "colors": {
+        "background": "#191919",
+        "primary": "#2d2d2d",
+        "secondary": "#444444",
+        "accent": "#ffffff",
+        "text": "#ffffff",
+        "border": "#333333"
+      }
+    },
+    {
+      "name": "Pure",
+      "colors": {
+        "background": "#f8f8f8",
+        "primary": "#ffffff",
+        "secondary": "#eaeaea",
+        "accent": "#111111",
+        "text": "#111111",
+        "border": "#cccccc"
+      }
+    }
+  ]
+}
