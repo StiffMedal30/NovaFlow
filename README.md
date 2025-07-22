@@ -13,19 +13,22 @@ This is the React frontend for the NovaFront project.
 
 1. **Clone the repository**
 
-```bash
+````bash
 git clone git@bitbucket.org:your-username/novafront.git
 cd novafront
 (Reminder to please use SSH)
 
-2. **Creating your node modules**
+2. **Install vite**
+Run npm install vite
+
+3. **Creating your node modules**
 
 node_modules are included in the gitignore, sorry I cant do that for you. You need to create your own after cloning with:
 
 ```bash
 git clone git@bitbucket.org:your-username/novafront.git
 
-3. **Available Scripts**
+4. **Available Scripts**
 
 In the project directory, you can run:
 
@@ -51,3 +54,4 @@ React documentation
 
 Create React App docs
 
+````
