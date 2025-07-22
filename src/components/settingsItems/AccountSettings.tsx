@@ -1,6 +1,6 @@
 import GlobalStyles from "../../app/GlobalStyles";
 import { useTheme } from "../../context/ThemeContext";
-import { CircleUserRound, ChevronRight, ChevronDown, LogInIcon, LogOutIcon } from "lucide-react";
+import { CircleUserRound, ChevronRight, ChevronDown, LogInIcon, LogOutIcon, UserCog } from "lucide-react";
 import React from "react";
 
 export default function AccountSettings() {
@@ -30,63 +30,83 @@ export default function AccountSettings() {
         }}
         aria-pressed={isClicked}
       >
-        {/* Account Settings Button*/}
+        {/* Collapsable Account Settings Button*/}
         <div style={{ alignItems: "center", display: "flex" }}>
-          <CircleUserRound style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
-          <a
+        <CircleUserRound style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+        <a
             style={{
-              ...styles.settingsItem,
-              marginLeft: 12,
-              display: "inline-block",
+            ...styles.settingsItem,
+            marginLeft: 12,
+            display: "inline-block",
             }}
-          >
+        >
             Account
-          </a>
+        </a>
         </div>
         {!isClicked && (
-          <ChevronRight style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+        <ChevronRight style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
         )}
         {isClicked && (
-          <ChevronDown style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+        <ChevronDown style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
         )}
-      </div>
+        </div>
 
-      {/*Conditionally render Login/Logout button*/}
-      {isClicked && isLoggedIn && (
-        <div style={{ padding: "12px 16px" }}>
-          {/* Logout Button*/}
-          <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => setIsLoggedIn(false)}>
-            <LogOutIcon style={{ strokeWidth: 1, color: "red" }} size={30} />
-            <a
-              style={{
-                ...styles.settingsItem,
-                marginLeft: 12,
-                display: "inline-block",
-                color: "red",
-              }}
-            >
-              Logout
-            </a>
-          </div>
-        </div>
-      )}
-      {isClicked && !isLoggedIn && (
-        <div style={{ padding: "12px 16px" }}>
-          {/* Login Button*/}
-          <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => setIsLoggedIn(true)}>
-            <LogInIcon style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
-            <a
-              style={{
-                ...styles.settingsItem,
-                marginLeft: 12,
-                display: "inline-block",
-              }}
-            >
-              Login
-            </a>
-          </div>
-        </div>
-      )}
+        {/*Change Account Settings Button*/}
+        {isClicked && isLoggedIn && (
+            <div style={{ padding: "12px 16px" }}>
+            {/* Logout Button*/}
+            <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => {}}>
+                <UserCog style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+                <a
+                style={{
+                    ...styles.settingsItem,
+                    marginLeft: 12,
+                    display: "inline-block",
+                    color: currentTheme.colors.text,
+                }}
+                >
+                Edit Profile
+                </a>
+            </div>
+            </div>
+        )}
+
+        {/*Conditionally render Login/Logout button*/}
+        {isClicked && isLoggedIn && (
+            <div style={{ padding: "12px 16px" }}>
+            {/* Logout Button*/}
+            <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => setIsLoggedIn(false)}>
+                <LogOutIcon style={{ strokeWidth: 1, color: "red" }} size={30} />
+                <a
+                style={{
+                    ...styles.settingsItem,
+                    marginLeft: 12,
+                    display: "inline-block",
+                    color: "red",
+                }}
+                >
+                Logout
+                </a>
+            </div>
+            </div>
+        )}
+        {isClicked && !isLoggedIn && (
+            <div style={{ padding: "12px 16px" }}>
+            {/* Login Button*/}
+            <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => setIsLoggedIn(true)}>
+                <LogInIcon style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+                <a
+                style={{
+                    ...styles.settingsItem,
+                    marginLeft: 12,
+                    display: "inline-block",
+                }}
+                >
+                Login
+                </a>
+            </div>
+            </div>
+        )}
 
     </div>
   );
