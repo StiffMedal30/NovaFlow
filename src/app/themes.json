@@ -21,6 +21,50 @@
         "text": "#111111",
         "border": "#cccccc"
       }
+    },
+    {
+      "name": "Copper",
+      "colors": {
+        "background": "#191919",
+        "primary": "#2d2d2d",
+        "secondary": "#444444",
+        "accent": "#ffffff",
+        "text": "#B87333",
+        "border": "#333333"
+      }
+    },
+    {
+      "name": "Obsidian",
+      "colors": {
+        "background": "#181622",
+        "primary": "#232136",
+        "secondary": "#393552",
+        "accent": "#a277ff",
+        "text": "#a277ff",
+        "border": "#444267"
+      }
+    },
+    {
+      "name": "Lavender",
+      "colors": {
+        "background": "#f6f3ff",
+        "primary": "#e9d8fd",
+        "secondary": "#d6bcfa",
+        "accent": "#7c3aed",
+        "text": "#5b21b6",
+        "border": "#c4b5fd"
+      }
+    },
+    {
+      "name": "Echo",
+      "colors": {
+        "background": "#1a1625",
+        "primary": "#2d193e",
+        "secondary": "#3a1c4a",
+        "accent": "#ff4fa3",
+        "text": "#ffb6d5",
+        "border": "#ff4fa3"
+      }
     }
   ]
 }
