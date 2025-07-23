@@ -29,6 +29,34 @@ const GlobalStyles = (theme: any) => ({
     fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
     color: theme.colors.text,
   },
+  textLink:{
+    textDecoration: "none",
+    fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
+    color: theme.colors.text,
+    fontSize: 14,
+  },
+  button1: {
+    width: "100%", 
+    padding: "0.75rem", 
+    borderRadius: 8, 
+    background: theme.colors.accent, 
+    color: theme.colors.background, 
+    fontWeight: 600, 
+    border: "none", 
+    cursor: "pointer", 
+    boxSizing: "border-box" as const
+  },
+    textInput: {
+    width: "100%",
+    padding: "0.75rem",
+    borderRadius: 8,
+    border: `1px solid ${theme.colors.border}`,
+    boxSizing: "border-box" as const,
+    fontSize: 16,
+    fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
+    color: theme.colors.text,
+    background: theme.colors.background,
+  },
 });
 
 export default GlobalStyles;

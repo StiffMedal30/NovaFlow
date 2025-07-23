@@ -2,10 +2,12 @@ import GlobalStyles from "../../app/GlobalStyles";
 import { useTheme } from "../../context/ThemeContext";
 import { CircleUserRound, ChevronRight, ChevronDown, LogInIcon, LogOutIcon, UserCog } from "lucide-react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountSettings() {
   const { currentTheme } = useTheme();
   const styles = GlobalStyles(currentTheme);
+  const navigate = useNavigate();
 
   const [isClicked, setIsClicked] = React.useState(false);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
@@ -91,21 +93,28 @@ export default function AccountSettings() {
             </div>
         )}
         {isClicked && !isLoggedIn && (
-            <div style={{ padding: "12px 16px" }}>
+          <div style={{ padding: "12px 16px" }}>
             {/* Login Button*/}
-            <div style={{ alignItems: "center", display: "flex", cursor: "pointer" }} onClick={() => setIsLoggedIn(true)}>
-                <LogInIcon style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
-                <a
+            <div
+              style={{ alignItems: "center", display: "flex", cursor: "pointer" }}
+              onClick={() => {
+                // Route to login page
+                navigate("/login");
+                setIsLoggedIn(true); //For testing only, remove in production
+              }}
+            >
+              <LogInIcon style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+              <a
                 style={{
-                    ...styles.settingsItem,
-                    marginLeft: 12,
-                    display: "inline-block",
+                  ...styles.settingsItem,
+                  marginLeft: 12,
+                  display: "inline-block",
                 }}
-                >
+              >
                 Login
-                </a>
+              </a>
             </div>
-            </div>
+          </div>
         )}
 
     </div>
