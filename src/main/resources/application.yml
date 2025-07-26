@@ -11,8 +11,8 @@ spring:
         git:
           uri: git@bitbucket.org:novaflow/common-config.git
           clone-on-start: true
-          ignore-local-ssh-settings: true
-          private-key: ${CONFIG_SERVER_SSH_KEY}
+          username: ${GIT_USERNAME}
+          password: ${GIT_PASSWORD}
           strict-host-key-checking: false
           searchPaths: '{application}'
 
