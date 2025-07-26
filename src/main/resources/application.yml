@@ -14,3 +14,12 @@ spring:
   cloud:
     config:
       uri: http://localhost:7090  # Location of config server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
