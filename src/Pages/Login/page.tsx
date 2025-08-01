@@ -1,16 +1,50 @@
 import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 import GlobalStyles from "../../app/GlobalStyles";
+import DynamicSvgBackground from "../../components/DynamicSvgBackground";
+// import LoginBackground from "../../assets/Images/Background/LoginBackground.svg?url";
 
 export default function LoginPage() {
   const { currentTheme } = useTheme();
   const styles = GlobalStyles(currentTheme);
+  
+  // Remove body margins and overflow to prevent scroll bars
+  React.useEffect(() => {
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.margin = "0";
+    document.documentElement.style.padding = "0";
+    document.documentElement.style.overflow = "hidden";
+    
+    // Cleanup function to restore body styles when component unmounts
+    return () => {
+      document.body.style.margin = "";
+      document.body.style.padding = "";
+      document.body.style.overflow = "";
+      document.documentElement.style.margin = "";
+      document.documentElement.style.padding = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+  
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: currentTheme.colors.background }}>
+    <div style={{ 
+      height: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      background: currentTheme.colors.background,
+      position: "relative",
+      overflow: "hidden",
+      margin: 0,
+      padding: 0,
+      boxSizing: "border-box"
+    }}>
+      <DynamicSvgBackground opacity={0.15} />
       <div style={{ 
         background: currentTheme.colors.primary,
         borderRadius: 16,
-        boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
         border: `1.5px solid ${currentTheme.colors.border}`,
         padding: "2rem 2.5rem",
         width: "clamp(220px, 90vw, 340px)",
@@ -18,6 +52,9 @@ export default function LoginPage() {
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
+        boxShadow: "0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 4px 0 rgba(0,0,0,0.10)",
+        position: "relative",
+        zIndex: 10
       }}>
         <h1 style={{ ...styles.h1, marginBottom: 24 }}>NovaFlow</h1>
         <h2 style={{ ...styles.h2, marginBottom: 24 }}>Login</h2>

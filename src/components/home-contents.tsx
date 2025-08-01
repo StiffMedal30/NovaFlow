@@ -1,4 +1,4 @@
-import { ChatSection } from "./Sections/ChatSection";
+import { ChatSection } from "./sections/ChatSection";
 
 export function HomeContents() {
   return (
