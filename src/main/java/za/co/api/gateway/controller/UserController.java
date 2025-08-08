@@ -19,7 +19,7 @@ public class UserController extends BaseController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
         try {
-            return forwardPostRequest("http://" + USER_SERVICE + "/api/user/login", credentials);
+            return forwardPostRequest(USER_SERVICE + "/login", credentials);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Login failed: " + e.getMessage()));
@@ -29,7 +29,7 @@ public class UserController extends BaseController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> newUser) {
         try {
-            return forwardPostRequest("http://" + USER_SERVICE + "/api/user/register", newUser);
+            return forwardPostRequest(USER_SERVICE + "/register", newUser);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Registration failed: " + e.getMessage()));
@@ -39,7 +39,7 @@ public class UserController extends BaseController {
     @PostMapping("/password/reset")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> newCredentials) {
         try {
-            return forwardPostRequest("http://" + USER_SERVICE + "/api/user/password/reset", newCredentials);
+            return forwardPostRequest(USER_SERVICE + "/password/reset", newCredentials);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Reset failed: " + e.getMessage()));

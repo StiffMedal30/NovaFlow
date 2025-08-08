@@ -39,6 +39,10 @@ public class SecurityConfig {
                                 "/api/user/register",
                                 "/api/user/password/reset",
                                 "/api/link",
+<<<<<<< Updated upstream
+=======
+                                "/api/debug/mappings",
+>>>>>>> Stashed changes
                                 "/error/**").permitAll() // Allow these
                         .anyRequest().authenticated() // All else requires JWT
                 )

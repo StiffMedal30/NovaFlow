@@ -50,6 +50,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 path.equals("/api/user/register") ||
                 path.equals("/api/user/password/reset") ||
                 path.equals("/api/link") ||
+                path.equals("/api/debug/mappings") ||
                 path.equals("/error");
     }
 
@@ -59,6 +60,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
+            System.out.println(SECRET);
             String token = getJwtTokenFromRequest(request);
             System.out.println("Received token: " + token);
 
