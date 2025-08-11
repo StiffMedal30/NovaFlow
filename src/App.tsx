@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { AuthProvider } from "./store/authStore";
 import RootLayout from "./Pages/Home/layout";
 import { Header } from "./components/header";
 import { HomeContents } from "./components/home-contents";
@@ -31,9 +32,11 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

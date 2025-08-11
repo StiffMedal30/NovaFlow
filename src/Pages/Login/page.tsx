@@ -5,17 +5,19 @@ import GlobalStyles from "../../app/GlobalStyles";
 import DynamicSvgBackground from "../../components/DynamicSvgBackground";
 import toast, { Toaster } from "react-hot-toast";
 import { FaGoogle } from "react-icons/fa";
+import { login } from "../../../apiClient/loginClient";
+import { useAuth } from "../../store/authStore";
 
 export default function LoginPage() {
   const { currentTheme } = useTheme();
   const styles = GlobalStyles(currentTheme);
   const navigate = useNavigate();
+  const { state, login: authLogin, startLogin, loginFailure } = useAuth();
   
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,24 +29,33 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    
     if (!formData.username || !formData.password) {
       toast.error("Please enter both username and password");
-      setIsLoading(false);
       return;
     }
+    startLogin();
 
     try {
+      const response = await login({
+        username: formData.username,
+        password: formData.password
+      });
+
+      // Store in auth store (this saves to local storage)
+      authLogin({
+        username: response.username,
+        token: response.token
+      });
+
       toast.success("Login successful!");
       setTimeout(() => {
         navigate("/");
       }, 1000);
       
     } catch (error) {
+      loginFailure();
       toast.error("Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -90,6 +101,8 @@ export default function LoginPage() {
             background: currentTheme.colors.primary,
             color: currentTheme.colors.text,
             border: `1px solid ${currentTheme.colors.border}`,
+            fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
+            fontSize: 16,
           },
         }}
       />
@@ -130,7 +143,7 @@ export default function LoginPage() {
             value={formData.username}
             onChange={handleInputChange}
             style={styles.textInput}
-            disabled={isLoading}
+            disabled={state.isLoading}
           />
           <input
             type="password"
@@ -139,20 +152,20 @@ export default function LoginPage() {
             value={formData.password}
             onChange={handleInputChange}
             style={styles.textInput}
-            disabled={isLoading}
+            disabled={state.isLoading}
           />
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={state.isLoading}
             style={{ 
               ...styles.button1, 
               width: "100%", 
               boxSizing: "border-box" as const,
-              opacity: isLoading ? 0.7 : 1,
-              cursor: isLoading ? "not-allowed" : "pointer"
+              opacity: state.isLoading ? 0.7 : 1,
+              cursor: state.isLoading ? "not-allowed" : "pointer"
             }}
           >
-            {isLoading ? "Logging In..." : "Log In"}
+            {state.isLoading ? "Logging In..." : "Log In"}
           </button>
           <div style={{justifyItems: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
             
@@ -190,7 +203,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                     style={{
                       ...styles.button1,
                       width: "100%",
@@ -205,8 +218,8 @@ export default function LoginPage() {
                       fontWeight: 500,
                       fontSize: 16,
                       boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-                      cursor: isLoading ? "not-allowed" : "pointer",
-                      opacity: isLoading ? 0.7 : 1
+                      cursor: state.isLoading ? "not-allowed" : "pointer",
+                      opacity: state.isLoading ? 0.7 : 1
                     }}
                   >
                     <FaGoogle size={20} />
