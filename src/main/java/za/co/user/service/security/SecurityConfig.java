@@ -35,7 +35,6 @@ public class SecurityConfig {
                                 "/api/user/login",
                                 "/api/user/register",
                                 "/api/user/password/reset",
-                                "/actuator/**",
                                 "/api/link/redirect/activate",
                                 "/api/link/redirect/reset/password").permitAll()
                         .requestMatchers("/").authenticated()
@@ -51,10 +50,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return customUserDetailsServiceImpl;
-    }
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        return customUserDetailsServiceImpl;
+//    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

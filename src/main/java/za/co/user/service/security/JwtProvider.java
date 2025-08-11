@@ -38,13 +38,15 @@ public class JwtProvider {
 
     public String getEmailFromToken(String token) {
         try {
-            // Remove Bearer prefix if present
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
 
-            Claims claims = Jwts.parser()
-                    .setSigningKey(JWT_SECRET)
+            Key signingKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(signingKey)
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
 

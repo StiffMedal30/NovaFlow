@@ -1,6 +1,9 @@
 package za.co.user.service.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import za.co.user.service.entity.AppUserEntity;
@@ -10,6 +13,7 @@ import za.co.user.service.records.NewPasswordRecord;
 import za.co.user.service.repository.PasswordResetTokenRepository;
 import za.co.user.service.repository.UserRepository;
 import za.co.user.service.security.JwtProvider;
+import za.co.user.service.service.CustomUserService;
 import za.co.user.service.service.EmailService;
 import za.co.user.service.service.UserService;
 import za.co.user.service.utilities.Converter;
@@ -29,6 +33,8 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordResetTokenServiceImpl passwordResetTokenService;
+    private final AuthenticationManager authenticationManager;
+    private final CustomUserService customUserService;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -36,13 +42,17 @@ public class UserServiceImpl implements UserService {
     private long jwtExpiration;
 
     public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, JwtProvider jwtProvider,
-                           EmailService emailService, PasswordResetTokenRepository tokenRepository, PasswordResetTokenServiceImpl passwordResetTokenService) {
+                           EmailService emailService, PasswordResetTokenRepository tokenRepository,
+                           PasswordResetTokenServiceImpl passwordResetTokenService,
+                           AuthenticationManager authenticationManager, CustomUserService customUserService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.jwtProvider = jwtProvider;
         this.emailService = emailService;
         this.tokenRepository = tokenRepository;
         this.passwordResetTokenService = passwordResetTokenService;
+        this.authenticationManager = authenticationManager;
+        this.customUserService = customUserService;
     }
 
     @Override
@@ -64,9 +74,15 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
+        String token = jwtProvider.generateToken(jwtSecret, user.getEmail());
+
         CompletableFuture.runAsync(() ->
-                emailService.sendAccountActivationEmail(appUserRecord.email(), authenticate(appUserRecord))
+                emailService.sendAccountActivationEmail(appUserRecord.email(), token)
         );
+
+//        user.setEnabled(false);
+
+//        userRepository.save(user);
     }
 
     @Override
@@ -98,10 +114,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String authenticate(AppUserRecord dto) {
-        // Generate JWT token after successful authentication
-        String token = jwtProvider.generateToken(jwtSecret, dto.username());// Generate token using JWT utility
-        System.out.println("Generated token: " + token);
-        return token;
+        // 1. Attempt authentication (will throw if user doesn't exist or password is wrong)
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(dto.username(), dto.password())
+        );
+
+        // 2. Load user details
+        UserDetails userDetails = customUserService.loadUserByUsername(dto.username());
+
+        // 3. Generate JWT token for authenticated user
+        return jwtProvider.generateToken(jwtSecret, userDetails.getUsername());
     }
 
     @Override
