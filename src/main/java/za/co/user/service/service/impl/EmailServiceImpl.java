@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import za.co.user.service.properties.MailProperties;
 import za.co.user.service.service.EmailService;
 
+import java.io.UnsupportedEncodingException;
+
 @Service
 @AllArgsConstructor
 public class EmailServiceImpl implements EmailService {
@@ -49,6 +51,8 @@ public class EmailServiceImpl implements EmailService {
             buildMail(to, subject, formattedHtml);
         } catch (MessagingException e) {
             throw new IllegalStateException("Failed to send email", e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -57,10 +61,11 @@ public class EmailServiceImpl implements EmailService {
         return mailProperties.getBaseRedirectUrl() + encoded;
     }
 
-    private void buildMail(String to, String subject, String htmlContent) throws MessagingException {
+    private void buildMail(String to, String subject, String htmlContent) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
         helper.setTo(to);
+        helper.setFrom("no-reply@novaflow.com", "Novaflow");
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
         mailSender.send(message);
