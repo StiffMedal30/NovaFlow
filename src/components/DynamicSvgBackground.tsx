@@ -28,7 +28,7 @@ const DynamicSvgBackground: React.FC<DynamicSvgBackgroundProps> = ({
           <stop offset="100%" stopColor="transparent" stopOpacity="0" />
         </linearGradient>
         
-        {/* Diagonal wave flow */}
+        {/* Diagonal wave */}
         <linearGradient id="waveFlow3" x1="30%" y1="100%" x2="80%" y2="20%">
           <stop offset="0%" stopColor={currentTheme.colors.text} stopOpacity={opacity * 0.15} />
           <stop offset="35%" stopColor={currentTheme.colors.background} stopOpacity={opacity * 0.7} />
@@ -36,7 +36,7 @@ const DynamicSvgBackground: React.FC<DynamicSvgBackgroundProps> = ({
           <stop offset="100%" stopColor="transparent" stopOpacity="0" />
         </linearGradient>
         
-        {/* Subtle horizontal wave */}
+        {/* Horizontal wave */}
         <linearGradient id="waveFlow4" x1="0%" y1="60%" x2="100%" y2="40%">
           <stop offset="0%" stopColor={currentTheme.colors.background} stopOpacity={opacity * 0.8} />
           <stop offset="30%" stopColor={currentTheme.colors.accent} stopOpacity={opacity * 0.2} />
@@ -45,7 +45,6 @@ const DynamicSvgBackground: React.FC<DynamicSvgBackgroundProps> = ({
         </linearGradient>
       </defs>
       
-      {/* Organic wave shapes using paths */}
       <path d="M0,200 Q300,150 600,250 T1200,200 L1200,400 Q900,350 600,400 T0,350 Z" 
             fill="url(#waveFlow1)" />
       

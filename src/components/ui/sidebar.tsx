@@ -28,7 +28,6 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         }}
       >
 
-
         {/* Header section with centered X icon */}
         <div
           style={{
