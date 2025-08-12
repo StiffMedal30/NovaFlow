@@ -1,4 +1,4 @@
-package za.co.novaflow.idea_service;
+package za.co.idea.service.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

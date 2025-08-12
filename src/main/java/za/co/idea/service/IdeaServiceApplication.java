@@ -1,4 +1,4 @@
-package za.co.novaflow.idea_service;
+package za.co.idea.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
