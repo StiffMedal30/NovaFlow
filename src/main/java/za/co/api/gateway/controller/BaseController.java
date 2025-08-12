@@ -15,7 +15,8 @@ import java.util.Map;
 
 public abstract class BaseController {
 
-    public static final String USER_SERVICE = "user-service";
+    public static final String USER_SERVICE = "http://user-service/api/user";
+    public static final String IDEA_SERVICE = "http://idea-service/api/idea";
 
     @Autowired
     protected RestTemplate restTemplate;
