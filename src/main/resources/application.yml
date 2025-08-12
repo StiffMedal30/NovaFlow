@@ -63,5 +63,6 @@ spring:
     username: ${EMAIL_USERNAME}
     password: ${EMAIL_PASSWORD}
     properties:
-      mail.smtp.auth: ${EMAIL_SMTP_AUTH}
-      mail.smtp.starttls.enable: ${EMAIL_STARTTLS}
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+
