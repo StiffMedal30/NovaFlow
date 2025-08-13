@@ -1,5 +1,5 @@
 //For local testing obviously
-const API_BASE_URL = 'http://localhost:8080/api-gateway';
+const API_BASE_URL = 'http://localhost:8081';
 
 // Types for login
 export interface LoginRequest {
