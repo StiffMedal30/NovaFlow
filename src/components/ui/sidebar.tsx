@@ -3,6 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 import AccountSettings from "../settingsItems/AccountSettings";
 import { X } from "lucide-react";
 import AppearanceSettings from "../settingsItems/AppearanceSettings";
+import LoginStateButton from "../settingsItems/LoginStateButton";
 
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -61,6 +62,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <div style={{ padding: "16px" }}>
           <AccountSettings />
           <AppearanceSettings />
+          <LoginStateButton />
         </div>
       </div>
       {/* Optional overlay */}
