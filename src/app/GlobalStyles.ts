@@ -15,6 +15,7 @@ const GlobalStyles = (theme: any) => ({
     fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
     color: theme.colors.text,
     fontSize: 16,
+    borderRadius: "6px",
   },
   h1: { //Header Main Title
     textDecoration: "none",
