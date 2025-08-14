@@ -1,14 +1,12 @@
 import { useTheme } from "../context/ThemeContext"
-import React from "react"
 import { CircleUserRound, MessageSquareText } from "lucide-react"
-import { Sidebar } from "./ui/sidebar"
+import { SettingsDropdown } from "./ui/settings-dropdown"
 //@ts-ignore
 import GlobalStyles from "../app/GlobalStyles"
 
 export function Header() {
   const { currentTheme } = useTheme()
   const styles = GlobalStyles(currentTheme)
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
   return (
     <>
       <header
@@ -61,30 +59,31 @@ export function Header() {
               }}
             />
           </button>
-          {/* Sidebar Button */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <CircleUserRound
-              size={40}
+          {/* Settings Dropdown */}
+          <SettingsDropdown>
+            <button
               style={{
-                color: currentTheme.colors.text,
-                strokeWidth: 1,
-                paddingBottom: "0.2rem",
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                outline: "none",
               }}
-            />
-          </button>
+            >
+              <CircleUserRound
+                size={40}
+                style={{
+                  color: currentTheme.colors.text,
+                  strokeWidth: 1,
+                  paddingBottom: "0.2rem",
+                }}
+              />
+            </button>
+          </SettingsDropdown>
         </div>
       </header>
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </>
   )
 }
