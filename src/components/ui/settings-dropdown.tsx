@@ -35,6 +35,7 @@ export function SettingsDropdown({ children }: SettingsDropdownProps) {
           borderRadius: "8px",
           padding: "12px",
           color: currentTheme.colors.text,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
         }}
       >
         {/* Menu Header */}

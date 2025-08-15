@@ -34,7 +34,7 @@ export function LeftSideMenu() {
         background: currentTheme.colors.primary,
         color: currentTheme.colors.text,
         borderRight: `1px solid ${currentTheme.colors.border}`,
-        boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+        //boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
         display: "flex",
         flexDirection: "column",
         padding: "20px 16px",
@@ -50,7 +50,6 @@ export function LeftSideMenu() {
         ...styles.h2, 
         marginBottom: "20px", 
         paddingBottom: "12px",
-        borderBottom: `1px solid ${currentTheme.colors.border}`
       }}>
         Menu
       </h2>
