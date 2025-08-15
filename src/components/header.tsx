@@ -3,10 +3,12 @@ import { CircleUserRound, MessageSquareText } from "lucide-react"
 import { SettingsDropdown } from "./ui/settings-dropdown"
 //@ts-ignore
 import GlobalStyles from "../app/GlobalStyles"
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const { currentTheme } = useTheme()
   const styles = GlobalStyles(currentTheme)
+  const navigate = useNavigate();
   return (
     <>
       <header
@@ -49,6 +51,7 @@ export function Header() {
               display: "flex",
               alignItems: "center",
             }}
+            onClick={() => {navigate('/SuperSecret')}}
           >
             <MessageSquareText
               size={40}

@@ -7,6 +7,8 @@ import { HomeContents } from "./components/home-contents";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import LoginPage from "./Pages/Login/page";
 import RegisterPage from "./Pages/Register/page";
+import SuperSecretPage from "./Pages/SuperSecret/page";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function AppContent() {
   const { currentTheme } = useTheme();
@@ -20,10 +22,17 @@ function AppContent() {
     <RootLayout>
       {location.pathname !== "/login" && location.pathname !== "/register" && <Header />}
       <Routes>
+        {/*Unprotected Routes (Anyone can access)*/}
         <Route path="/" element={<HomeContents />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<HomeContents />} />
+
+
+        {/*Protected Routes*/}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/SuperSecret" element={<SuperSecretPage />} /> 
+        </Route>
       </Routes>
     </RootLayout>
   );
