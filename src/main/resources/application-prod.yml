@@ -1,6 +1,7 @@
 spring:
   config:
     import: "configserver:http://config-server:7090/"  # Pull config from config server
+    label: main
   cloud:
     config:
       uri: http://config-server:7090  # Location of config server
