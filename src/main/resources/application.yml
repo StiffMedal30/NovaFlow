@@ -10,9 +10,8 @@ spring:
       server:
         git:
           uri: git@bitbucket.org:novaflow/common-config.git
+          private-key: /root/.ssh/bitbucket_rsa
           clone-on-start: true
-          username: ${GIT_USERNAME}
-          password: ${GIT_PASSWORD}
           strict-host-key-checking: false
           searchPaths: '{application}'
 
