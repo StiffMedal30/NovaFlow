@@ -2,7 +2,7 @@
 
 jwt:
   expiration: 3600000
-  secret: ${JWT_SECRET}
+  secret: 'a8f7d3c9e7b2f3d1c4e6b8a2d7f4c3e1a6b9c8d4e5f7a3b6d9c2e8f1a4b7c5d3'
 
 eureka:
   client:
