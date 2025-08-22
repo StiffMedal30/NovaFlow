@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built jar (make sure you build it first!)
-COPY ./build/libs/gateway-*.jar app.jar
+COPY ./build/libs/api-gateway-*.jar app.jar
 
 # Expose the port your app runs on (adjust as needed)
 EXPOSE 8081
