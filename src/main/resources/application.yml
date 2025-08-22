@@ -10,6 +10,7 @@ spring:
 
   config:
     import: "configserver:http://localhost:7090/"  # Pull config from config server
+    label: develop
 
   cloud:
     config:
