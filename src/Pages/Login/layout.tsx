@@ -2,7 +2,7 @@ import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  const { currentTheme } = useTheme();
+  const { currentTheme: _currentTheme } = useTheme();
   // Optional: add a subtle background gradient or image for effect
   return (
     <div
