@@ -27,18 +27,11 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
       body: JSON.stringify(credentials),
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
-
     const data = await response.json();
-    console.log('Response data:', data);
 
     if (!response.ok) {
-      console.error('Login failed:', data);
       throw new Error(data.message || 'Login failed');
     }
-
-    console.log('Login successful!');
     return data;
   } catch (error) {
     console.error('Login error:', error);
