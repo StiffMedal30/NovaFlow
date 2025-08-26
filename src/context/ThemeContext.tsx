@@ -20,8 +20,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (found) setCurrentTheme(found);
   };
 
-  // Sync theme to localStorage or system preference here
-
   return (
     <ThemeContext.Provider value={{ themes, currentTheme, setTheme }}>
       {children}

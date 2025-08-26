@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function SuperSecretLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
