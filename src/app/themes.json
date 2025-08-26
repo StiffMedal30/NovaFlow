@@ -65,6 +65,17 @@
         "text": "#ffb6d5",
         "border": "#ff4fa3"
       }
+    },
+    {
+      "name": "Main",
+      "colors": {
+        "background": "#16161a",
+        "primary": "#7f5af0",
+        "secondary": "#94a1b2",
+        "accent": "#2cb67d",
+        "text": "#fffffe",
+        "border": "#010101"
+      }
     }
   ]
 }

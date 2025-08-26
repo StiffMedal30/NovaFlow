@@ -18,8 +18,8 @@ export function LeftSideMenu() {
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.backgroundColor = currentTheme.colors.accent;
-    e.currentTarget.style.color = currentTheme.colors.background;
+    e.currentTarget.style.backgroundColor = currentTheme.colors.primary;
+    e.currentTarget.style.color = currentTheme.colors.text;
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -31,7 +31,7 @@ export function LeftSideMenu() {
     <div
       style={{
         width: "220px",
-        background: currentTheme.colors.primary,
+        background: currentTheme.colors.background,
         color: currentTheme.colors.text,
         borderRight: `1px solid ${currentTheme.colors.border}`,
         //boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
@@ -70,7 +70,7 @@ export function LeftSideMenu() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          Something
+          Chat
         </a>
         <a 
           href="#" 

@@ -186,7 +186,7 @@ export default function LoginPage() {
                     onMouseEnter={() => setHover1(true)}
                     onMouseLeave={() => setHover1(false)}
                   >
-                    Forgot your password?
+                    Forgot your password? 
                   </a>
                   <a
                     onClick={navigateToRegister}
