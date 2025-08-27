@@ -1,12 +1,10 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_USERNAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     networks:
@@ -53,9 +51,10 @@ services:
       - eureka
     ports:
       - "7090:7090"
+    volumes:
+      - ${HOME}/.ssh:/root/.ssh   # Mount host SSH keys
     environment:
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - GIT_SSH_COMMAND=ssh -i /root/.ssh/bitbucket_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts
     networks:
       - app-network
     restart: always
@@ -72,6 +71,11 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PROTOCOL=${EMAIL_PROTOCOL}
     networks:
       - app-network
     restart: always
@@ -115,7 +119,16 @@ services:
       - eureka
       - config-server
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    networks:
+      - app-network
+    restart: always
+
+  novafront:
+    image: novafront
+    container_name: novafront
+    ports:
+      - "3000:80"
     networks:
       - app-network
     restart: always
