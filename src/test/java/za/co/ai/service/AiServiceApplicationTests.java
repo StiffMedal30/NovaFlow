@@ -1,4 +1,4 @@
-package za.co.novaflow.ai_service;
+package za.co.ai.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
