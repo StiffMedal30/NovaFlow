@@ -1,87 +1,39 @@
-import { useTheme } from "../context/ThemeContext"
 import { CircleUserRound, MessageSquareText } from "lucide-react"
 import { SettingsDropdown } from "./ui/settings-dropdown"
-//@ts-ignore
-import GlobalStyles from "../app/GlobalStyles"
 import { useNavigate } from "react-router-dom";
 
 export function Header() {
-  const { currentTheme } = useTheme()
-  const styles = GlobalStyles(currentTheme)
   const navigate = useNavigate();
   return (
     <>
-      <header
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: "4rem",
-          padding: "0 2rem",
-          paddingTop: "2rem",
-          paddingBottom: "1rem",
-          zIndex: 50,
-          backgroundColor: currentTheme.colors.background,
-          color: currentTheme.colors.text,
-          borderBottom: `2px solid ${currentTheme.colors.text}`,
-          borderWidth: 1
-        }}
-      >
+      <header className="fixed top-0 left-0 w-full box-border flex items-center justify-between h-16 px-8 pt-8 pb-4 z-50 bg-background text-text border-b border-text">
         <a
           href="#"
-          style={{
-            ...styles.h1,
-          }}
+          className="text-3xl font-normal text-text font-['Didact_Gothic'] no-underline"
         >
           NovaFlow
         </a>
-        <div style={{ justifyContent: "space-between", display: "flex", gap: 20 }}>
+        <div className="flex items-center gap-5">
           {/* Message Button */}
           <button
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
+            className="bg-none border-none p-0 cursor-pointer flex items-center hover:opacity-80 transition-opacity"
             onClick={() => {navigate('/SuperSecret')}}
           >
             <MessageSquareText
               size={40}
-              style={{
-                color: currentTheme.colors.text,
-                strokeWidth: 1,
-                paddingBottom: "0.2rem",
-              }}
+              className="text-text pb-1"
+              strokeWidth={1.2}
             />
           </button>
           {/* Settings Dropdown */}
           <SettingsDropdown>
             <button
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                outline: "none",
-              }}
+              className="bg-none border-none p-0 cursor-pointer flex items-center outline-none hover:opacity-80 transition-opacity"
             >
               <CircleUserRound
                 size={40}
-                style={{
-                  color: currentTheme.colors.text,
-                  strokeWidth: 1,
-                  paddingBottom: "0.2rem",
-                }}
+                className="text-text pb-1"
+                strokeWidth={1.2}
               />
             </button>
           </SettingsDropdown>
@@ -90,5 +42,3 @@ export function Header() {
     </>
   )
 }
-
-

@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for Dynamic Theming */
+:root {
+  /* Default theme (Dark) */
+  --color-background: #100d14;
+  --color-secondary-background: #17151b;
+  --color-primary: #7f5af0;
+  --color-secondary: #211f25;
+  --color-accent: #908df7;
+  --color-text: #fffffe;
+  --color-border: #1a1520;
+}

@@ -1,84 +1,49 @@
-
-import { useTheme } from "../context/ThemeContext";
-import React from "react";
-//@ts-ignore
-import GlobalStyles from "../app/GlobalStyles";
+import { FiInstagram } from "react-icons/fi";
+import { BsTwitterX } from "react-icons/bs";
+import { FaDiscord, FaLinkedinIn } from "react-icons/fa";
 
 export function LeftSideMenu() {
-  const { currentTheme } = useTheme();
-  const styles = GlobalStyles(currentTheme);
-
-  const menuItemStyle = {
-    ...styles.settingsItem,
-    padding: "8px 12px",
-    borderRadius: "6px",
-    textDecoration: "none",
-    transition: "background-color 0.2s",
-    display: "block"
-  };
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.backgroundColor = currentTheme.colors.primary;
-    e.currentTarget.style.color = currentTheme.colors.text;
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = currentTheme.colors.text;
-  };
-
   return (
-    <div
-      style={{
-        width: "220px",
-        background: currentTheme.colors.background,
-        color: currentTheme.colors.text,
-        borderRight: `1px solid ${currentTheme.colors.border}`,
-        //boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
-        padding: "20px 16px",
-        height: "100vh",
-        overflowY: "auto",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        zIndex: 10
-      }}
-    >
-      <h2 style={{ 
-        ...styles.h2, 
-        marginBottom: "20px", 
-        paddingBottom: "12px",
-      }}>
+    <div className="w-64 bg-secondary-background text-text flex flex-col p-5 h-[calc(100vh-6rem)] overflow-y-auto fixed top-20 left-4 bottom-4 z-10 rounded-lg opacity-100">
+      <h2 className="text-lg font-normal text-text font-['Didact_Gothic'] mb-5 pb-3">
         Menu
       </h2>
-      
+
       {/* Menu Items */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <a 
-          href="#" 
-          style={menuItemStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+      <div className="flex flex-col gap-2 flex-grow">
+        <a
+          href="#"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm"
         >
           Projects
         </a>
-        <a 
-          href="#" 
-          style={menuItemStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+        <a
+          href="#"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm"
         >
           Chat
         </a>
-        <a 
-          href="#" 
-          style={menuItemStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+        <a
+          href="#"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm"
         >
           Something else
+        </a>
+      </div>
+
+      {/* Social Icons at Bottom */}
+      <div className="flex justify-center gap-4 mt-6 pt-4 border-t border-border/20">
+        <a href="#" className="text-text hover:text-primary transition-colors">
+          <FiInstagram size={20} />
+        </a>
+        <a href="#" className="text-text hover:text-primary transition-colors">
+          <BsTwitterX size={20} />
+        </a>
+        <a href="#" className="text-text hover:text-primary transition-colors">
+          <FaDiscord size={20} />
+        </a>
+        <a href="#" className="text-text hover:text-primary transition-colors">
+          <FaLinkedinIn size={20} />
         </a>
       </div>
     </div>
