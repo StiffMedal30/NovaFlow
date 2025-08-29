@@ -42,8 +42,8 @@ export default function AppearanceSettings() {
                 onClick={() => setTheme(theme.name)}
                 className={`px-4 py-1.5 rounded-md border font-medium cursor-pointer outline-none transition-all duration-200 min-w-24 max-w-28 flex-1 basis-1/3 box-border ${
                   currentTheme.name === theme.name
-                    ? 'bg-accent text-background border-accent'
-                    : 'bg-primary text-text border-border hover:bg-secondary'
+                    ? 'bg-primary text-text border-primary'
+                    : 'bg-background text-text border-border hover:bg-secondary'
                 }`}
                 aria-pressed={currentTheme.name === theme.name}
               >
