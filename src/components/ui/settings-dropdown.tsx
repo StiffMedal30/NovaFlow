@@ -1,5 +1,4 @@
 import React from "react";
-import { useTheme } from "../../context/ThemeContext";
 import AccountSettings from "../settingsItems/AccountSettings";
 import AppearanceSettings from "../settingsItems/AppearanceSettings";
 import LoginStateButton from "../settingsItems/LoginStateButton";
@@ -8,17 +7,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
-//@ts-ignore
-import GlobalStyles from "../../app/GlobalStyles";
 
 interface SettingsDropdownProps {
   children: React.ReactNode;
 }
 
 export function SettingsDropdown({ children }: SettingsDropdownProps) {
-  const { currentTheme } = useTheme();
-  const styles = GlobalStyles(currentTheme);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,40 +21,22 @@ export function SettingsDropdown({ children }: SettingsDropdownProps) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        style={{
-          width: "280px",
-          maxHeight: "400px",
-          background: currentTheme.colors.background,
-          border: `1px solid ${currentTheme.colors.border}`,
-          borderRadius: "8px",
-          padding: "12px",
-          color: currentTheme.colors.text,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
-        }}
+                className="w-80 max-h-100 bg-secondary-background border border-border rounded-lg p-3 text-text shadow-lg"
       >
         {/* Menu Header */}
-        <div
-          style={{
-            ...styles.settingsItem,
-            marginBottom: "12px",
-            paddingBottom: "8px",
-            borderBottom: `1px solid ${currentTheme.colors.border}`,
-          }}
-        >
+        <div className="mb-3 pb-2 border-b border-border text-lg font-normal text-text">
           Settings
         </div>
 
         {/* Menu Items */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ padding: "4px 0" }}>
+        <div className="flex flex-col gap-2">
+          <div className="py-1">
             <AccountSettings />
           </div>
-          <div style={{ padding: "4px 0" }}>
-            
+          <div className="py-1">
             <AppearanceSettings />
           </div>
-          <div style={{ padding: "4px 0" }}>
-            
+          <div className="py-1">
             <LoginStateButton />
           </div>
         </div>

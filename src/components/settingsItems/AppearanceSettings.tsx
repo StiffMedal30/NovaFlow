@@ -1,12 +1,9 @@
-import GlobalStyles from "../../app/GlobalStyles";
-import { useTheme } from "../../context/ThemeContext";
 import { Palette, ChevronRight, ChevronDown } from "lucide-react";
 import React from "react";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function AppearanceSettings() {
   const { themes, currentTheme, setTheme } = useTheme();
-  const styles = GlobalStyles(currentTheme);
-
   const [isClicked, setIsClicked] = React.useState(false);
 
   return (
@@ -15,71 +12,39 @@ export default function AppearanceSettings() {
         onClick={() => setIsClicked(!isClicked)}
         tabIndex={0}
         role="button"
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          cursor: "pointer",
-          outline: "none",
-          userSelect: "none",
-        }}
+        className="flex flex-row items-center justify-between cursor-pointer outline-none select-none"
         onKeyPress={e => {
           if (e.key === "Enter" || e.key === " ") setIsClicked(!isClicked);
         }}
         aria-pressed={isClicked}
       >
-        {/* Appearance Settings Button*/}
-        <div style={{ alignItems: "center", display: "flex" }}>
-          <Palette style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
-          <a
-            style={{
-              ...styles.settingsItem,
-              marginLeft: 12,
-              display: "inline-block",
-            }}
-          >
+        {/* Appearance Settings Button */}
+        <div className="flex items-center">
+          <Palette className="text-text" size={25} strokeWidth={1} />
+          <a className="ml-3 text-text hover:text-primary transition-colors inline-block text-sm font-normal">
             Appearance
           </a>
         </div>
         {!isClicked && (
-          <ChevronRight style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+          <ChevronRight className="text-text" size={25} strokeWidth={1} />
         )}
         {isClicked && (
-          <ChevronDown style={{ strokeWidth: 1, color: currentTheme.colors.text }} size={30} />
+          <ChevronDown className="text-text" size={25} strokeWidth={1} />
         )}
       </div>
 
       {isClicked && (
-        <div style={{ padding: "12px 16px" }}>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              marginTop: 12,
-              maxWidth: 3 * 120 + 2 * 8,
-            }}
-          >
+        <div className="px-4 py-3">
+          <div className="flex flex-wrap gap-2 mt-3 max-w-xs">
             {themes.map(theme => (
               <button
                 key={theme.name}
                 onClick={() => setTheme(theme.name)}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: 6,
-                  border: `1px solid ${currentTheme.colors.border}`,
-                  background: currentTheme.name === theme.name ? currentTheme.colors.accent : currentTheme.colors.primary,
-                  color: currentTheme.name === theme.name ? currentTheme.colors.background : currentTheme.colors.text,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  outline: "none",
-                  transition: "background 0.2s, color 0.2s",
-                  minWidth: 100,
-                  maxWidth: 120,
-                  flex: "1 0 30%",
-                  boxSizing: "border-box",
-                }}
+                className={`px-4 py-1.5 rounded-md border font-medium cursor-pointer outline-none transition-all duration-200 min-w-24 max-w-28 flex-1 basis-1/3 box-border ${
+                  currentTheme.name === theme.name
+                    ? 'bg-accent text-background border-accent'
+                    : 'bg-primary text-text border-border hover:bg-secondary'
+                }`}
                 aria-pressed={currentTheme.name === theme.name}
               >
                 {theme.name}
@@ -88,7 +53,6 @@ export default function AppearanceSettings() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
