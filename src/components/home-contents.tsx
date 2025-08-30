@@ -1,38 +1,16 @@
 
-import { ChatSection } from "./Sections/ChatSection";
+import { AnalyticsSection } from "./Sections/AnalyticsSection";
+import { IdeaSection } from "./Sections/IdeaSection";
 import { LeftSideMenu } from "./left-side-menu";
 
 export function HomeContents() {
   return (
-    <div style={{ 
-      display: "flex", 
-      height: "100vh", 
-      overflow: "hidden",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0
-    }}>
+    <div className="flex h-screen overflow-hidden fixed inset-0">
       <LeftSideMenu />
-      <div style={{ 
-        flex: 1, 
-        marginLeft: "220px", 
-        height: "100vh", 
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column"
-      }}>
-        <div style={{
-          width: "100%",
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          padding: "2rem 0",
-          overflowY: "auto"
-        }}>
-          <ChatSection />
+      <div className="flex-1 ml-[220px] h-screen overflow-hidden flex flex-col">
+        <div className="w-full flex-1 flex justify-center items-start p-8 gap-8 overflow-y-auto">
+          <IdeaSection />
+          <AnalyticsSection />
         </div>
       </div>
     </div>
