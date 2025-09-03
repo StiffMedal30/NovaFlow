@@ -1,5 +1,5 @@
 
-import { Analytics } from "./Sections/Analytics";
+import { MockAnalytics } from "./Sections/MockAnalytics";
 import { Ideas } from "./Sections/Ideas";
 import { LeftSideMenu } from "./left-side-menu";
 
@@ -10,7 +10,7 @@ export function HomeContents() {
       <div className="flex-1 ml-[220px] h-screen overflow-hidden flex flex-col">
         <div className="w-full flex-1 flex justify-center items-start p-8 gap-8 overflow-y-auto">
           <Ideas />
-          <Analytics />
+          <MockAnalytics />
         </div>
       </div>
     </div>

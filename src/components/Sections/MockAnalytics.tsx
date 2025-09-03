@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import GlobalStyles from "../../app/GlobalStyles";
 
-export function Analytics() {
+export function MockAnalytics() {
   const { currentTheme } = useTheme();
   const styles = GlobalStyles(currentTheme);
   const svgRef = useRef<SVGSVGElement>(null);
