@@ -1,16 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
-import GlobalStyles from "../../app/GlobalStyles";
 import DynamicSvgBackground from "../../components/DynamicSvgBackground";
 import toast, { Toaster } from "react-hot-toast";
-import { FaGoogle } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
 export default function RegisterPage() {
-  const { currentTheme } = useTheme();
-  const styles = GlobalStyles(currentTheme);
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -18,7 +14,7 @@ export default function RegisterPage() {
     confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Remove body margins and overflow to prevent scroll bars
   React.useEffect(() => {
     document.body.style.margin = "0";
@@ -27,7 +23,7 @@ export default function RegisterPage() {
     document.documentElement.style.margin = "0";
     document.documentElement.style.padding = "0";
     document.documentElement.style.overflow = "hidden";
-    
+
     // Cleanup function to restore body styles when component unmounts
     return () => {
       document.body.style.margin = "";
@@ -82,7 +78,7 @@ export default function RegisterPage() {
       setTimeout(() => {
         navigate("/login");
       }, 1000);
-      
+
     } catch (error) {
       toast.error("Registration failed. Please try again.");
     } finally {
@@ -97,58 +93,35 @@ export default function RegisterPage() {
   const navigateToLogin = () => {
     navigate("/login");
   };
-  
+
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 4000,
           style: {
-            background: currentTheme.colors.primary,
-            color: currentTheme.colors.text,
-            border: `1px solid ${currentTheme.colors.border}`,
+            background: 'var(--color-primary)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
+            fontFamily: "'Didact Gothic', Arial, Helvetica, sans-serif",
+            fontSize: 16,
           },
         }}
       />
-      <div style={{ 
-        height: "100vh", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        background: currentTheme.colors.background,
-        position: "relative",
-        overflow: "hidden",
-        margin: 0,
-        padding: 0,
-        boxSizing: "border-box"
-      }}>
+      <div className="h-screen flex items-center justify-center bg-background relative overflow-hidden m-0 p-0 box-border">
         <DynamicSvgBackground opacity={0.15} />
-        <div style={{ 
-          background: currentTheme.colors.primary,
-          borderRadius: 16,
-          border: `1.5px solid ${currentTheme.colors.border}`,
-          padding: "2rem 2.5rem",
-          width: "clamp(220px, 90vw, 340px)",
-          height: "auto",
-          minHeight: "400px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          boxShadow: "0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 4px 0 rgba(0,0,0,0.10)",
-          position: "relative",
-          zIndex: 10
-        }}>
-          <h1 style={{ ...styles.h1, marginBottom: 24 }}>NovaFlow</h1>
-          <h2 style={{ ...styles.h2, marginBottom: 24 }}>Create Account</h2>
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="bg-secondary-background rounded-xl border-2 border-border p-8 w-96 min-h-96 max-w-md flex flex-col items-stretch shadow-2xl relative z-10">
+          <h1 className="text-3xl font-normal text-text font-['Didact_Gothic'] mb-6">NovaFlow</h1>
+          <h2 className="text-2xl font-normal text-text font-['Didact_Gothic'] mb-6">Create Account</h2>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="email"
               name="email"
               placeholder="Email"
               value={formData.email}
               onChange={handleInputChange}
-              style={styles.textInput}
+              className="px-4 py-3 bg-secondary border border-border rounded-lg text-text placeholder-text/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all"
               disabled={isLoading}
             />
             <input
@@ -157,7 +130,7 @@ export default function RegisterPage() {
               placeholder="Username"
               value={formData.username}
               onChange={handleInputChange}
-              style={styles.textInput}
+              className="px-4 py-3 bg-secondary border border-border rounded-lg text-text placeholder-text/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all"
               disabled={isLoading}
             />
             <input
@@ -166,7 +139,7 @@ export default function RegisterPage() {
               placeholder="Password"
               value={formData.password}
               onChange={handleInputChange}
-              style={styles.textInput}
+              className="px-4 py-3 bg-secondary border border-border rounded-lg text-text placeholder-text/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all"
               disabled={isLoading}
             />
             <input
@@ -175,70 +148,36 @@ export default function RegisterPage() {
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              style={styles.textInput}
+              className="px-4 py-3 bg-secondary border border-border rounded-lg text-text placeholder-text/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={isLoading}
-              style={{ 
-                ...styles.button1, 
-                width: "100%", 
-                boxSizing: "border-box" as const,
-                opacity: isLoading ? 0.7 : 1,
-                cursor: isLoading ? "not-allowed" : "pointer"
-              }}
+              className={`w-full px-4 py-3 bg-accent text-background border-0 rounded-lg font-medium text-base cursor-pointer transition-all hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
             >
               {isLoading ? "Creating Account..." : "Create Account"}
             </button>
-            <div style={{justifyItems: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              
-              {(() => {
-                const [hover1, setHover1] = React.useState(false);
-                return (
-                  <>
-                    <a
-                      onClick={navigateToLogin}
-                      style={{
-                        ...styles.textLink,
-                        marginBottom: 8,
-                        marginTop: 8,
-                        textDecoration: hover1 ? "underline" : "none",
-                        cursor: "pointer"
-                      }}
-                      onMouseEnter={() => setHover1(true)}
-                      onMouseLeave={() => setHover1(false)}
-                    >
-                      Already have an account? Sign in
-                    </a>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignup}
-                      disabled={isLoading}
-                      style={{
-                        ...styles.button1,
-                        width: "100%",
-                        marginTop: 12,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        background: "#fff",
-                        color: "#222",
-                        border: `1.5px solid ${currentTheme.colors.border}`,
-                        fontWeight: 500,
-                        fontSize: 16,
-                        boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                        opacity: isLoading ? 0.7 : 1
-                      }}
-                    >
-                      <FaGoogle size={20} />
-                      Continue with Google
-                    </button>
-                  </>
-                );
-              })()}
+            <div className="flex flex-col items-center gap-2">
+              <a
+                onClick={navigateToLogin}
+                className="text-text hover:text-accent transition-colors cursor-pointer underline-offset-4 hover:underline mb-2 mt-2"
+              >
+                Already have an account? Sign in
+              </a>
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={isLoading}
+                className={`w-full mt-3 px-4 py-3 bg-white text-gray-800 border-2 border-border rounded-lg font-medium text-base flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background ${
+                  isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                <FcGoogle size={20} />
+                Continue with Google
+              </button>
             </div>
           </form>
         </div>

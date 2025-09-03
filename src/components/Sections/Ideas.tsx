@@ -1,15 +1,14 @@
 import { useTheme } from "../../context/ThemeContext";
-import GlobalStyles from "../../app/GlobalStyles";
 
-export function ChatSection() {
+export function Ideas() {
   const { currentTheme } = useTheme();
-  const styles = GlobalStyles(currentTheme);
+
   return (
     <div
       style={{
         width: "100%",
         maxWidth: 600,
-        background: currentTheme.colors.primary,
+        background: currentTheme.colors.secondary_background,
         borderRadius: 18,
         boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
         border: `1.5px solid ${currentTheme.colors.border}`,
@@ -22,10 +21,10 @@ export function ChatSection() {
         marginTop: "4.5rem",
       }}
     >
-      <h2 style={{ ...styles.h2, marginBottom: 12 }}>Chat</h2>
-      <div style={{ color: currentTheme.colors.text, opacity: 0.5, fontSize: 16 }}>
-        {/* Chat content will go here */}
-        <span>Start a conversation...</span>
+      <h2 className="text-2xl font-semibold text-text mb-3">Ideas</h2>
+      <div className="text-text opacity-50 text-base">
+        {/* Idea content will go here */}
+        <span>Your most recent ideas</span>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--color-background', currentTheme.colors.background);
+    root.style.setProperty('--color-secondary-background', currentTheme.colors.secondary_background);
     root.style.setProperty('--color-primary', currentTheme.colors.primary);
     root.style.setProperty('--color-secondary', currentTheme.colors.secondary);
     root.style.setProperty('--color-accent', currentTheme.colors.accent);
