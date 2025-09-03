@@ -1,6 +1,6 @@
 import { useTheme } from "../../context/ThemeContext";
 
-export function IdeaSection() {
+export function Ideas() {
   const { currentTheme } = useTheme();
 
   return (
