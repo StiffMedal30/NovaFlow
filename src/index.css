@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Animations */
+@keyframes noticeablePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6;
+  }
+}
+
 /* CSS Custom Properties for Dynamic Theming */
 :root {
   /* Default theme (Dark) */

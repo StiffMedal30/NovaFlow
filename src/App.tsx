@@ -9,6 +9,7 @@ import LoginPage from "./Pages/Login/page";
 import RegisterPage from "./Pages/Register/page";
 import SuperSecretPage from "./Pages/SuperSecret/page";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import ChatPage from "./Pages/Chat/page";
 
 function AppContent() {
   const { currentTheme } = useTheme();
@@ -32,6 +33,7 @@ function AppContent() {
         {/*Protected Routes*/}
         <Route element={<ProtectedRoute />}>
           <Route path="/SuperSecret" element={<SuperSecretPage />} /> 
+          <Route path="/chat" element={<ChatPage />} />
         </Route>
       </Routes>
     </RootLayout>
