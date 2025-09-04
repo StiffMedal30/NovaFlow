@@ -1,45 +1,45 @@
-import { Mic, Send } from "lucide-react"
-import { useTheme } from "../../context/ThemeContext";
-import { useMemo, useState } from "react";
+import { Mic, Send } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { useMemo, useState } from 'react';
 
 export default function ChatPage() {
-    const { currentTheme } = useTheme();
+  const { currentTheme } = useTheme();
 
-    const [isListening, setIsListening] = useState(false);
-    const [isTyping, setIsTyping] = useState(false);
-    const [inputText, setInputText] = useState(""); //The text that is currently being typed
-    const [userMessage, setUserMessage] = useState("");//The text that the user has sent
+  const [isListening, setIsListening] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [inputText, setInputText] = useState(''); //The text that is currently being typed
+  const [userMessage, setUserMessage] = useState(''); //The text that the user has sent
 
-    const handleListen = () => {
-        setIsListening(!isListening);
-        
-        //Prevent multiple inputs
-        setIsTyping(false);
-        
-        console.log(!isListening);
+  const handleListen = () => {
+    setIsListening(!isListening);
+
+    //Prevent multiple inputs
+    setIsTyping(false);
+
+    console.log(!isListening);
+  };
+
+  const handleType = (text: string) => {
+    setIsTyping(true);
+    setInputText(text);
+  };
+
+  //Prevent highlighted send button when text is empty
+  useMemo(() => {
+    if (inputText === '') {
+      setIsTyping(false);
     }
+  }, [inputText]);
 
-    const handleType = (text : string) => {
-        setIsTyping(true);
-        setInputText(text);
-    }
+  const handleSend = () => {
+    if (inputText === '') return; //Do not send empty messages
+    if (isListening) return; //Do not send if listening to voice input
 
-    //Prevent highlighted send button when text is empty
-    useMemo(() => {
-        if(inputText === "") {
-            setIsTyping(false);
-        }
-    }, [inputText]);
-
-    const handleSend = () => {
-        if(inputText === "") return; //Do not send empty messages
-        if(isListening) return; //Do not send if listening to voice input
-
-        setIsTyping(false);
-        setUserMessage(inputText);
-        setInputText("");
-        console.log("Sent:", userMessage);
-    }
+    setIsTyping(false);
+    setUserMessage(inputText);
+    setInputText('');
+    console.log('Sent:', userMessage);
+  };
 
   return (
     <div className="flex-1 flex justify-center items-center">
@@ -49,13 +49,16 @@ export default function ChatPage() {
         style={{
           background: currentTheme.colors.secondary_background,
           borderColor: currentTheme.colors.border,
-          boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)"
+          boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)',
         }}
       >
         <h2 className="text-2xl font-semibold mb-3" style={{ color: currentTheme.colors.text }}>
           Chat
         </h2>
-        <div className="flex-1 flex items-center justify-center opacity-50 text-base" style={{ color: currentTheme.colors.text }}>
+        <div
+          className="flex-1 flex items-center justify-center opacity-50 text-base"
+          style={{ color: currentTheme.colors.text }}
+        >
           {/* Chat content will go here */}
           <span>Start a conversation...</span>
         </div>
@@ -70,7 +73,13 @@ export default function ChatPage() {
               color: currentTheme.colors.text,
             }}
             value={inputText}
-            onChange={(e) => handleType(e.target.value)}
+            onChange={e => handleType(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
           />
           <div
             className="absolute inset-0 rounded-full opacity-0 peer-focus:opacity-100 transition-opacity duration-200 pointer-events-none"
@@ -84,14 +93,14 @@ export default function ChatPage() {
               style={{ color: currentTheme.colors.text }}
               aria-label="Voice input"
             >
-              <Mic 
-                className={isListening ? "animate-pulse" : ""}
+              <Mic
+                className={isListening ? 'animate-pulse' : ''}
                 style={{
-                    color: isListening ? currentTheme.colors.primary : currentTheme.colors.text,
-                    animation: isListening ? 'noticeablePulse 1.5s ease-in-out infinite' : 'none',
-                    transformOrigin: 'center',
+                  color: isListening ? currentTheme.colors.primary : currentTheme.colors.text,
+                  animation: isListening ? 'noticeablePulse 1.5s ease-in-out infinite' : 'none',
+                  transformOrigin: 'center',
                 }}
-                size={20} 
+                size={20}
                 onClick={handleListen}
               />
             </button>
@@ -99,9 +108,9 @@ export default function ChatPage() {
               className="p-1 rounded-full hover:opacity-70 transition-opacity duration-200"
               aria-label="Send message"
             >
-              <Send 
+              <Send
                 style={{
-                    color: isTyping ? currentTheme.colors.primary : currentTheme.colors.text
+                  color: isTyping ? currentTheme.colors.primary : currentTheme.colors.text,
                 }}
                 size={20}
                 onClick={handleSend}
