@@ -1,6 +1,8 @@
 import { Mic, Send } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useMemo, useState } from 'react';
+import ChatContainer from '../../components/ui/chat-container';
+import { type ChatMessage } from '../../components/ui/chat-message';
 
 export default function ChatPage() {
   const { currentTheme } = useTheme();
@@ -8,7 +10,8 @@ export default function ChatPage() {
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState(''); //The text that is currently being typed
-  const [userMessage, setUserMessage] = useState(''); //The text that the user has sent
+  const [messages, setMessages] = useState<ChatMessage[]>([]); //Chat messages
+  const [isLoading, setIsLoading] = useState(false); //AI response loading state
 
   const handleListen = () => {
     setIsListening(!isListening);
@@ -36,16 +39,37 @@ export default function ChatPage() {
     if (isListening) return; //Do not send if listening to voice input
 
     setIsTyping(false);
-    setUserMessage(inputText);
+    
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString() + '-user',
+      content: inputText,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setInputText('');
-    console.log('Sent:', userMessage);
+    
+    // Simulate AI response
+    setIsLoading(true);
+    setTimeout(() => {
+      const aiMessage: ChatMessage = {
+        id: Date.now().toString() + '-ai',
+        content: `I received your message: "${inputText}". This is a mock response from the AI.`,
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      setIsLoading(false);
+    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
   };
 
   return (
     <div className="flex-1 flex justify-center items-center">
       {/* Chat Section */}
       <div
-        className="w-full h-full max-w-[70vw] max-h-[80vh] min-h-[80vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-28"
+        className="w-full h-full max-w-[50vw] max-h-[83vh] min-h-[83vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-28"
         style={{
           background: currentTheme.colors.secondary_background,
           borderColor: currentTheme.colors.border,
@@ -55,13 +79,14 @@ export default function ChatPage() {
         <h2 className="text-2xl font-semibold mb-3" style={{ color: currentTheme.colors.text }}>
           Chat
         </h2>
-        <div
-          className="flex-1 flex items-center justify-center opacity-50 text-base"
-          style={{ color: currentTheme.colors.text }}
-        >
-          {/* Chat content will go here */}
-          <span>Start a conversation...</span>
-        </div>
+        
+        {/* Chat Messages */}
+        <ChatContainer 
+          messages={messages} 
+          isLoading={isLoading}
+          className="flex-1"
+        />
+        
         <div className="w-full mt-4 relative">
           <input //TODO : Add voice input support, grow input depending on content
             type="text"
