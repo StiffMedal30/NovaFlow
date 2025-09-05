@@ -1,31 +1,81 @@
 import { Mic, Send } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import ChatContainer from '../../components/ui/chat-container';
 import { type ChatMessage } from '../../components/ui/chat-message';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
+import toast from 'react-hot-toast';
 
 export default function ChatPage() {
   const { currentTheme } = useTheme();
 
-  const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState(''); //The text that is currently being typed
   const [messages, setMessages] = useState<ChatMessage[]>([]); //Chat messages
   const [isLoading, setIsLoading] = useState(false); //AI response loading state
 
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
   const handleListen = () => {
-    setIsListening(!isListening);
+    if(!browserSupportsSpeechRecognition){
+      toast.error("Your browser does not support speech recognition. Please use a supported browser in order to use this feature.");
+      return;
+    } else {
+      console.log("Listening: ", listening);
 
-    //Prevent multiple inputs
-    setIsTyping(false);
-
-    console.log(!isListening);
+      if(listening) {
+        SpeechRecognition.stopListening();
+      } else {
+        resetTranscript();
+        setInputText('');
+        SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+      }
+    }
   };
+
+  const handleSend = useCallback(() => {
+    if (inputText === '') return; //Do not send empty messages
+    if (listening) return; // Don't send while listening
+    if (isLoading) return; // Don't send while AI is responding
+
+    const messageText = inputText; //Store the message before sending it
+    setIsTyping(false);
+    setInputText('');
+
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString() + '-user',
+      content: messageText,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+
+    // Simulate AI response
+    setIsLoading(true);
+    setTimeout(() => {
+      const aiMessage: ChatMessage = {
+        id: Date.now().toString() + '-ai',
+        content: `I received your message: "${messageText}". This is a mock response from the AI.`,
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      setIsLoading(false);
+    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+  }, [inputText, listening, isLoading]);
 
   const handleType = (text: string) => {
     setIsTyping(true);
     setInputText(text);
   };
+
 
   //Prevent highlighted send button when text is empty
   useMemo(() => {
@@ -34,36 +84,23 @@ export default function ChatPage() {
     }
   }, [inputText]);
 
-  const handleSend = () => {
-    if (inputText === '') return; //Do not send empty messages
-    if (isListening) return; //Do not send if listening to voice input
+    //Listen for changes in the transcript and update inputText to display what is being heard
+  useEffect (() => {
+    if (transcript) {
+      setInputText(transcript);
+    }
+  }, [transcript]);
 
-    setIsTyping(false);
-    
-    // Add user message
-    const userMessage: ChatMessage = {
-      id: Date.now().toString() + '-user',
-      content: inputText,
-      sender: 'user',
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    
-    // Simulate AI response
-    setIsLoading(true);
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: Date.now().toString() + '-ai',
-        content: `I received your message: "${inputText}". This is a mock response from the AI.`,
-        sender: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
-  };
+  //Auto send message when voice input stops
+  useEffect(() => {
+    if (!listening && transcript && inputText) {
+      //Small delay to ensure voice recognition has actually stopped
+      setTimeout(() => {
+        handleSend();
+        resetTranscript();
+      }, 500);
+    }
+  }, [transcript, listening, inputText, handleSend]);
 
   return (
     <div className="flex-1 flex justify-center items-center">
@@ -90,7 +127,6 @@ export default function ChatPage() {
         <div className="w-full mt-4 relative">
           <input //TODO : Add voice input support, grow input depending on content
             type="text"
-            placeholder="Type your message..."
             className="w-full pl-4 pr-20 py-3 rounded-full border-2 focus:outline-none focus:ring-0 focus:border-2 transition-all duration-200 peer"
             style={{
               background: currentTheme.colors.background,
@@ -100,11 +136,13 @@ export default function ChatPage() {
             value={inputText}
             onChange={e => handleType(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey && !listening) {
                 e.preventDefault();
                 handleSend();
               }
             }}
+            disabled={isLoading || listening} // Disable when listening OR loading
+            placeholder={listening ? "Listening..." : "Type your message..."} 
           />
           <div
             className="absolute inset-0 rounded-full opacity-0 peer-focus:opacity-100 transition-opacity duration-200 pointer-events-none"
@@ -119,10 +157,10 @@ export default function ChatPage() {
               aria-label="Voice input"
             >
               <Mic
-                className={isListening ? 'animate-pulse' : ''}
+                className={listening ? 'animate-pulse' : ''}
                 style={{
-                  color: isListening ? currentTheme.colors.primary : currentTheme.colors.text,
-                  animation: isListening ? 'noticeablePulse 1.5s ease-in-out infinite' : 'none',
+                  color: listening ? currentTheme.colors.primary : currentTheme.colors.text,
+                  animation: listening ? 'noticeablePulse 1.5s ease-in-out infinite' : 'none',
                   transformOrigin: 'center',
                 }}
                 size={20}
@@ -136,6 +174,7 @@ export default function ChatPage() {
               <Send
                 style={{
                   color: isTyping ? currentTheme.colors.primary : currentTheme.colors.text,
+                  opacity: listening ? 0.5 : 1, // Dim when listening
                 }}
                 size={20}
                 onClick={handleSend}

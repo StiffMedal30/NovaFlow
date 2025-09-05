@@ -29,11 +29,13 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<HomeContents />} />
 
+        {/*Unprotected for development, please remove in production*/}
+        <Route path="/chat" element={<ChatPage />} />
 
         {/*Protected Routes*/}
         <Route element={<ProtectedRoute />}>
-          <Route path="/SuperSecret" element={<SuperSecretPage />} /> 
-          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/SuperSecret" element={<SuperSecretPage />} />
+          {/* <Route path="/chat" element={<ChatPage />} /> REMOVE THIS COMMENT FOR PRODUCTION*/}
         </Route>
       </Routes>
     </RootLayout>
