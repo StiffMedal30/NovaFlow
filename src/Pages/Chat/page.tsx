@@ -113,9 +113,6 @@ export default function ChatPage() {
           boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)',
         }}
       >
-        <h2 className="text-2xl font-semibold mb-3" style={{ color: currentTheme.colors.text }}>
-          Chat
-        </h2>
         
         {/* Chat Messages */}
         <ChatContainer 
@@ -125,7 +122,7 @@ export default function ChatPage() {
         />
         
         <div className="w-full mt-4 relative">
-          <input //TODO : Add voice input support, grow input depending on content
+          <input 
             type="text"
             className="w-full pl-4 pr-20 py-3 rounded-full border-2 focus:outline-none focus:ring-0 focus:border-2 transition-all duration-200 peer"
             style={{
