@@ -2,8 +2,11 @@ import { FiInstagram } from "react-icons/fi";
 import { BsTwitterX } from "react-icons/bs";
 import { FaDiscord, FaLinkedinIn } from "react-icons/fa";
 import { Bot, Lightbulb, FileQuestionMarkIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function LeftSideMenu() {
+  const navigate = useNavigate();
+  
   return (
     <div className="w-64 bg-secondary-background text-text flex flex-col p-5 h-[calc(100vh-6rem)] overflow-y-auto fixed top-20 left-4 bottom-4 z-10 rounded-lg opacity-100">
 
@@ -11,19 +14,23 @@ export function LeftSideMenu() {
       <div className="flex flex-col gap-2 flex-grow">
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/Chat");
+          }}
         >
-          <Bot size={20} className="mr-2" /> Chat   
+          <Bot size={20} className="mr-2" /> Chat
         </a>
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
         >
           <Lightbulb size={20} className="mr-2" /> Ideas
         </a>
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors block text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
         >
           <FileQuestionMarkIcon size={20} className="mr-2" /> Something else
         </a>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DynamicSvgBackground from "../../components/DynamicSvgBackground";
+import DarkVeil from "../../components/DarkVeil";
 import toast, { Toaster } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 
@@ -110,8 +110,15 @@ export default function RegisterPage() {
         }}
       />
       <div className="h-screen flex items-center justify-center bg-background relative overflow-hidden m-0 p-0 box-border">
-        <DynamicSvgBackground opacity={0.15} />
-        <div className="bg-secondary-background rounded-xl border-2 border-border p-8 w-96 min-h-96 max-w-md flex flex-col items-stretch shadow-2xl relative z-10">
+        <DarkVeil 
+          noiseIntensity={0.08}
+          scanlineIntensity={0.08}
+          speed={0.9}
+          scanlineFrequency={0.05}
+          warpAmount={0.5}
+          resolutionScale={1}
+        />
+        <div className="bg-secondary-background/20 backdrop-blur-md rounded-xl border-2 border-border p-8 w-96 min-h-96 max-w-md flex flex-col items-stretch shadow-2xl relative z-10">
           <h1 className="text-3xl font-normal text-text font-['Didact_Gothic'] mb-6">NovaFlow</h1>
           <h2 className="text-2xl font-normal text-text font-['Didact_Gothic'] mb-6">Create Account</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
