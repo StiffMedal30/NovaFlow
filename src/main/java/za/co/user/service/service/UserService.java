@@ -4,6 +4,8 @@ import za.co.user.service.entity.AppUserEntity;
 import za.co.user.service.records.AppUserRecord;
 import za.co.user.service.records.NewPasswordRecord;
 
+import java.security.Principal;
+
 public interface UserService {
     void registerUser(AppUserRecord dto);
 
@@ -20,4 +22,6 @@ public interface UserService {
     Boolean confirmPasswordReset(String token);
 
     AppUserEntity findByUsername(String name);
+
+    void deleteCollaborator(Long collaboratorId, Principal admin);
 }
