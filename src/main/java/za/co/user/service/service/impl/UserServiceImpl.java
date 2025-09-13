@@ -177,7 +177,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    //make this string not void
     public void deleteCollaborator(Long collaboratorId, Principal admin) {
         // Find the collaborator and verify they belong to the requesting admin
         AppUserEntity collaborator = userRepository.findByIdAndAdmin_Username(collaboratorId, admin.getName())
