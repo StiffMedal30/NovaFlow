@@ -1,6 +1,6 @@
 import { Mic, Send } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import ChatContainer from '../../components/ui/chat-container';
 import { type ChatMessage } from '../../components/ui/chat-message';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
@@ -13,6 +13,8 @@ export default function ChatPage() {
   const [inputText, setInputText] = useState(''); //The text that is currently being typed
   const [messages, setMessages] = useState<ChatMessage[]>([]); //Chat messages
   const [isLoading, setIsLoading] = useState(false); //AI response loading state
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for textarea
+  const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track auto-send timeout
 
   const {
     transcript,
@@ -31,6 +33,11 @@ export default function ChatPage() {
       if(listening) {
         SpeechRecognition.stopListening();
       } else {
+        // Clear any pending auto-send when starting new speech recognition
+        if (autoSendTimeoutRef.current) {
+          clearTimeout(autoSendTimeoutRef.current);
+          autoSendTimeoutRef.current = null;
+        }
         resetTranscript();
         setInputText('');
         SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
@@ -39,13 +46,24 @@ export default function ChatPage() {
   };
 
   const handleSend = useCallback(() => {
-    if (inputText === '') return; //Do not send empty messages
+    if (inputText.trim() === '') return; //Do not send empty messages (including whitespace)
     if (listening) return; // Don't send while listening
     if (isLoading) return; // Don't send while AI is responding
+
+    // Clear any pending auto-send timeout to prevent duplicates
+    if (autoSendTimeoutRef.current) {
+      clearTimeout(autoSendTimeoutRef.current);
+      autoSendTimeoutRef.current = null;
+    }
 
     const messageText = inputText; //Store the message before sending it
     setIsTyping(false);
     setInputText('');
+
+    // Reset textarea height to original size
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '48px';
+    }
 
     // Add user message
     const userMessage: ChatMessage = {
@@ -74,8 +92,7 @@ export default function ChatPage() {
   const handleType = (text: string) => {
     setIsTyping(true);
     setInputText(text);
-  };
-
+  };``
 
   //Prevent highlighted send button when text is empty
   useMemo(() => {
@@ -88,19 +105,41 @@ export default function ChatPage() {
   useEffect (() => {
     if (transcript) {
       setInputText(transcript);
+      // Trigger textarea resize when speech recognition updates the text
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '48px';
+        const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+        textareaRef.current.style.height = newHeight + 'px';
+      }
     }
   }, [transcript]);
 
   //Auto send message when voice input stops
   useEffect(() => {
+    // Clear any existing timeout to prevent duplicates
+    if (autoSendTimeoutRef.current) {
+      clearTimeout(autoSendTimeoutRef.current);
+      autoSendTimeoutRef.current = null;
+    }
+
     if (!listening && transcript && inputText) {
       //Small delay to ensure voice recognition has actually stopped
-      setTimeout(() => {
+      autoSendTimeoutRef.current = setTimeout(() => {
         handleSend();
         resetTranscript();
+        autoSendTimeoutRef.current = null; //Clear the ref after sending
       }, 500);
     }
   }, [transcript, listening, inputText, handleSend]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSendTimeoutRef.current) {
+        clearTimeout(autoSendTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex-1 flex justify-center items-center">
@@ -122,36 +161,58 @@ export default function ChatPage() {
         />
         
         <div className="w-full mt-4 relative">
-          <input 
-            type="text"
-            className="w-full pl-4 pr-20 py-3 rounded-full border-2 focus:outline-none focus:ring-0 focus:border-2 transition-all duration-200 peer"
+          <div 
+            className="relative border-2 transition-all duration-200 overflow-hidden chat-input-container"
             style={{
               background: currentTheme.colors.background,
               borderColor: currentTheme.colors.border,
-              color: currentTheme.colors.text,
-            }}
-            value={inputText}
-            onChange={e => handleType(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey && !listening) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            disabled={isLoading || listening} // Disable when listening OR loading
-            placeholder={listening ? "Listening..." : "Type your message..."} 
-          />
-          <div
-            className="absolute inset-0 rounded-full opacity-0 peer-focus:opacity-100 transition-opacity duration-200 pointer-events-none"
-            style={{
-              boxShadow: `inset 0 0 0 2px ${currentTheme.colors.accent}`,
-            }}
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+              borderRadius: inputText.includes('\n') || inputText.length > 50 ? '20px' : '24px', // Dynamic border radius
+              '--accent-color': currentTheme.colors.accent,
+            } as React.CSSProperties & { '--accent-color': string }}
+          >
+            <textarea 
+              ref={textareaRef} //In order to resize the text area to its original size on send
+              className="w-full pl-4 pr-20 resize-none outline-none scrollbar-hide"
+              style={{
+                background: 'transparent',
+                color: currentTheme.colors.text,
+                minHeight: '48px',
+                maxHeight: '120px',
+                lineHeight: '1.4',
+                fontFamily: 'inherit',
+                fontSize: 'inherit',
+                border: 'none',
+                overflowY: 'auto',
+                paddingTop: '16px',
+                paddingBottom: '12px',
+                height: '48px', // Force initial height
+              }}
+              value={inputText}
+              onChange={e => handleType(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey && !listening) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = '48px';
+                const newHeight = Math.min(target.scrollHeight, 120);
+                target.style.height = newHeight + 'px';
+              }}
+              disabled={isLoading || listening}
+              placeholder={listening ? "Listening..." : "Type your message..."}
+              rows={1}
+            />
+          </div>
+          
+          <div className="absolute right-4 bottom-3.5 flex items-center gap-2">
             <button
               className="p-1 rounded-full hover:opacity-70 transition-opacity duration-200"
               style={{ color: currentTheme.colors.text }}
               aria-label="Voice input"
+              onClick={handleListen}
             >
               <Mic
                 className={listening ? 'animate-pulse' : ''}
@@ -161,12 +222,12 @@ export default function ChatPage() {
                   transformOrigin: 'center',
                 }}
                 size={20}
-                onClick={handleListen}
               />
             </button>
             <button
               className="p-1 rounded-full hover:opacity-70 transition-opacity duration-200"
               aria-label="Send message"
+              onClick={handleSend}
             >
               <Send
                 style={{
@@ -174,7 +235,6 @@ export default function ChatPage() {
                   opacity: listening ? 0.5 : 1, // Dim when listening
                 }}
                 size={20}
-                onClick={handleSend}
               />
             </button>
           </div>

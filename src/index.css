@@ -14,6 +14,20 @@
   }
 }
 
+/* Hide scrollbars while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Chat input focus border color change */
+.chat-input-container:focus-within {
+  border-color: var(--accent-color) !important;
+}
+
 /* CSS Custom Properties for Dynamic Theming */
 :root {
   /* Default theme (Dark) */
