@@ -3,6 +3,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import ChatContainer from '../../components/ui/chat-container';
 import { type ChatMessage } from '../../components/ui/chat-message';
+import { ChatSideMenu } from '../../components/ui/chat-side-menu';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import toast from 'react-hot-toast';
 
@@ -142,10 +143,14 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex justify-center items-center">
+    <div className="flex-1 flex items-center relative">
+      {/* Chat Side Menu */}
+      <ChatSideMenu />
+      
       {/* Chat Section */}
-      <div
-        className="w-full h-full max-w-[50vw] max-h-[83vh] min-h-[83vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-28"
+      <div className="flex-1 flex justify-center items-center ml-72">
+        <div
+          className="w-full h-full max-w-[60vw] max-h-[83vh] min-h-[85vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-28"
         style={{
           background: currentTheme.colors.secondary_background,
           borderColor: currentTheme.colors.border,
@@ -240,6 +245,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
