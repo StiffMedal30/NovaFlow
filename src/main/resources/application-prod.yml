@@ -1,7 +1,14 @@
+server:
+  port: 8082
+
 spring:
+  application:
+    name: user-service
+
   config:
     import: "configserver:http://config-server:7090/"  # Pull config from config server
     label: develop
+
   cloud:
     config:
       uri: http://config-server:7090  # Location of config server
@@ -11,3 +18,55 @@ spring:
         initial-interval: 2000
         multiplier: 1.5
         max-interval: 10000
+
+  liquibase:
+    drop-first: false
+
+  jpa:
+    show-sql: true
+
+  mail:
+    host: mail.dotze.co.za
+    port: 465
+    username: no-reply@dotze.co.za
+    password: OjaX?oW^c0@6
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+
+
+app:
+  mail:
+    account-activation-url: http://api-gateway:8081/api-gateway/api/account/activate
+    reset-password-url: http://api-gateway:8081/api-gateway/api/reset/password
+    collaborator-invite-url: http://api-gateway:8081/api-gateway/api/invite/collaborator
+    base-redirect-url: http://api-gateway:8081/api/link?t=
+    activate-account-message-body: |
+      <html>
+        <body>
+          <h2>Welcome to NovaFlow!</h2>
+          <p>Thanks for registering. Please click the link below to activate your account:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Activate Account</a>
+          <p>If you didn't register, you can safely ignore this email.</p>
+        </body>
+      </html>
+    reset-password-message-body: |
+      <html>
+        <body>
+          <h2>NovaFlow!</h2>
+          <p>Your password has been reset. Please click the link below to confirm that this was you:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Confirm Reset</a>
+          <p>If you didn't request a password reset, you can safely ignore this email.</p>
+        </body>
+      </html>
+    invitation-message-body: |
+      <html>
+          <body>
+          <h2>NovaFlow!</h2>
+          <p>You have been invited to join a project. Please click the link below to accept the invitation:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Accept Invitation</a>
+          <p>If you are not aware of this, you can safely ignore it.</p>
+          <p>This email will expire in 24 hours</p>
+          </body>
+      </html>
+
