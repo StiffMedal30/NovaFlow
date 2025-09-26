@@ -76,6 +76,7 @@ services:
       - EMAIL_USERNAME=${EMAIL_USERNAME}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_PROTOCOL=${EMAIL_PROTOCOL}
+      - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
     restart: always
@@ -92,6 +93,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
     restart: always
@@ -108,6 +110,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
     restart: always
@@ -120,6 +123,8 @@ services:
       - config-server
     ports:
       - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
     restart: always
@@ -132,6 +137,33 @@ services:
     networks:
       - app-network
     restart: always
+  
+  ollama-gpu: # Ollama with GPU support
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"   # expose Ollama API
+    volumes:
+      - ollama_data:/root/.ollama  # persist models between restarts
+      - ./start-ollama.sh:/start-ollama.sh  # mount the script
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: ["/start-ollama.sh"]
+
+  ollama-cpu: # Ollama with CPU support
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./start-ollama.sh:/start-ollama.sh  # mount the script
+    command: ["/start-ollama.sh"]
 
 networks:
   app-network:
@@ -140,5 +172,6 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
+  ollama_data:
 
 
