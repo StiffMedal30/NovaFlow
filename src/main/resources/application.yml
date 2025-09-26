@@ -5,9 +5,6 @@ spring:
   application:
     name: idea-service
 
-  profiles:
-    active: dev
-
   config:
     import: "configserver:http://localhost:7090/"  # Pull config from config server
     label: develop
