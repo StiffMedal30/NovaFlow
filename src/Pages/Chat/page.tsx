@@ -1,21 +1,31 @@
 import { Mic, Send } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useChat } from '../../context/ChatContext';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import ChatContainer from '../../components/ui/chat-container';
-import { type ChatMessage } from '../../components/ui/chat-message';
 import { ChatSideMenu } from '../../components/ui/chat-side-menu';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import toast from 'react-hot-toast';
 
 export default function ChatPage() {
   const { currentTheme } = useTheme();
+  const { 
+    getCurrentSession, 
+    addMessage, 
+    isLoading, 
+    setLoading,
+    createSession,
+    currentSessionId 
+  } = useChat();
 
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState(''); //The text that is currently being typed
-  const [messages, setMessages] = useState<ChatMessage[]>([]); //Chat messages
-  const [isLoading, setIsLoading] = useState(false); //AI response loading state
   const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for textarea
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track auto-send timeout
+
+  // Get current session messages
+  const currentSession = getCurrentSession();
+  const messages = currentSession?.messages || [];
 
   const {
     transcript,
@@ -66,29 +76,29 @@ export default function ChatPage() {
       textareaRef.current.style.height = '48px';
     }
 
-    // Add user message
-    const userMessage: ChatMessage = {
-      id: Date.now().toString() + '-user',
+    // Create session if none exists
+    if (!currentSessionId) {
+      createSession();
+    }
+
+    // Add user message using chat provider
+    addMessage({
       content: messageText,
       sender: 'user',
       timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
+    });
 
     // Simulate AI response
-    setIsLoading(true);
+    setLoading(true);
     setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: Date.now().toString() + '-ai',
+      addMessage({
         content: `I received your message: "${messageText}". This is a mock response from the AI.`,
         sender: 'assistant',
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
+      });
+      setLoading(false);
     }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
-  }, [inputText, listening, isLoading]);
+  }, [inputText, listening, isLoading, currentSessionId, createSession, addMessage, setLoading]);
 
   const handleType = (text: string) => {
     setIsTyping(true);
@@ -150,9 +160,9 @@ export default function ChatPage() {
       {/* Chat Section */}
       <div className="flex-1 flex justify-center items-center ml-72">
         <div
-          className="w-full h-full max-w-[60vw] max-h-[83vh] min-h-[85vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-28"
+          className="w-full h-full max-w-[70vw] max-h-[96vh] min-h-[96vh] rounded-[18px] shadow-lg border py-8 px-6 flex flex-col justify-between mt-4"
         style={{
-          background: currentTheme.colors.secondary_background,
+          background: currentTheme.colors.background,
           borderColor: currentTheme.colors.border,
           boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)',
         }}
@@ -169,7 +179,7 @@ export default function ChatPage() {
           <div 
             className="relative border-2 transition-all duration-200 overflow-hidden chat-input-container"
             style={{
-              background: currentTheme.colors.background,
+              background: currentTheme.colors.secondary_background,
               borderColor: currentTheme.colors.border,
               borderRadius: inputText.includes('\n') || inputText.length > 50 ? '20px' : '24px', // Dynamic border radius
               '--accent-color': currentTheme.colors.accent,

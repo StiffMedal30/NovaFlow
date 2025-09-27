@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./store/authStore";
 import RootLayout from "./Pages/Home/layout";
 import { Header } from "./components/header";
@@ -16,12 +17,21 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    document.body.style.backgroundColor = currentTheme.colors.background;
-  }, [currentTheme]);
+    const isChatPage = location.pathname.toLowerCase() === '/chat';
+    document.body.style.backgroundColor = isChatPage
+      ? currentTheme.colors.secondary_background
+      : currentTheme.colors.background;
+  }, [currentTheme, location.pathname]);
+  
+  // Check if header should be shown (case-insensitive)
+  const hiddenHeaderPaths = ["/login", "/register", "/chat"];
+  const shouldShowHeader = !hiddenHeaderPaths.some(path => 
+    path.toLowerCase() === location.pathname.toLowerCase()
+  );
 
   return (
     <RootLayout>
-      {location.pathname !== "/login" && location.pathname !== "/register" && <Header />}
+      {shouldShowHeader && <Header />}
       <Routes>
         {/*Unprotected Routes (Anyone can access)*/}
         <Route path="/" element={<HomeContents />} />
@@ -47,7 +57,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <AppContent />
+          <ChatProvider>
+            <AppContent />
+          </ChatProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
