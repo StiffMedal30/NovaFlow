@@ -10,12 +10,12 @@ import toast from 'react-hot-toast';
 export default function ChatPage() {
   const { currentTheme } = useTheme();
   const { 
-    getCurrentSession, 
     addMessage, 
+    addMessageToSession,
     isLoading, 
     setLoading,
-    createSession,
-    currentSessionId 
+    sessions,
+    currentSessionId
   } = useChat();
 
   const [isTyping, setIsTyping] = useState(false);
@@ -23,8 +23,10 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for textarea
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track auto-send timeout
 
-  // Get current session messages
-  const currentSession = getCurrentSession();
+  // Get current session messages - memoized to avoid recalculation on every render
+  const currentSession = useMemo(() => {
+    return sessions.find(s => s.id === currentSessionId) || null;
+  }, [sessions, currentSessionId]);
   const messages = currentSession?.messages || [];
 
   const {
@@ -39,8 +41,6 @@ export default function ChatPage() {
       toast.error("Your browser does not support speech recognition. Please use a supported browser in order to use this feature.");
       return;
     } else {
-      console.log("Listening: ", listening);
-
       if(listening) {
         SpeechRecognition.stopListening();
       } else {
@@ -76,13 +76,8 @@ export default function ChatPage() {
       textareaRef.current.style.height = '48px';
     }
 
-    // Create session if none exists
-    if (!currentSessionId) {
-      createSession();
-    }
-
-    // Add user message using chat provider
-    addMessage({
+    // Add user message using chat provider (will auto-create session if needed)
+    const sessionId = addMessage({
       content: messageText,
       sender: 'user',
       timestamp: new Date()
@@ -91,14 +86,14 @@ export default function ChatPage() {
     // Simulate AI response
     setLoading(true);
     setTimeout(() => {
-      addMessage({
+      addMessageToSession(sessionId, {
         content: `I received your message: "${messageText}". This is a mock response from the AI.`,
         sender: 'assistant',
         timestamp: new Date()
       });
       setLoading(false);
     }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
-  }, [inputText, listening, isLoading, currentSessionId, createSession, addMessage, setLoading]);
+  }, [inputText, listening, isLoading, addMessage, addMessageToSession, setLoading]);
 
   const handleType = (text: string) => {
     setIsTyping(true);

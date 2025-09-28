@@ -16,11 +16,12 @@ export interface ChatState {
   currentSessionId: string | null;
   isLoading: boolean;
   error: string | null;
+  isInitialized: boolean;
 }
 
 // Actions
 type ChatAction =
-  | { type: 'CREATE_SESSION'; payload: { title?: string } }
+  | { type: 'CREATE_SESSION'; payload: { title?: string; sessionId: string } }
   | { type: 'SET_CURRENT_SESSION'; payload: { sessionId: string } }
   | { type: 'ADD_MESSAGE'; payload: { sessionId: string; message: ChatMessage } }
   | { type: 'UPDATE_MESSAGE'; payload: { sessionId: string; messageId: string; updates: Partial<ChatMessage> } }
@@ -37,6 +38,7 @@ const initialState: ChatState = {
   currentSessionId: null,
   isLoading: false,
   error: null,
+  isInitialized: false, // Add flag to track initialization
 };
 
 // Reducer
@@ -44,7 +46,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case 'CREATE_SESSION': {
       const newSession: ChatSession = {
-        id: Date.now().toString(),
+        id: action.payload.sessionId,
         title: action.payload.title || 'New Chat',
         messages: [],
         createdAt: new Date(),
@@ -152,6 +154,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         sessions: action.payload.sessions,
         isLoading: false,
         error: null,
+        isInitialized: true, // Mark as initialized after loading
       };
     }
     
@@ -177,7 +180,8 @@ interface ChatContextType extends ChatState {
   clearCurrentSession: () => void;
   
   // Message management  
-  addMessage: (message: Omit<ChatMessage, 'id'>) => void;
+  addMessage: (message: Omit<ChatMessage, 'id'>) => string;
+  addMessageToSession: (sessionId: string, message: Omit<ChatMessage, 'id'>) => void;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   
   // Getters
@@ -199,7 +203,7 @@ const CURRENT_SESSION_KEY = 'novaflow_current_session';
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   
-  // Load sessions from localStorage on mount
+  // Load sessions from localStorage on mount (TODO: Change to load from api when available)
   useEffect(() => {
     try {
       const savedSessions = localStorage.getItem(STORAGE_KEY);
@@ -210,6 +214,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           ...session,
           createdAt: new Date(session.createdAt),
           updatedAt: new Date(session.updatedAt),
+          messages: session.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          })),
         }));
         
         dispatch({ type: 'LOAD_SESSIONS', payload: { sessions } });
@@ -224,14 +232,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
   
-  // Save sessions to localStorage whenever sessions change
+  // Save sessions to localStorage whenever sessions change (but only after initialization)
   useEffect(() => {
+    if (!state.isInitialized) {
+      return;
+    }
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sessions));
     } catch (error) {
       console.error('Failed to save chat sessions:', error);
     }
-  }, [state.sessions]);
+  }, [state.sessions, state.isInitialized]);
   
   // Save current session whenever it changes
   useEffect(() => {
@@ -248,9 +260,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   
   // Session management
   const createSession = useCallback((title?: string): string => {
-    dispatch({ type: 'CREATE_SESSION', payload: { title } });
-    // Return the new session ID (timestamp-based)
-    return Date.now().toString();
+    const sessionId = Date.now().toString();
+    dispatch({ type: 'CREATE_SESSION', payload: { title, sessionId } });
+    return sessionId;
   }, []);
   
   const setCurrentSession = useCallback((sessionId: string) => {
@@ -270,23 +282,31 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   // Message management
-  const addMessage = useCallback((message: Omit<ChatMessage, 'id'>) => {
-    if (!state.currentSessionId) {
+  const addMessage = useCallback((message: Omit<ChatMessage, 'id'>): string => {
+    let targetSessionId = state.currentSessionId;
+    
+    if (!targetSessionId) {
       // Auto-create session if none exists
-      const newSessionId = createSession();
-      const messageWithId: ChatMessage = {
-        ...message,
-        id: Date.now().toString() + '-' + message.sender,
-      };
-      dispatch({ type: 'ADD_MESSAGE', payload: { sessionId: newSessionId, message: messageWithId } });
-    } else {
-      const messageWithId: ChatMessage = {
-        ...message,
-        id: Date.now().toString() + '-' + message.sender,
-      };
-      dispatch({ type: 'ADD_MESSAGE', payload: { sessionId: state.currentSessionId, message: messageWithId } });
+      targetSessionId = createSession();
     }
+    
+    const messageWithId: ChatMessage = {
+      ...message,
+      id: Date.now().toString() + '-' + message.sender,
+    };
+    
+    dispatch({ type: 'ADD_MESSAGE', payload: { sessionId: targetSessionId, message: messageWithId } });
+    return targetSessionId;
   }, [state.currentSessionId, createSession]);
+  
+  const addMessageToSession = useCallback((sessionId: string, message: Omit<ChatMessage, 'id'>) => {
+    const messageWithId: ChatMessage = {
+      ...message,
+      id: Date.now().toString() + '-' + message.sender,
+    };
+    
+    dispatch({ type: 'ADD_MESSAGE', payload: { sessionId, message: messageWithId } });
+  }, []);
   
   const updateMessage = useCallback((messageId: string, updates: Partial<ChatMessage>) => {
     if (state.currentSessionId) {
@@ -325,6 +345,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     updateSessionTitle,
     clearCurrentSession,
     addMessage,
+    addMessageToSession,
     updateMessage,
     getCurrentSession,
     getRecentSessions,

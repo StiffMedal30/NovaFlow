@@ -79,7 +79,7 @@ export default function RegisterPage() {
         navigate("/login");
       }, 1000);
 
-    } catch (error) {
+    } catch {
       toast.error("Registration failed. Please try again.");
     } finally {
       setIsLoading(false);

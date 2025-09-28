@@ -3,7 +3,6 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./store/authStore";
 import RootLayout from "./Pages/Home/layout";
-import { Header } from "./components/header";
 import { HomeContents } from "./components/home-contents";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import LoginPage from "./Pages/Login/page";
@@ -20,18 +19,11 @@ function AppContent() {
     const isChatPage = location.pathname.toLowerCase() === '/chat';
     document.body.style.backgroundColor = isChatPage
       ? currentTheme.colors.secondary_background
-      : currentTheme.colors.background;
+      : currentTheme.colors.secondary_background;
   }, [currentTheme, location.pathname]);
-  
-  // Check if header should be shown (case-insensitive)
-  const hiddenHeaderPaths = ["/login", "/register", "/chat"];
-  const shouldShowHeader = !hiddenHeaderPaths.some(path => 
-    path.toLowerCase() === location.pathname.toLowerCase()
-  );
 
   return (
     <RootLayout>
-      {shouldShowHeader && <Header />}
       <Routes>
         {/*Unprotected Routes (Anyone can access)*/}
         <Route path="/" element={<HomeContents />} />
