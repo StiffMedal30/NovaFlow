@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: ai-service
+  profiles:
+    active: dev   # <-- this makes sure it fetches ai-service-dev.yml + application-dev.yml
 
   config:
     import: "configserver:http://localhost:7090/"  # Pull config from config server
