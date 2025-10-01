@@ -7,7 +7,7 @@ spring:
 
   config:
     import: "configserver:http://config-server:7090/"  # Pull config from config server
-    label: develop
+    # label: develop
 
   cloud:
     config:

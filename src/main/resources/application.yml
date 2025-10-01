@@ -4,10 +4,11 @@ server:
 spring:
   application:
     name: api-gateway
+  profiles:
+    active: dev   # <-- this makes sure it fetches api-gateway-dev.yml + application-dev.yml
 
   config:
     import: "configserver:http://localhost:7090/"  # Pull config from config server
-    label: develop
 
   cloud:
     config:
