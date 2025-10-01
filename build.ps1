@@ -12,8 +12,8 @@ function ErrorExit($message) {
 
 function UpdateBranch() {
     Write-Host "🔄 Updating branch in $(Get-Location)..."
-    git checkout develop | Out-Null
-    git pull origin develop | Out-Null
+    # git checkout develop | Out-Null
+    # git pull origin develop | Out-Null
 }
 
 function Build-Service($service) {

@@ -12,8 +12,8 @@ error_exit() {
 # Function to update branch
 update_branch() {
     echo "🔄 Updating branch in $(pwd)..."
-    git checkout develop || error_exit "Failed to checkout develop branch"
-    git pull origin develop || error_exit "Failed to pull latest develop branch"
+    # git checkout develop || error_exit "Failed to checkout develop branch"
+    # git pull origin develop || error_exit "Failed to pull latest develop branch"
 }
 
 # Function to build a service
