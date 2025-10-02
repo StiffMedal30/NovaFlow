@@ -11,7 +11,7 @@ spring:
   cloud:
     config:
       uri: http://config-server:7090/  # Location of config server
-      fail-fast: true
+      fail-fast: false
       retry:
         max-attempts: 10
         initial-interval: 2000
