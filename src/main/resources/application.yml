@@ -7,9 +7,6 @@ spring:
   profiles:
     active: dev   # <-- this makes sure it fetches api-gateway-dev.yml + application-dev.yml
 
-  config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
-
   cloud:
     config:
       uri: http://localhost:7090  # Location of config server
