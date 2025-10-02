@@ -1,4 +1,4 @@
-package za.co.chat_service;
+package za.co.chat.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
