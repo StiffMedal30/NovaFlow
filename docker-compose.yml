@@ -122,7 +122,21 @@ services:
       - eureka
       - config-server
     ports:
-      - "8081:8080"
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - app-network
+    restart: always
+
+  chat-service:
+    image: chat-service
+    container_name: chat-service
+    depends_on:
+      - eureka
+      - config-server
+    ports:
+      - "8085:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     networks:
@@ -137,7 +151,7 @@ services:
     networks:
       - app-network
     restart: always
-  
+
   ollama-gpu: # Ollama with GPU support
     image: ollama/ollama:latest
     container_name: ollama
