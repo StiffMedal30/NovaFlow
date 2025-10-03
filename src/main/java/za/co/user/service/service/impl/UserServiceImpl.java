@@ -18,6 +18,7 @@ import za.co.user.service.service.EmailService;
 import za.co.user.service.service.UserService;
 import za.co.user.service.utilities.Converter;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -173,6 +174,21 @@ public class UserServiceImpl implements UserService {
     public AppUserEntity findByUsername(String name) {
         Optional<AppUserEntity> user = userRepository.findByUsername(name);
         return Converter.optionalToEntity(user);
+    }
+
+    @Override
+    public void deleteCollaborator(Long collaboratorId, Principal admin) {
+        // Find the collaborator and verify they belong to the requesting admin
+        AppUserEntity collaborator = userRepository.findByIdAndAdmin_Username(collaboratorId, admin.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Collaborator not found or does not belong to this admin"));
+
+        // Additional security check: ensure the collaborator has COLLABORATOR role
+        if (!Objects.equals(collaborator.getRole().toString(), "COLLABORATOR")) {
+            throw new IllegalArgumentException("Cannot delete user: not a collaborator");
+        }
+
+        // Delete the collaborator
+        userRepository.delete(collaborator);
     }
 
 
