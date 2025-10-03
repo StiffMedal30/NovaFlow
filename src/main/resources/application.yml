@@ -1,6 +1,42 @@
 server:
   port: 8082
 
+spring:
+  application:
+    name: user-service
+  profiles:
+    active: dev 
+
+  config:
+    import: "configserver:http://localhost:7090/"  # Pull config from config server
+    # label: develop
+
+  cloud:
+    config:
+      uri: http://localhost:7090  # Location of config server
+      fail-fast: true
+      retry:
+        max-attempts: 10
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+
+  liquibase:
+    drop-first: false
+
+  jpa:
+    show-sql: true
+
+  mail:
+    host: mail.dotze.co.za
+    port: 465
+    username: no-reply@dotze.co.za
+    password: OjaX?oW^c0@6
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+
+
 app:
   mail:
     account-activation-url: http://localhost:8081/api-gateway/api/account/activate
@@ -36,39 +72,3 @@ app:
           </body>
       </html>
 
-
-spring:
-  application:
-    name: user-service
-
-  profiles:
-    active: dev
-
-  config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
-    label: develop
-
-  cloud:
-    config:
-      uri: http://localhost:7090  # Location of config server
-      fail-fast: true
-      retry:
-        max-attempts: 10
-        initial-interval: 2000
-        multiplier: 1.5
-        max-interval: 10000
-
-  liquibase:
-    drop-first: false
-
-  jpa:
-    show-sql: true
-
-  mail:
-    host: mail.dotze.co.za
-    port: 465
-    username: no-reply@dotze.co.za
-    password: OjaX?oW^c0@6
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
