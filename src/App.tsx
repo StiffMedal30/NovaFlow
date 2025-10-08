@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./store/authStore";
 import RootLayout from "./Pages/Home/layout";
-import { Header } from "./components/header";
 import { HomeContents } from "./components/home-contents";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import LoginPage from "./Pages/Login/page";
@@ -16,12 +16,14 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    document.body.style.backgroundColor = currentTheme.colors.background;
-  }, [currentTheme]);
+    const isChatPage = location.pathname.toLowerCase() === '/chat';
+    document.body.style.backgroundColor = isChatPage
+      ? currentTheme.colors.secondary_background
+      : currentTheme.colors.secondary_background;
+  }, [currentTheme, location.pathname]);
 
   return (
     <RootLayout>
-      {location.pathname !== "/login" && location.pathname !== "/register" && <Header />}
       <Routes>
         {/*Unprotected Routes (Anyone can access)*/}
         <Route path="/" element={<HomeContents />} />
@@ -47,7 +49,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <AppContent />
+          <ChatProvider>
+            <AppContent />
+          </ChatProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import GlobalStyles from "../../app/GlobalStyles";
 
@@ -130,7 +130,7 @@ export function MockAnalytics() {
       style={{
         width: "100%",
         maxWidth: 600,
-        background: currentTheme.colors.secondary_background,
+        background: currentTheme.colors.background,
         borderRadius: 18,
         boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
         border: `1.5px solid ${currentTheme.colors.border}`,
