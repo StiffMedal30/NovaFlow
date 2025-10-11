@@ -36,25 +36,25 @@ export function LeftSideMenu() {
       <div className="flex flex-col gap-2 flex-grow">
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
           onClick={(e) => {
             e.preventDefault();
             navigate("/Chat");
           }}
         >
-          <Bot size={20} className="mr-2" /> Chat
+          <Bot size={20} /> Chat
         </a>
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
         >
-          <Lightbulb size={20} className="mr-2" /> Ideas
+          <Lightbulb size={20} /> Ideas
         </a>
         <a
           href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center"
+          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
         >
-          <FileQuestionMarkIcon size={20} className="mr-2" /> Something else
+          <FileQuestionMarkIcon size={20} /> Something else
         </a>
       </div>
 

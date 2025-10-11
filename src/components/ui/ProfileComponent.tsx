@@ -2,7 +2,6 @@ import { CircleUserRound, Settings } from "lucide-react";
 import { SettingsDropdown } from "./settings-dropdown"
 import { useTheme } from "../../context/ThemeContext";
 
-
 const ProfileComponent = () => {
   const { currentTheme } = useTheme();
 

@@ -1,23 +1,43 @@
 
-import { MockAnalytics } from "./Sections/MockAnalytics";
-import { Chats } from "./Sections/Chats";
+import { MockAnalytics } from "./Cards/MockAnalytics";
+import { Chats } from "./Cards/Chats";
+import { MockPieChart } from "./Cards/MockPieChart";
 import { LeftSideMenu } from "./left-side-menu";
 import ProfileComponent from "./ui/ProfileComponent";
+import HomeTopMenu from "./ui/HomeTopMenu";
 
 export function HomeContents() {
   return (
-    <div className="flex h-screen overflow-hidden fixed inset-0">
+    <div className="flex h-screen overflow-hidden">
       <LeftSideMenu />
       
-      {/* ProfileComponent positioned at top right */}
-      <div className="fixed top-4 right-4 z-20">
-        <ProfileComponent />
-      </div>
-      
-      <div className="flex-1 ml-[220px] h-screen overflow-hidden flex flex-col">
-        <div className="w-full flex-1 flex justify-center items-start p-8 gap-8 overflow-y-auto">
-          <Chats />
-          <MockAnalytics />
+      <div className="flex-1 ml-64 flex flex-col">
+        {/* Top Bar with Menus */}
+        <div className="flex justify-between items-center pt-3 pb-3 z-20 border-b border-background mr-10 ml-5">
+          <div className="flex-1 flex justify-center">
+            <HomeTopMenu />
+          </div>
+          <div className="flex-shrink-0">
+            <ProfileComponent />
+          </div>
+        </div>
+        
+        {/* Main Content Area - Grid Layout */}
+        <div className="flex-1 pl-4 pr-8 py-8 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-4 gap-6">
+            {/* First Row */}
+            <div className="col-span-2">
+              <Chats />
+            </div>
+            <MockAnalytics />
+            <MockPieChart />
+            
+            {/* Second Row */}
+            <MockPieChart />
+            <MockPieChart />
+            <MockPieChart />
+            <MockPieChart />
+          </div>
         </div>
       </div>
     </div>

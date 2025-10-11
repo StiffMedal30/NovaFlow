@@ -39,7 +39,7 @@ export function ChatSideMenu() {
         color: currentTheme.colors.text,
       }}
     >
-        <div className='group flex items-center gap-3 mb-8'>
+        <div className='group flex items-center gap-2 mb-8'>
             <Sparkles
                 size={24}
                 color={'#7f5af0'}
@@ -53,45 +53,17 @@ export function ChatSideMenu() {
         {/* Home Button */}
         <button
             onClick={()=>{navigate('/home')}}
-            className="flex items-center gap-3 px-3 py-2 mt-2 rounded-lg transition-all duration-200 border hover:scale-[1.00] text-sm"
-            style={{
-            borderColor: currentTheme.colors.background,
-            background: currentTheme.colors.background,
-            color: currentTheme.colors.text,
-            }}
-            onMouseEnter={(e) => {
-            e.currentTarget.style.background = currentTheme.colors.primary;
-            e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-            e.currentTarget.style.background = currentTheme.colors.background;
-            e.currentTarget.style.color = currentTheme.colors.text;
-            }}
+            className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
         >
-            <Home size={20} />
-            <span>Home</span>
+            <Home size={20} /> Home
         </button>
 
       {/* New Chat Button */}
         <button
             onClick={handleNewChat}
-            className="flex items-center gap-3 px-3 py-2 mt-2 rounded-lg transition-all duration-200 border hover:scale-[1.00] text-sm"
-            style={{
-            borderColor: currentTheme.colors.background,
-            background: currentTheme.colors.background,
-            color: currentTheme.colors.text,
-            }}
-            onMouseEnter={(e) => {
-            e.currentTarget.style.background = currentTheme.colors.primary;
-            e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-            e.currentTarget.style.background = currentTheme.colors.background;
-            e.currentTarget.style.color = currentTheme.colors.text;
-            }}
+            className="px-3 py-2 mt-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
         >
-            <Plus size={20} />
-            <span>New Chat</span>
+            <Plus size={20} /> New Chat
         </button>
 
         {/* Divider */}
@@ -99,12 +71,12 @@ export function ChatSideMenu() {
       
       {/* Recent Chats */}
       <div className="flex flex-col gap-1 flex-grow overflow-y-auto">
-        <h3 className="text-sm font-normal mb-2 opacity-70 flex items-center">
+        <h3 className="text-sm font-normal mb-2 opacity-70 flex items-center text-text">
             <List size={16} className="inline-block mr-1" /> Recent Chats
         </h3>
         
         {recentSessions.length === 0 ? (
-          <div className="text-sm opacity-50 text-center py-4">
+          <div className="text-sm opacity-50 text-center py-4 text-text">
             No recent chats
           </div>
         ) : (
@@ -112,7 +84,7 @@ export function ChatSideMenu() {
             <div
               key={session.id}
               onClick={() => handleSelectSession(session.id)}
-              className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer relative hover:scale-[1.00]"
+              className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer relative hover:scale-[1.00] text-text"
               style={{
                 background: session.id === currentSessionId 
                   ? currentTheme.colors.accent + '20' 
@@ -120,7 +92,6 @@ export function ChatSideMenu() {
                 borderLeft: session.id === currentSessionId 
                   ? `3px solid ${currentTheme.colors.accent}` 
                   : '3px solid transparent',
-                color: currentTheme.colors.text,
               }}
               onMouseEnter={(e) => {
                 if (session.id !== currentSessionId) {
@@ -148,8 +119,7 @@ export function ChatSideMenu() {
               {/* Delete button */}
               <button
                 onClick={(e) => handleDeleteSession(session.id, e)}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
-                style={{ color: currentTheme.colors.text }}
+                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all text-text"
               >
                 <Trash2 size={14} />
               </button>

@@ -6,6 +6,7 @@ import ChatContainer from '../../components/ui/chat-container';
 import { ChatSideMenu } from '../../components/ui/chat-side-menu';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import toast from 'react-hot-toast';
+import { LLMPersonaMenu } from '../../components/ui/llm_persona_menu';
 
 export default function ChatPage() {
   const { currentTheme } = useTheme();
@@ -251,6 +252,8 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+
+    <LLMPersonaMenu />
     </div>
   );
 }
