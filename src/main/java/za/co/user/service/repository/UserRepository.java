@@ -18,4 +18,8 @@ public interface UserRepository extends JpaRepository<AppUserEntity, Long> {
     Optional<AppUserEntity> findByIdAndAdmin_Username(Long id, String adminUsername);
     
     List<AppUserEntity> findByAdmin_Username(String adminUsername);
+
+    // Checking if user exists by email or username
+    boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
 }
