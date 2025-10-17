@@ -51,6 +51,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 path.equals("/api/user/password/reset") ||
                 path.equals("/api/link") ||
                 path.equals("/api/debug/mappings") ||
+                path.equals("/api/user/check-registered") ||
                 path.equals("/error");
     }
 

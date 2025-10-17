@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/api/user/password/reset",
                                 "/api/link",
                                 "/api/debug/mappings",
+                                "/api/user/check-registered",
                                 "/error/**").permitAll() // Allow these
                         .anyRequest().authenticated() // All else requires JWT
                 )
