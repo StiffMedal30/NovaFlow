@@ -15,6 +15,15 @@ export interface Idea {
     aiResponse: string;
 }
 
+interface RefinedIdea {
+    idea: Idea;
+    refinedRequest: _RefinedRequest;
+}
+
+interface _RefinedRequest {
+    
+}
+
 // ------------------------------------------------------
 // Chats
 // ------------------------------------------------------

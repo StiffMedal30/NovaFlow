@@ -47,6 +47,10 @@ export function LeftSideMenu() {
         <a
           href="#"
           className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/Idea");
+          }}
         >
           <Lightbulb size={20} /> Ideas
         </a>

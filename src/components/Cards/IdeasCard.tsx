@@ -59,7 +59,7 @@ function IdeasCard({  }: IdeasCardProps) {
                     <h2 className="text-xl font-semibold text-text">Recent Ideas</h2>
                 </div>
                 <button
-                    onClick={() => navigate('/chat')} //Change when ideas page is ready
+                    onClick={() => navigate('/idea')} //Change when ideas page is ready
                     className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-text hover:bg-primary transition-colors rounded-lg"
                 >
                     View All <ArrowRight size={16} />
