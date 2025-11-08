@@ -5,8 +5,14 @@ import { MockPieChart } from "./Cards/MockPieChart";
 import { LeftSideMenu } from "./left-side-menu";
 import ProfileComponent from "./ui/ProfileComponent";
 import HomeTopMenu from "./ui/HomeTopMenu";
+import { IdeasCard } from "./Cards/IdeasCard";
 
 export function HomeContents() {
+
+  function LoadIdeas() {
+
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       <LeftSideMenu />
@@ -29,14 +35,14 @@ export function HomeContents() {
             <div className="col-span-2">
               <Chats />
             </div>
-            <MockAnalytics />
+            <IdeasCard />
             <MockPieChart />
             
             {/* Second Row */}
+            <MockAnalytics />
             <MockPieChart />
             <MockPieChart />
-            <MockPieChart />
-            <MockPieChart />
+            <MockAnalytics />
           </div>
         </div>
       </div>

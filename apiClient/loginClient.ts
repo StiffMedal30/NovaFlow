@@ -1,5 +1,7 @@
+import config from "../src/appconfig.json";
+
 //For local testing obviously
-const API_BASE_URL = 'http://localhost:8081';
+const API_BASE_URL = config.API_BASE_URL_DEV;
 
 // Types for login
 export interface LoginRequest {

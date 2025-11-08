@@ -1,4 +1,3 @@
-import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useChat } from "../../context/ChatContext";
 import { MessageSquare, Clock, ArrowRight } from "lucide-react";

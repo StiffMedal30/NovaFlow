@@ -14,19 +14,8 @@ const ProfileComponent = () => {
             boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
             border: `1.5px solid ${currentTheme.colors.border}`,
           }}
-        >
+        >            
           {/* Settings Button */}
-          <button
-            className="flex items-center justify-center p-2 rounded-lg hover:opacity-70 transition-opacity"
-            style={{ color: currentTheme.colors.text }}
-          >
-            <Settings 
-              size={20}
-              color={currentTheme.colors.text}
-            />
-          </button>
-          
-          {/* Profile Dropdown */}
           <SettingsDropdown>
             <button
               className="flex items-center justify-center p-1 cursor-pointer outline-none hover:opacity-80 transition-opacity"
@@ -35,13 +24,25 @@ const ProfileComponent = () => {
                 border: 'none',
               }}
             >
-              <CircleUserRound
-                size={36}
-                style={{ color: currentTheme.colors.text }}
-                strokeWidth={1.2}
+              <Settings 
+                size={22}
+                color={currentTheme.colors.text}
               />
             </button>
           </SettingsDropdown>
+
+          {/* Profile Dropdown */}
+          <button
+            className="flex items-center justify-center p-2 rounded-lg hover:opacity-70 transition-opacity"
+            style={{ color: currentTheme.colors.text }}
+          >
+            {/* Will be replaced with actual user icon or profile photo */}
+            <CircleUserRound
+              size={36}
+              style={{ color: currentTheme.colors.text }}
+              strokeWidth={1.2}
+            />
+          </button>
         </div>
     );
 }

@@ -21,7 +21,7 @@ export function SettingsDropdown({ children }: SettingsDropdownProps) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-                className="w-80 max-h-100 bg-secondary-background border border-border rounded-lg p-3 text-text shadow-lg"
+                className="w-80 max-h-100 bg-background border border-border rounded-lg p-3 text-text shadow-lg"
       >
         {/* Menu Header */}
         <div className="mb-3 pb-2 border-b border-border text-lg font-normal text-text">
