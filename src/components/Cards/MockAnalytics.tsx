@@ -140,7 +140,6 @@ export function MockAnalytics() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        marginTop: "4.5rem",
       }}
     >
       <h2 style={{ ...styles.h2, marginBottom: 12 }}>Analytics</h2>
