@@ -14,7 +14,7 @@ import java.util.Map;
 public class IdeaController extends BaseController {
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNewIdea(@RequestBody Map<String, String> idea) {
+    public ResponseEntity<?> addNewIdea(@RequestBody Map<String, Object> idea) {
         try {
             return forwardPostRequest(IDEA_SERVICE + "/add", idea);
         } catch (Exception e) {
