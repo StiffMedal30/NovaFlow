@@ -45,4 +45,14 @@ public class UserController extends BaseController {
                     .body(Map.of("error", "Reset failed: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/check-registered")
+    public ResponseEntity<?> checkRegister(@RequestBody Map<String, String> user) {
+        try {
+            return forwardPostRequest(USER_SERVICE + "/check-registered", user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Check registration failed: " + e.getMessage()));
+        }
+    }
 }
