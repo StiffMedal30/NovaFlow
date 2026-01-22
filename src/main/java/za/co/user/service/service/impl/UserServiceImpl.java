@@ -17,6 +17,8 @@ import za.co.user.service.service.CustomUserService;
 import za.co.user.service.service.EmailService;
 import za.co.user.service.service.UserService;
 import za.co.user.service.utilities.Converter;
+import za.co.user.service.records.CheckUserRequest;   
+import za.co.user.service.records.CheckUserResponse;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -191,5 +193,34 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(collaborator);
     }
 
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public CheckUserResponse checkUserAvailability(CheckUserRequest request) {
+        boolean emailExists = existsByEmail(request.email());
+        boolean usernameExists = existsByUsername(request.username());
+        
+        boolean valid = !emailExists && !usernameExists;
+        String message = valid ? "Username and email are available" :
+                        (emailExists && usernameExists) ? "Both email and username are already taken" :
+                        emailExists ? "Email is already taken" : "Username is already taken";
+        
+        return new CheckUserResponse(
+            valid, 
+            request.email(), 
+            request.username(), 
+            emailExists, 
+            usernameExists, 
+            message
+        );
+    }
 
 }

@@ -6,11 +6,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus; 
 import za.co.user.service.records.AppUserRecord;
 import za.co.user.service.records.JwtResponseRecord;
 import za.co.user.service.records.NewPasswordRecord;
 import za.co.user.service.service.UserService;
 import za.co.user.service.service.impl.UserServiceImpl;
+import za.co.user.service.records.CheckUserRequest; 
+import za.co.user.service.records.CheckUserResponse;
+import jakarta.validation.Valid;
 
 import java.util.Map;
 import java.util.Objects;
@@ -57,4 +61,25 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/check-registered")
+    public ResponseEntity<CheckUserResponse> checkUserRegistered(@Valid @RequestBody CheckUserRequest request) {
+        try {
+            CheckUserResponse response = userService.checkUserAvailability(request);
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            CheckUserResponse errorResponse = new CheckUserResponse(
+                false, 
+                request.email(), 
+                request.username(), 
+                false, 
+                false, 
+                "Unable to check availability at this time"
+            );
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }
+
