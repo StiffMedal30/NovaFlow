@@ -6,38 +6,42 @@ Param(
 $ErrorActionPreference = "Stop"
 
 function ErrorExit($message) {
-    Write-Host "❌ ERROR: $message" -ForegroundColor Red
+    Write-Host "ERROR: $message" -ForegroundColor Red
     exit 1
 }
 
 function UpdateBranch() {
-    Write-Host "🔄 Updating branch in $(Get-Location)..."
+    Write-Host "Updating branch in $(Get-Location)..."
     # git checkout develop | Out-Null
     # git pull origin develop | Out-Null
 }
 
 function Build-Service($service) {
-    Write-Host "📂 Changing directory to $service..."
-    Set-Location "..\$service" -ErrorAction Stop
+    Write-Host "Changing directory to $service..."
+    Set-Location (Join-Path $PSScriptRoot "..\$service") -ErrorAction Stop
 
     UpdateBranch
 
-    Write-Host "🛠 Running Gradle clean build for $service..."
-    if (!(gradle clean build)) {
+    Write-Host "Running Gradle clean build for $service..."
+    try {
+        gradle clean build
+    } catch {
         ErrorExit "Gradle build failed for $service"
     }
 
-    Write-Host "🛑 Stopping old Docker container (if exists)..."
+    Write-Host "Stopping old Docker container (if exists)..."
     docker container stop $service 2>$null
 
-    Write-Host "🗑 Removing old Docker container (if exists)..."
+    Write-Host "Removing old Docker container (if exists)..."
     docker container rm $service 2>$null
 
-    Write-Host "🗑 Removing old Docker image (if exists)..."
-    docker image rm $service 2>$null
+    Write-Host "Removing old Docker image (if exists)..."
+    docker image rm "$service:latest" -f 2>$null
 
-    Write-Host "📦 Building new Docker image for $service..."
-    if (!(docker build -t $service .)) {
+    Write-Host "Building new Docker image for $service..."
+    try {
+        docker build -t $service .
+    } catch {
         ErrorExit "Docker build failed for $service"
     }
 
@@ -45,18 +49,23 @@ function Build-Service($service) {
 }
 
 function Build-Novafront() {
-    Write-Host "📂 Changing directory to novafront..."
-    Set-Location "../novafront" -ErrorAction Stop
+    Write-Host "Changing directory to novafront..."
+    Set-Location (Join-Path $PSScriptRoot "../novafront") -ErrorAction Stop
 
     UpdateBranch
 
-    Write-Host "🛠 Running npm build for novafront..."
-    if (!(npm install) -or !(npm run build)) {
+    Write-Host "Running npm build for novafront..."
+    try {
+        npm install
+        npm run build
+    } catch {
         ErrorExit "Frontend build failed for novafront"
     }
 
-    Write-Host "📦 Building new Docker image for novafront..."
-    if (!(docker build -t novafront .)) {
+    Write-Host "Building new Docker image for novafront..."
+    try {
+        docker build -t novafront .
+    } catch {
         ErrorExit "Docker build failed for novafront"
     }
 
@@ -64,13 +73,15 @@ function Build-Novafront() {
 }
 
 function Start-Compose([string[]]$services) {
-    Write-Host "📂 Changing directory to builder..."
-    Set-Location "../builder" -ErrorAction Stop
+    Write-Host "Changing directory to builder..."
+    Set-Location (Join-Path $PSScriptRoot "../builder") -ErrorAction Stop
 
-#    UpdateBranch
+    # UpdateBranch  # optional
 
-    Write-Host "🚀 Starting services with Docker Compose..."
-    if (!(docker-compose up -d @services)) {
+    Write-Host "Starting services with Docker Compose..."
+    try {
+        docker-compose up -d $services
+    } catch {
         ErrorExit "docker-compose failed"
     }
 
@@ -101,7 +112,9 @@ if ($Target) {
             Build-Service $service
         }
     }
-    Start-Compose @("ai-service", "user-service", "idea-service", "api-gateway", "config-server")
+
+    # Start config-server first, then dependencies
+    Start-Compose @("config-server", "ai-service", "user-service", "idea-service", "api-gateway")
 }
 
-Write-Host "✅ Build and deployment completed successfully!" -ForegroundColor Green
+Write-Host "Build and deployment completed successfully!" -ForegroundColor Green
