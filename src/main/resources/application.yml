@@ -6,6 +6,9 @@ spring:
     name: ai-service
   profiles:
     active: dev   # <-- this makes sure it fetches ai-service-dev.yml + application-dev.yml
+  ai:
+    ollama:
+      base-url: http://localhost:11434
 
   cloud:
     config:
@@ -16,6 +19,12 @@ spring:
         initial-interval: 2000
         multiplier: 1.5
         max-interval: 10000
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+  refinement-model: ${OPENAI_REFINEMENT_MODEL:gpt-5.2}
+  transcription-model: ${OPENAI_TRANSCRIPTION_MODEL:gpt-4o-mini-transcribe}
 
   liquibase:
     drop-first: false
