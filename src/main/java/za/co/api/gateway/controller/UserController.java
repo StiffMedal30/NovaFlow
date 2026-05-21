@@ -1,14 +1,15 @@
 package za.co.api.gateway.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
+import za.co.api.gateway.records.CheckUserRequest;
+import za.co.api.gateway.records.LoginRequest;
+import za.co.api.gateway.records.PasswordResetRequest;
+import za.co.api.gateway.records.RegisterUserRequest;
 
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import java.util.Map;
 public class UserController extends BaseController {
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest credentials) {
         try {
             return forwardPostRequest(USER_SERVICE + "/login", credentials);
         } catch (Exception e) {
@@ -27,7 +28,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> newUser) {
+    public ResponseEntity<?> register(@RequestBody RegisterUserRequest newUser) {
         try {
             return forwardPostRequest(USER_SERVICE + "/register", newUser);
         } catch (Exception e) {
@@ -37,7 +38,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/password/reset")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> newCredentials) {
+    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest newCredentials) {
         try {
             return forwardPostRequest(USER_SERVICE + "/password/reset", newCredentials);
         } catch (Exception e) {
@@ -47,7 +48,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/check-registered")
-    public ResponseEntity<?> checkRegister(@RequestBody Map<String, String> user) {
+    public ResponseEntity<?> checkRegister(@RequestBody CheckUserRequest user) {
         try {
             return forwardPostRequest(USER_SERVICE + "/check-registered", user);
         } catch (Exception e) {

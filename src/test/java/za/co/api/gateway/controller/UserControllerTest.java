@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import za.co.api.gateway.records.LoginRequest;
+import za.co.api.gateway.records.PasswordResetRequest;
+import za.co.api.gateway.records.RegisterUserRequest;
 
 import java.util.Map;
 
@@ -28,7 +31,7 @@ class UserControllerTest {
 
 //    @Test
     void loginReturnsOkWhenAuthServiceRespondsSuccessfully() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "test");
+        LoginRequest credentials = new LoginRequest("test", "test");
         Map<String, String> responseBody = Map.of("token", "mock-jwt-token");
 
         when(restTemplate.postForEntity(eq("http://auth-service/api/user/login"), eq(credentials), eq(Map.class)))
@@ -42,7 +45,7 @@ class UserControllerTest {
 
 //    @Test
     void loginReturnsUnauthorizedWhenAuthServiceFails() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "wrong");
+        LoginRequest credentials = new LoginRequest("test", "wrong");
 
         when(restTemplate.postForEntity(any(String.class), any(Object.class), eq(Map.class)))
                 .thenThrow(new RuntimeException("Unauthorized"));
@@ -55,7 +58,7 @@ class UserControllerTest {
 
 //    @Test
     void registerReturnsOkWhenAuthServiceRespondsSuccessfully() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "test");
+        RegisterUserRequest credentials = new RegisterUserRequest(null, "test", "test", null, null, null, null, null);
         Map<String, String> responseBody = Map.of("message", "User registered successfully");
 
         when(restTemplate.postForEntity(eq("http://auth-service/api/user/register"), eq(credentials), eq(Map.class)))
@@ -69,7 +72,7 @@ class UserControllerTest {
 
 //    @Test
     void registerReturnsInternalServerErrorWhenAuthServiceFails() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "test");
+        RegisterUserRequest credentials = new RegisterUserRequest(null, "test", "test", null, null, null, null, null);
 
         when(restTemplate.postForEntity(any(String.class), any(Object.class), eq(Map.class)))
                 .thenThrow(new RuntimeException("Registration failed"));
@@ -82,7 +85,7 @@ class UserControllerTest {
 
 //    @Test
     void resetPasswordReturnsOkWhenAuthServiceRespondsSuccessfully() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "new-password");
+        PasswordResetRequest credentials = new PasswordResetRequest("test", "test@example.com", "new-password", "new-password");
         Map<String, String> responseBody = Map.of("message", "Password reset successfully");
 
         when(restTemplate.postForEntity(eq("http://auth-service/api/user/password/reset"), eq(credentials), eq(Map.class)))
@@ -96,7 +99,7 @@ class UserControllerTest {
 
 //    @Test
     void resetPasswordReturnsInternalServerErrorWhenAuthServiceFails() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "new-password");
+        PasswordResetRequest credentials = new PasswordResetRequest("test", "test@example.com", "new-password", "new-password");
 
         when(restTemplate.postForEntity(any(String.class), any(Object.class), eq(Map.class)))
                 .thenThrow(new RuntimeException("Reset failed"));
@@ -109,7 +112,7 @@ class UserControllerTest {
 
 //    @Test
     void processRequestReturnsErrorResponseWhenHttpStatusCodeExceptionOccurs() {
-        Map<String, String> credentials = Map.of("username", "test", "password", "test");
+        LoginRequest credentials = new LoginRequest("test", "test");
         HttpStatusCodeException exception = mock(HttpStatusCodeException.class);
 
         when(exception.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST);

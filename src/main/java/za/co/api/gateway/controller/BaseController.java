@@ -16,6 +16,7 @@ import java.util.Map;
 public abstract class BaseController {
 
     public static final String USER_SERVICE = "http://user-service/api/user";
+    public static final String USER_COLLABORATOR_SERVICE = "http://user-service/api/collaborator";
     public static final String IDEA_SERVICE = "http://idea-service/api/idea";
 
     @Autowired
