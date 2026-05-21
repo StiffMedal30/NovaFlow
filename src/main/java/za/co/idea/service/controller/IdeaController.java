@@ -7,9 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import za.co.idea.service.records.IdeaRecord;
+import za.co.idea.service.records.IdeaResponse;
 import za.co.idea.service.service.IdeaService;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/idea")
@@ -19,12 +18,12 @@ public class IdeaController {
     private final IdeaService ideaService;
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, String>> addIdea(@RequestBody IdeaRecord idea) {
+    public ResponseEntity<IdeaResponse> addIdea(@RequestBody IdeaRecord idea) {
         try {
-            ideaService.addIdea(idea);
-            return ResponseEntity.ok(Map.of("message", idea.title() + " has been added."));
+            String refinement = ideaService.addIdea(idea);
+            return ResponseEntity.ok(new IdeaResponse(idea.title() + " has been added.", refinement));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new IdeaResponse(e.getMessage(), null));
         }
     }
 }

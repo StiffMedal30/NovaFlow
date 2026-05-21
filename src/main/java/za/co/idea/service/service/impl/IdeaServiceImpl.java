@@ -13,9 +13,8 @@ public class IdeaServiceImpl implements IdeaService {
     private final AiServiceClient aiClient;
 
     @Override
-    public void addIdea(IdeaRecord idea) {
-        System.out.println("pretend add idea " + idea.title());
-        process(idea);
+    public String addIdea(IdeaRecord idea) {
+        return process(idea);
     }
 
     @Override

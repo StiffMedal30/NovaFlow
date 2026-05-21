@@ -1,7 +1,7 @@
 databaseChangeLog:
 #  - CREATE YML
-#  - include:
-#      file: classpath:/db/changelog/create/001-create-users-table.yml
+  - include:
+      file: classpath:/db/changelog/create/001-create-idea-table.yml
 #  - include:
 #      file: classpath:/db/changelog/create/002-create-ideas-table.yml
 #  - include:
