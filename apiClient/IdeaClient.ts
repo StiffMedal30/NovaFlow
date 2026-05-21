@@ -1,7 +1,4 @@
 import type { Idea } from "../src/app/Types";
-import config from "../src/appconfig.json";
-
-const API_BASE_URL = config.API_BASE_URL_DEV;
 
 //Return a list of mock ideas
 export const fetchIdeas = async (): Promise<Idea[]> => {
@@ -13,4 +10,4 @@ export const fetchIdeas = async (): Promise<Idea[]> => {
         { id: '4', title: 'Fourth Idea', description: 'This is the fourth idea.', aiProcessed: false, aiResponse: '', createdBy: '', createdDate: '10 November 2025', updatedDate: '', status: 'ACTIVE' },
     ];
     return mockIdeas;
-}
+};

@@ -15,13 +15,15 @@ export interface Idea {
     aiResponse: string;
 }
 
-interface RefinedIdea {
+export interface RefinedIdea {
     idea: Idea;
-    refinedRequest: _RefinedRequest;
+    refinedRequest: RefinedRequest;
 }
 
-interface _RefinedRequest {
-    
+export interface RefinedRequest {
+    audience?: string;
+    focusAreas?: string[];
+    tone?: string;
 }
 
 // ------------------------------------------------------

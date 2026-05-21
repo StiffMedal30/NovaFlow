@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect} from "react";
 import themesData from "../app/themes.json";
 
-type Theme = typeof themesData.themes[0];
+export type Theme = typeof themesData.themes[0];
 
 interface ThemeContextType {
   themes: Theme[];

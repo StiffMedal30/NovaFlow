@@ -5,11 +5,7 @@ import type { Idea } from "../../app/Types";
 import { useEffect, useState } from "react";
 import { fetchIdeas } from "../../../apiClient/IdeaClient";
 
-interface IdeasCardProps {
-    
-}
-
-function IdeasCard({  }: IdeasCardProps) {
+function IdeasCard() {
     const { currentTheme } = useTheme();
     const navigate = useNavigate();
 

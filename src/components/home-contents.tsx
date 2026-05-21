@@ -8,11 +8,6 @@ import HomeTopMenu from "./ui/HomeTopMenu";
 import { IdeasCard } from "./Cards/IdeasCard";
 
 export function HomeContents() {
-
-  function LoadIdeas() {
-
-  }
-
   return (
     <div className="flex h-screen overflow-hidden">
       <LeftSideMenu />

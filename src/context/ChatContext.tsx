@@ -199,6 +199,16 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 const STORAGE_KEY = 'novaflow_chat_sessions';
 const CURRENT_SESSION_KEY = 'novaflow_current_session';
 
+type StoredChatMessage = Omit<ChatMessage, 'timestamp'> & {
+  timestamp: string;
+};
+
+type StoredChatSession = Omit<ChatSession, 'createdAt' | 'updatedAt' | 'messages'> & {
+  createdAt: string;
+  updatedAt: string;
+  messages: StoredChatMessage[];
+};
+
 // Provider
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
@@ -210,11 +220,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const savedCurrentSession = localStorage.getItem(CURRENT_SESSION_KEY);
       
       if (savedSessions) {
-        const sessions: ChatSession[] = JSON.parse(savedSessions).map((session: any) => ({
+        const storedSessions = JSON.parse(savedSessions) as StoredChatSession[];
+        const sessions: ChatSession[] = storedSessions.map((session) => ({
           ...session,
           createdAt: new Date(session.createdAt),
           updatedAt: new Date(session.updatedAt),
-          messages: session.messages.map((msg: any) => ({
+          messages: session.messages.map((msg) => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
           })),

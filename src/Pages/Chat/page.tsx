@@ -99,10 +99,10 @@ export default function ChatPage() {
   const handleType = (text: string) => {
     setIsTyping(true);
     setInputText(text);
-  };``
+  };
 
   //Prevent highlighted send button when text is empty
-  useMemo(() => {
+  useEffect(() => {
     if (inputText === '') {
       setIsTyping(false);
     }
@@ -137,7 +137,7 @@ export default function ChatPage() {
         autoSendTimeoutRef.current = null; //Clear the ref after sending
       }, 500);
     }
-  }, [transcript, listening, inputText, handleSend]);
+  }, [transcript, listening, inputText, handleSend, resetTranscript]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

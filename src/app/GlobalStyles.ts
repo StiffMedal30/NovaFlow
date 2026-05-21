@@ -1,4 +1,6 @@
-const GlobalStyles = (theme: any) => ({
+import type { Theme } from "../context/ThemeContext";
+
+const GlobalStyles = (theme: Theme) => ({
   body: {
     margin: 0,
     padding: 0,
