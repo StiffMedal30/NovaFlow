@@ -20,7 +20,7 @@ spring:
         max-interval: 10000
 
   liquibase:
-    drop-first: true
+    drop-first: false
 
   jpa:
     show-sql: true
