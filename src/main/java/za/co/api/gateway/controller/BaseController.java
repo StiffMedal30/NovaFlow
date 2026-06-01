@@ -15,9 +15,11 @@ import java.util.Map;
 
 public abstract class BaseController {
 
-    public static final String USER_SERVICE = "http://user-service/api/user";
-    public static final String USER_COLLABORATOR_SERVICE = "http://user-service/api/collaborator";
-    public static final String IDEA_SERVICE = "http://idea-service/api/idea";
+    public static final String USER_SERVICE = "http://user-service:8082/api/user";
+    public static final String USER_COLLABORATOR_SERVICE = "http://user-service:8082/api/collaborator";
+    public static final String IDEA_SERVICE = "http://idea-service:8083/api/idea";
+    public static final String AI_SERVICE = "http://ai-service:8084/api/ai";
+    public static final String CHAT_SERVICE = "http://chat-service:8085/api/chat";
 
     @Autowired
     protected RestTemplate restTemplate;
@@ -43,6 +45,29 @@ public abstract class BaseController {
                     HttpMethod.POST,
                     requestEntity,
                     Map.class
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));
+        }
+    }
+
+    protected ResponseEntity<?> forwardGetRequest(String url) {
+        HttpHeaders headers = new HttpHeaders();
+
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes instanceof ServletRequestAttributes servletRequestAttributes) {
+            String authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            if (authHeader != null) {
+                headers.set("Authorization", authHeader);
+            }
+        }
+
+        try {
+            return restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    Object.class
             );
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));

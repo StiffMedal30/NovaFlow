@@ -17,7 +17,7 @@ import java.util.Map;
 @RequestMapping("/api")
 public class LinkApi {
 
-    public static final String USER_SERVICE = "http://user-service";
+    public static final String USER_SERVICE = "http://user-service:8082";
     private final RestTemplate restTemplate;
     private final LinkDecoderService linkDecoderService;
 

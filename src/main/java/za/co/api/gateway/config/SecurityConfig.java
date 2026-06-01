@@ -45,6 +45,10 @@ public class SecurityConfig {
                                 "/api/user/password/reset",
                                 "/api/link",
                                 "/api/debug/mappings",
+                                "/api/chat/test",
+                                "/api/idea",
+                                "/api/idea/add",
+                                "/api/ai/transcribe",
                                 "/api/user/check-registered",
                                 "/error/**").permitAll() // Allow these
                         .anyRequest().authenticated() // All else requires JWT
@@ -56,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://novafront:3000")); // Allow react dev server
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173", "http://novafront:3000")); // Allow react dev server
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
