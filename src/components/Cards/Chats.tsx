@@ -29,7 +29,7 @@ function Chats() {
 
   return (
     <div
-      className="w-full h-full mx-auto mt-18 bg-background"
+      className="w-full h-full mx-auto bg-background"
       style={{
         borderRadius: 18,
         boxShadow: "0 4px 24px 0 rgba(0,0,0,0.08)",

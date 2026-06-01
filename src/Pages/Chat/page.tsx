@@ -6,7 +6,7 @@ import ChatContainer from '../../components/ui/chat-container';
 import { ChatSideMenu } from '../../components/ui/chat-side-menu';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import toast from 'react-hot-toast';
-import { LLMPersonaMenu } from '../../components/ui/llm_persona_menu';
+import { sendChatMessage } from '../../../apiClient/ChatClient';
 
 export default function ChatPage() {
   const { currentTheme } = useTheme();
@@ -57,7 +57,7 @@ export default function ChatPage() {
     }
   };
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (inputText.trim() === '') return; //Do not send empty messages (including whitespace)
     if (listening) return; // Don't send while listening
     if (isLoading) return; // Don't send while AI is responding
@@ -84,16 +84,23 @@ export default function ChatPage() {
       timestamp: new Date()
     });
 
-    // Simulate AI response
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await sendChatMessage();
       addMessageToSession(sessionId, {
-        content: `I received your message: "${messageText}". This is a mock response from the AI.`,
+        content: response.message,
         sender: 'assistant',
         timestamp: new Date()
       });
+    } catch (error) {
+      addMessageToSession(sessionId, {
+        content: error instanceof Error ? error.message : 'Chat service is unavailable.',
+        sender: 'assistant',
+        timestamp: new Date()
+      });
+    } finally {
       setLoading(false);
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+    }
   }, [inputText, listening, isLoading, addMessage, addMessageToSession, setLoading]);
 
   const handleType = (text: string) => {
@@ -253,7 +260,6 @@ export default function ChatPage() {
       </div>
     </div>
 
-    <LLMPersonaMenu />
     </div>
   );
 }

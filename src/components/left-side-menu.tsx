@@ -1,7 +1,4 @@
-import { FiInstagram } from "react-icons/fi";
-import { BsTwitterX } from "react-icons/bs";
-import { FaDiscord, FaLinkedinIn } from "react-icons/fa";
-import { Bot, Lightbulb, FileQuestionMarkIcon, Sparkles } from "lucide-react";
+import { Bot, Lightbulb, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 
@@ -53,28 +50,6 @@ export function LeftSideMenu() {
           }}
         >
           <Lightbulb size={20} /> Ideas
-        </a>
-        <a
-          href="#"
-          className="px-3 py-2 rounded-md no-underline text-text hover:bg-primary hover:text-text transition-colors text-sm flex items-center gap-2"
-        >
-          <FileQuestionMarkIcon size={20} /> Something else
-        </a>
-      </div>
-
-      {/* Social Icons at Bottom */}
-      <div className="flex justify-center gap-4 mt-6 pt-4 border-t border-border/20">
-        <a href="#" className="text-text hover:text-primary transition-colors">
-          <FiInstagram size={20} />
-        </a>
-        <a href="#" className="text-text hover:text-primary transition-colors">
-          <BsTwitterX size={20} />
-        </a>
-        <a href="#" className="text-text hover:text-primary transition-colors">
-          <FaDiscord size={20} />
-        </a>
-        <a href="#" className="text-text hover:text-primary transition-colors">
-          <FaLinkedinIn size={20} />
         </a>
       </div>
     </div>
