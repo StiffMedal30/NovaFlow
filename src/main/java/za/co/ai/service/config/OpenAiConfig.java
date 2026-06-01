@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@EnableConfigurationProperties(OpenAiProperties.class)
+@EnableConfigurationProperties({OpenAiProperties.class, AiPromptProperties.class})
 public class OpenAiConfig {
 
     @Bean

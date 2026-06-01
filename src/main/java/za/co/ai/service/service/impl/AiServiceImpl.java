@@ -10,39 +10,38 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
+import za.co.ai.service.config.AiPromptProperties;
 import za.co.ai.service.config.OpenAiProperties;
 import za.co.ai.service.record.IdeaRecord;
 import za.co.ai.service.service.AiService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
 @AllArgsConstructor
 public class AiServiceImpl implements AiService {
+    private static final String IDEA_PLANNING_PROMPT = "idea-planning";
+
     private final RestClient openAiRestClient;
     private final OpenAiProperties openAiProperties;
+    private final AiPromptProperties aiPromptProperties;
 
     @Override
     public String refineIdea(IdeaRecord idea) {
         requireApiKey();
+        AiPromptProperties.PromptDefinition prompt = aiPromptProperties.require(IDEA_PLANNING_PROMPT);
 
         OpenAiResponsesRequest request = new OpenAiResponsesRequest(
                 openAiProperties.refinementModel(),
-                """
-                        You refine rough business ideas into clear, practical startup notes.
-                        Return concise markdown with these sections: Summary, Target customer,
-                        Problem, Proposed solution, Differentiators, Risks, and Next steps.
-                        Keep assumptions explicit and do not invent financial claims.
-                        """,
-                """
-                        Title: %s
-
-                        Raw idea:
-                        %s
-                        """.formatted(idea.title(), idea.description()),
-                900
+                prompt.instructions(),
+                renderTemplate(prompt.inputTemplate(), Map.of(
+                        "title", idea.title(),
+                        "description", idea.description()
+                )),
+                prompt.maxOutputTokens()
         );
 
         OpenAiResponsesResponse response = openAiRestClient.post()
@@ -82,6 +81,14 @@ public class AiServiceImpl implements AiService {
         if (!openAiProperties.hasApiKey()) {
             throw new IllegalStateException("OPENAI_API_KEY is not configured");
         }
+    }
+
+    private String renderTemplate(String template, Map<String, String> values) {
+        String rendered = template;
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            rendered = rendered.replace("{{" + entry.getKey() + "}}", entry.getValue() == null ? "" : entry.getValue());
+        }
+        return rendered;
     }
 
     private String extractText(OpenAiResponsesResponse response) {
