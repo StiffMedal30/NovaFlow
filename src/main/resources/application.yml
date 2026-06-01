@@ -4,16 +4,14 @@ server:
 spring:
   application:
     name: user-service
-  profiles:
-    active: dev 
 
   config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
+    import: "configserver:http://config-server:7090/"  # Pull config from config server
     # label: develop
 
   cloud:
     config:
-      uri: http://localhost:7090  # Location of config server
+      uri: http://config-server:7090  # Location of config server
       fail-fast: true
       retry:
         max-attempts: 10
