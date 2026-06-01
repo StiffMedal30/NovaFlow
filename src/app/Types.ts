@@ -15,6 +15,20 @@ export interface Idea {
     aiResponse: string;
 }
 
+export interface IdeaRequest {
+    title: string;
+    description: string;
+}
+
+export interface IdeaResponse {
+    message: string;
+    refinement: string | null;
+}
+
+export interface TranscriptionResponse {
+    text: string;
+}
+
 export interface RefinedIdea {
     idea: Idea;
     refinedRequest: RefinedRequest;

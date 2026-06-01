@@ -11,20 +11,18 @@ function IdeasCard() {
 
     const [ideas, setIdeas] = useState<Idea[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
     async function getIdeas() {
         setLoading(true);
+        setErrorMessage("");
         try {
             const response = await fetchIdeas();
-
-            if (response === null) {
-                console.error("No ideas found");
-                return;
-            }
-
             setIdeas(response);
         } catch (error) {
             console.error("Error fetching ideas:", error);
+            setIdeas([]);
+            setErrorMessage(error instanceof Error ? error.message : "Could not load ideas.");
         } finally {
             setLoading(false);
         }
@@ -41,7 +39,7 @@ function IdeasCard() {
 
     return (
         <div
-            className="w-full h-full mx-auto mt-18 bg-background"
+            className="w-full h-full mx-auto bg-background"
             style={{
                 borderRadius: 18,
                 boxShadow: "0 4px 24px 0 rgba(0,0,0,0.08)",
@@ -66,9 +64,13 @@ function IdeasCard() {
             <div className="p-6">
                 {loading ? (
                     <>Loading...</>
+                ) : errorMessage ? (
+                    <p className="text-sm opacity-70">{errorMessage}</p>
+                ) : ideas.length === 0 ? (
+                    <p className="text-sm opacity-70">No ideas returned yet.</p>
                 ) : (
                     <div>
-                        {ideas !== null && ideas.map((idea) => (
+                        {ideas.map((idea) => (
                             <div 
                                 className="group flex items-start gap-4 p-4 rounded-lg cursor-pointer transition-colors"
                                 style={{ 

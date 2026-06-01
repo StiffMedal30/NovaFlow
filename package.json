@@ -1,15 +1,12 @@
 {
   "name": "nova_front",
-  "private": true,
   "version": "0.0.0",
+  "license": "ISC",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.11",
@@ -60,17 +57,5 @@
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.5"
   },
-  "description": "This is the React frontend for the NovaFront project.",
-  "main": "eslint.config.js",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@bitbucket.org/novaflow/novafront.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://bitbucket.org/novaflow/novafront/issues"
-  },
-  "homepage": "https://bitbucket.org/novaflow/novafront#readme"
+  "private": true
 }

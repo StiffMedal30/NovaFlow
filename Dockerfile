@@ -19,8 +19,7 @@ FROM nginx:alpine
 # Copy the built app from Stage 1 (Vite outputs to /dist)
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Optional: replace default Nginx config if needed
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
