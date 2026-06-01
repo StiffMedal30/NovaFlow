@@ -1,9 +1,9 @@
 databaseChangeLog:
 #  - CREATE YML
   - include:
-      file: classpath:/db/changelog/create/001-create-users-table.yml
+      file: db/changelog/create/001-create-users-table.yml
   - include:
-      file: classpath:/db/changelog/create/002-password-reset-token.yml
+      file: db/changelog/create/002-password-reset-token.yml
 
 # - CONSTRAINTS YML
 #  - include:
