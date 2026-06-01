@@ -52,8 +52,11 @@ services:
     ports:
       - "7090:7090"
     volumes:
+      - ../common-config:/config:ro
       - ${HOME}/.ssh:/root/.ssh   # Mount host SSH keys
     environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config/{application},file:/config
       - GIT_SSH_COMMAND=ssh -i /root/.ssh/bitbucket_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts
     networks:
       - app-network
@@ -67,7 +70,7 @@ services:
       - config-server
       - postgres
     ports:
-      - "7010:7010"
+      - "7010:8082"
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -77,6 +80,8 @@ services:
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_PROTOCOL=${EMAIL_PROTOCOL}
       - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
     networks:
       - app-network
     restart: always
@@ -89,7 +94,7 @@ services:
       - config-server
       - postgres
     ports:
-      - "7020:7020"
+      - "7020:8083"
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -106,7 +111,9 @@ services:
       - config-server
       - postgres
     ports:
-      - "7030:7030"
+      - "7030:8084"
+    env_file:
+      - ../ai-service/.env
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -152,33 +159,28 @@ services:
       - app-network
     restart: always
 
-#  ollama-gpu: # Ollama with GPU support
-#    image: ollama/ollama:latest
-#    container_name: ollama
-#    ports:
-#      - "11434:11434"   # expose Ollama API
-#    volumes:
-#      - ollama_data:/root/.ollama  # persist models between restarts
-#      - ./start-ollama.sh:/start-ollama.sh  # mount the script
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: all
-#              capabilities: [gpu]
-#    command: ["/start-ollama.sh"]
-
-  ollama-cpu:
-    image: ollama/ollama:latest
-    container_name: ollama
+  loki:
+    image: grafana/loki:2.9.8
     ports:
-      - "11434:11434"
+      - "3100:3100"
     volumes:
-      - ollama_data:/root/.ollama
-      - ./ollama/start-ollama.sh:/start-ollama.sh
-    entrypoint: ["/bin/bash", "start-ollama.sh"]
-#    command: ["/start-ollama.sh"]
+      - ./loki/local-config.yml:/etc/loki/local-config.yml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yml
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    volumes:
+      - ./promtail/config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
 
 networks:
   app-network:
@@ -187,6 +189,6 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
-  ollama_data:
+  loki-data:
 
 
