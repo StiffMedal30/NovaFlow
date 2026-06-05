@@ -58,6 +58,8 @@ services:
       - SPRING_PROFILES_ACTIVE=native
       - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config/{application},file:/config
       - GIT_SSH_COMMAND=ssh -i /root/.ssh/bitbucket_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
     networks:
       - app-network
     restart: always
@@ -79,6 +81,8 @@ services:
       - EMAIL_USERNAME=${EMAIL_USERNAME}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_PROTOCOL=${EMAIL_PROTOCOL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
       - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
@@ -131,6 +135,8 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
       - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
