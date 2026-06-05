@@ -1,8 +1,8 @@
 # application-dev.yml (in config repo)
 
 jwt:
-  expiration: 3600000
-  secret: 'a8f7d3c9e7b2f3d1c4e6b8a2d7f4c3e1a6b9c8d4e5f7a3b6d9c2e8f1a4b7c5d3'
+  expiration: ${JWT_EXPIRATION:3600000}
+  secret: ${JWT_SECRET}
 
 eureka:
   client:
@@ -11,7 +11,7 @@ eureka:
 
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
     org.springframework.cloud.gateway: DEBUG
 
 spring:

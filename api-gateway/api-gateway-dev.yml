@@ -1,7 +1,5 @@
 spring:
   gateway:
-    default-filters:
-      - AddRequestHeader=Authorization, ${http.request.header.Authorization}
     discovery:
       locator:
         enabled: true
@@ -25,3 +23,12 @@ spring:
   user:
     service:
       url: http://localhost:8082
+
+novaflow:
+  services:
+    user-base: http://localhost:8082
+    user: http://localhost:8082/api/user
+    collaborator: http://localhost:8082/api/collaborator
+    idea: http://localhost:8083/api/idea
+    ai: http://localhost:8084/api/ai
+    chat: http://localhost:8085/api/chat
