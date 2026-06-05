@@ -4,6 +4,10 @@ databaseChangeLog:
       file: db/001-create-idea-table.yml
   - include:
       file: db/002-add-ai-plan-columns.yml
+  - include:
+      file: db/003-add-feasibility-columns.yml
+  - include:
+      file: db/004-create-idea-step-table.yml
 #  - include:
 #      file: classpath:/db/changelog/create/002-create-ideas-table.yml
 #  - include:

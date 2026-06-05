@@ -44,6 +44,12 @@ public class IdeaEntity {
     @Column(name = "ai_response", columnDefinition = "text")
     private String aiResponse;
 
+    @Column(name = "feasibility_country")
+    private String feasibilityCountry;
+
+    @Column(name = "feasibility_response", columnDefinition = "text")
+    private String feasibilityResponse;
+
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -125,5 +131,21 @@ public class IdeaEntity {
 
     public void setAiResponse(String aiResponse) {
         this.aiResponse = aiResponse;
+    }
+
+    public String getFeasibilityCountry() {
+        return feasibilityCountry;
+    }
+
+    public void setFeasibilityCountry(String feasibilityCountry) {
+        this.feasibilityCountry = feasibilityCountry;
+    }
+
+    public String getFeasibilityResponse() {
+        return feasibilityResponse;
+    }
+
+    public void setFeasibilityResponse(String feasibilityResponse) {
+        this.feasibilityResponse = feasibilityResponse;
     }
 }

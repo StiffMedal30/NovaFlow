@@ -1,5 +1,7 @@
 package za.co.idea.service.records;
 
+import java.util.List;
+
 public record IdeaSummaryResponse(
         String id,
         String title,
@@ -9,6 +11,9 @@ public record IdeaSummaryResponse(
         String updatedDate,
         String status,
         boolean aiProcessed,
-        String aiResponse
+        String aiResponse,
+        String feasibilityCountry,
+        String feasibilityResponse,
+        List<IdeaStepResponse> steps
 ) {
 }

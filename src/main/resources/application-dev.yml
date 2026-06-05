@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: idea-service
-  profiles:
-    active: dev   # <-- this makes sure it fetches idea-service-dev.yml + application
 
   cloud:
     config:

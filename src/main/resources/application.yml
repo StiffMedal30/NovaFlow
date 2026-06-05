@@ -6,6 +6,8 @@ spring:
     name: idea-service
   profiles:
     active: dev   # <-- this makes sure it fetches idea-service-dev.yml + application
+  config:
+    import: "configserver:http://localhost:7090/"
 
   cloud:
     config:
