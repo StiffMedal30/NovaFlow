@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import za.co.ai.service.record.AiResponse;
+import za.co.ai.service.record.FeasibilityRequest;
 import za.co.ai.service.record.IdeaRecord;
 import za.co.ai.service.record.TranscriptionResponse;
 import za.co.ai.service.service.AiService;
@@ -24,6 +25,11 @@ public class AiController {
     public AiResponse processIdea(@RequestBody IdeaRecord idea) {
         String result = aiService.refineIdea(idea);
         return new AiResponse(result);
+    }
+
+    @PostMapping("/feasibility")
+    public AiResponse feasibilityStudy(@RequestBody FeasibilityRequest request) {
+        return new AiResponse(aiService.generateFeasibilityStudy(request));
     }
 
     @PostMapping(value = "/transcribe", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

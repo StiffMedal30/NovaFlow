@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 import za.co.ai.service.config.AiPromptProperties;
 import za.co.ai.service.config.OpenAiProperties;
+import za.co.ai.service.record.FeasibilityRequest;
 import za.co.ai.service.record.IdeaRecord;
 import za.co.ai.service.service.AiService;
 
@@ -24,6 +25,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class AiServiceImpl implements AiService {
     private static final String IDEA_PLANNING_PROMPT = "idea-planning";
+    private static final String FEASIBILITY_STUDY_PROMPT = "feasibility-study";
 
     private final RestClient openAiRestClient;
     private final OpenAiProperties openAiProperties;
@@ -31,16 +33,39 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public String refineIdea(IdeaRecord idea) {
-        requireApiKey();
         AiPromptProperties.PromptDefinition prompt = aiPromptProperties.require(IDEA_PLANNING_PROMPT);
+
+        return generateResponse(
+                prompt,
+                Map.of(
+                        "title", idea.title(),
+                        "description", idea.description()
+                )
+        );
+    }
+
+    @Override
+    public String generateFeasibilityStudy(FeasibilityRequest request) {
+        AiPromptProperties.PromptDefinition prompt = aiPromptProperties.require(FEASIBILITY_STUDY_PROMPT);
+
+        return generateResponse(
+                prompt,
+                Map.of(
+                        "title", request.title(),
+                        "description", request.description(),
+                        "plan", request.plan(),
+                        "country", request.country()
+                )
+        );
+    }
+
+    private String generateResponse(AiPromptProperties.PromptDefinition prompt, Map<String, String> values) {
+        requireApiKey();
 
         OpenAiResponsesRequest request = new OpenAiResponsesRequest(
                 openAiProperties.refinementModel(),
                 prompt.instructions(),
-                renderTemplate(prompt.inputTemplate(), Map.of(
-                        "title", idea.title(),
-                        "description", idea.description()
-                )),
+                renderTemplate(prompt.inputTemplate(), values),
                 prompt.maxOutputTokens()
         );
 
