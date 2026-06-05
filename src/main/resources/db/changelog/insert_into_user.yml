@@ -2,23 +2,28 @@ databaseChangeLog:
   - changeSet:
       id: 20250410-insert-admin-user
       author: Christiaan Dotze
-      context: dev  # Ensure this runs only in the dev environment
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: HALT
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "select count(*) from app_user where username = 'admin' or email = 'admin@novaflow.local'"
       changes:
         - insert:
             tableName: app_user
             columns:
               - column:
                   name: email
-                  value: 'christiaandotze@gmail.com'
+                  value: 'admin@novaflow.local'
               - column:
                   name: name
-                  value: 'christiaan'
+                  value: 'Admin'
               - column:
                   name: username
                   value: 'admin'
               - column:
                   name: password
-                  value: '$2a$10$orJwRsj4ZMBpnaseYMOEPeT2Vr/6D7.FYVEwcquj8acHremzwdPRa'  # Your bcrypt password hash
+                  value: '$2a$10$NeIcrmlnkhUuRt0daXxFyOCKMx5b0ppv1I4vUCBrvssdu4YoLQDg.'
               - column:
                   name: role
                   value: 'ADMIN'
@@ -36,13 +41,13 @@ databaseChangeLog:
                   value: true
               - column:
                   name: created_at
-                  valueComputed: 'CURRENT_TIMESTAMP'  # Automatically set to current timestamp
+                  valueComputed: 'CURRENT_TIMESTAMP'
               - column:
                   name: created_by
                   value: 'SYSTEM'
               - column:
                   name: modified_at
-                  valueComputed: 'CURRENT_TIMESTAMP'  # Set this to current timestamp, it can be updated later
+                  valueComputed: 'CURRENT_TIMESTAMP'
               - column:
                   name: modified_by
                   value: 'SYSTEM'

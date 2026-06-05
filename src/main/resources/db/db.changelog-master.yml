@@ -15,6 +15,6 @@ databaseChangeLog:
 # - DELETE YML
 
 
-# - INSERT YML (ONLY FOR DEV)
-#  - include:
-#      file: classpath:/db/changelog/insert_into_user.yml
+# - SEED YML
+  - include:
+      file: db/changelog/insert_into_user.yml

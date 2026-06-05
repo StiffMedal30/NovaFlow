@@ -5,34 +5,44 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtProvider {
 
     @Value("${jwt.secret}")
-    private String JWT_SECRET;
+    private String jwtSecret;
 
-    // Method to generate JWT token
+    @Value("${jwt.expiration:3600000}")
+    private long jwtExpiration;
+
     public String generateToken(String securityKey, String email) {
-        System.out.println("JWT SECRET = " + JWT_SECRET);
+        return generateToken(email, List.of());
+    }
+
+    public String generateToken(String subject, Collection<? extends GrantedAuthority> authorities) {
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         Date issuedAt = new Date(System.currentTimeMillis());
-        Date expirationTime = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10); // 10 hours
+        Date expirationTime = new Date(System.currentTimeMillis() + jwtExpiration);
 
-        // Use UTF-8 encoded bytes directly instead of base64-decoding
-        Key signingKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(subject)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expirationTime)
-                .signWith(signingKey, signatureAlgorithm)
-                .setIssuer("User Service")
+                .setIssuer("NovaFlow User Service")
+                .claim("roles", roles)
+                .signWith(signingKey(), signatureAlgorithm)
                 .compact();
     }
 
@@ -42,17 +52,19 @@ public class JwtProvider {
                 token = token.substring(7);
             }
 
-            Key signingKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
-
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(signingKey)
+                    .setSigningKey(signingKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
             return claims.getSubject();
         } catch (Exception e) {
-            return e.getMessage();
+            return null;
         }
+    }
+
+    private Key signingKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 }

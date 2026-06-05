@@ -20,8 +20,7 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-//    @SequenceGenerator(name = "entity_seq", sequenceName = "entity_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "created_at", updatable = false)
