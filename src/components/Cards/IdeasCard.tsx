@@ -34,7 +34,7 @@ function IdeasCard() {
     }, []);
 
     function handleIdeaClick(ideaId: string) {
-        console.log("Clicked idea with ID:", ideaId);
+        navigate(`/idea/${ideaId}`);
     }
 
     return (
@@ -71,8 +71,9 @@ function IdeasCard() {
                 ) : (
                     <div>
                         {ideas.map((idea) => (
-                            <div 
-                                className="group flex items-start gap-4 p-4 rounded-lg cursor-pointer transition-colors"
+                            <button
+                                type="button"
+                                className="group flex w-full items-start gap-4 rounded-lg p-4 text-left transition-colors"
                                 style={{ 
                                     background: 'transparent',
                                     border: `1px solid transparent`,
@@ -106,7 +107,7 @@ function IdeasCard() {
 
                                 {/*Arrow Right*/}
                                 <ArrowRight size={16} className="text-text opacity-30 group-hover:opacity-60 group-hover:text-primary transition-all" />
-                            </div>
+                            </button>
                         ))}
                     </div>
                 )}
