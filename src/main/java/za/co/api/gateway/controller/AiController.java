@@ -25,14 +25,14 @@ public class AiController extends BaseController {
     @PostMapping(value = "/transcribe", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> transcribe(@RequestPart("file") MultipartFile file) {
         try {
-            HttpHeaders headers = new HttpHeaders();
+            HttpHeaders headers = createForwardHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", new NamedByteArrayResource(file.getBytes(), file.getOriginalFilename()));
 
             return restTemplate.exchange(
-                    AI_SERVICE + "/transcribe",
+                    aiService + "/transcribe",
                     HttpMethod.POST,
                     new HttpEntity<>(body, headers),
                     TranscriptionResponse.class

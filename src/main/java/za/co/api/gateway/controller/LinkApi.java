@@ -1,5 +1,6 @@
 package za.co.api.gateway.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +18,11 @@ import java.util.Map;
 @RequestMapping("/api")
 public class LinkApi {
 
-    public static final String USER_SERVICE = "http://user-service:8082";
     private final RestTemplate restTemplate;
     private final LinkDecoderService linkDecoderService;
+
+    @Value("${novaflow.services.user-base:http://localhost:8082}")
+    private String userServiceBaseUrl;
 
     public LinkApi(LinkDecoderService linkDecoderService, RestTemplate restTemplate) {
         this.linkDecoderService = linkDecoderService;
@@ -44,8 +47,8 @@ public class LinkApi {
 
             String path = uri.getPath();
             String url = path.contains("/activate")
-                    ? USER_SERVICE + "/api/link/redirect/activate?t=" + decodedToken
-                    : USER_SERVICE + "/api/link/redirect/reset/password?t=" + decodedToken;
+                    ? userServiceBaseUrl + "/api/link/redirect/activate?t=" + decodedToken
+                    : userServiceBaseUrl + "/api/link/redirect/reset/password?t=" + decodedToken;
 
             restTemplate.getForEntity(url, Void.class);
 

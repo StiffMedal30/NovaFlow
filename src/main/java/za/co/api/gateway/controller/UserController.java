@@ -20,7 +20,7 @@ public class UserController extends BaseController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest credentials) {
         try {
-            return forwardPostRequest(USER_SERVICE + "/login", credentials);
+            return forwardPostRequest(userService + "/login", credentials);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Login failed: " + e.getMessage()));
@@ -30,7 +30,7 @@ public class UserController extends BaseController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterUserRequest newUser) {
         try {
-            return forwardPostRequest(USER_SERVICE + "/register", newUser);
+            return forwardPostRequest(userService + "/register", newUser);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Registration failed: " + e.getMessage()));
@@ -40,7 +40,7 @@ public class UserController extends BaseController {
     @PostMapping("/password/reset")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest newCredentials) {
         try {
-            return forwardPostRequest(USER_SERVICE + "/password/reset", newCredentials);
+            return forwardPostRequest(userService + "/password/reset", newCredentials);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Reset failed: " + e.getMessage()));
@@ -50,7 +50,7 @@ public class UserController extends BaseController {
     @PostMapping("/check-registered")
     public ResponseEntity<?> checkRegister(@RequestBody CheckUserRequest user) {
         try {
-            return forwardPostRequest(USER_SERVICE + "/check-registered", user);
+            return forwardPostRequest(userService + "/check-registered", user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Check registration failed: " + e.getMessage()));

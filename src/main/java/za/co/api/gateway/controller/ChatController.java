@@ -15,7 +15,7 @@ public class ChatController extends BaseController {
     @GetMapping("/test")
     public ResponseEntity<?> testChatService() {
         try {
-            return forwardGetRequest(CHAT_SERVICE + "/test");
+            return forwardGetRequest(chatService + "/test");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not reach chat service: " + e.getMessage()));

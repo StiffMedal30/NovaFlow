@@ -17,7 +17,7 @@ public class CollaboratorController extends BaseController {
     @PostMapping("/invite")
     public ResponseEntity<?> invite(@RequestBody InviteRequest credentials) {
         try {
-            return forwardPostRequest(USER_COLLABORATOR_SERVICE + "/invite", credentials);
+            return forwardPostRequest(collaboratorService + "/invite", credentials);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Registration failed: " + e.getMessage()));
