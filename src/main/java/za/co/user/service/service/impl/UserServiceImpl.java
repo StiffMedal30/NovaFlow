@@ -1,6 +1,5 @@
 package za.co.user.service.service.impl;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import za.co.user.service.entity.AppUserEntity;
 import za.co.user.service.entity.PasswordResetToken;
+import za.co.user.service.enums.Role;
 import za.co.user.service.records.AppUserRecord;
 import za.co.user.service.records.NewPasswordRecord;
 import za.co.user.service.repository.PasswordResetTokenRepository;
@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -38,11 +39,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordResetTokenServiceImpl passwordResetTokenService;
     private final AuthenticationManager authenticationManager;
     private final CustomUserService customUserService;
-
-    @Value("${jwt.secret}")
-    private String jwtSecret;
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
 
     public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, JwtProvider jwtProvider,
                            EmailService emailService, PasswordResetTokenRepository tokenRepository,
@@ -64,12 +60,17 @@ public class UserServiceImpl implements UserService {
                 .ifPresent(user -> {
                     throw new IllegalArgumentException("Email already in use");
                 });
+        userRepository.findByUsername(appUserRecord.username())
+                .ifPresent(user -> {
+                    throw new IllegalArgumentException("Username already in use");
+                });
+
         AppUserEntity user = new AppUserEntity();
         user.setPassword(passwordEncoder.encode(appUserRecord.password()));
-        user.setRole(appUserRecord.role());
+        user.setRole(appUserRecord.role() == null ? Role.ADMIN : appUserRecord.role());
         user.setUsername(appUserRecord.username());
         user.setEmail(appUserRecord.email());
-        user.setName(appUserRecord.name());
+        user.setName(isBlank(appUserRecord.name()) ? appUserRecord.username() : appUserRecord.name());
         user.setCredentialsNonExpired(true);
         user.setAccountNonExpired(true);
         user.setAccountNonLocked(true);
@@ -77,7 +78,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        String token = jwtProvider.generateToken(jwtSecret, user.getEmail());
+        String token = jwtProvider.generateToken(user.getEmail(), List.of());
 
         CompletableFuture.runAsync(() ->
                 emailService.sendAccountActivationEmail(appUserRecord.email(), token)
@@ -86,6 +87,10 @@ public class UserServiceImpl implements UserService {
 //        user.setEnabled(false);
 
 //        userRepository.save(user);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     @Override
@@ -126,7 +131,7 @@ public class UserServiceImpl implements UserService {
         UserDetails userDetails = customUserService.loadUserByUsername(dto.username());
 
         // 3. Generate JWT token for authenticated user
-        return jwtProvider.generateToken(jwtSecret, userDetails.getUsername());
+        return jwtProvider.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
     }
 
     @Override
