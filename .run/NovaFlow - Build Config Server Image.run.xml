@@ -1,13 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="NovaFlow - Config Server" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="NovaFlow - Build Config Server Image" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="env">
-        <map>
-          <entry key="EUREKA_CLIENT_SERVICEURL_DEFAULTZONE" value="http://localhost:8761/eureka" />
-          <entry key="SERVER_PORT" value="7090" />
-          <entry key="SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS" value="file:../common-config/{application},file:../common-config" />
-          <entry key="SPRING_PROFILES_ACTIVE" value="native" />
-        </map>
+        <map />
       </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -18,7 +13,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":config-server:bootRun" />
+          <option value="configServerImage" />
         </list>
       </option>
       <option name="vmOptions" value="" />

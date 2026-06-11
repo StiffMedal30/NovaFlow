@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # Copy the built jar (make sure you build it first!)
-COPY ./build/libs/user-service-*.jar app.jar
+COPY ./target/libs/user-service-*.jar app.jar
 
 # Expose the port your app runs on (adjust as needed)
 EXPOSE 8082

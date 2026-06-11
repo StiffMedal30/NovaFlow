@@ -7,6 +7,14 @@ import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfil
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    outDir: 'target',
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),

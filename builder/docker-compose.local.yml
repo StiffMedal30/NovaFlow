@@ -24,5 +24,20 @@ services:
       SPRING_APPLICATION_NAME: discovery-server
     restart: unless-stopped
 
+  config-server:
+    image: config-server
+    container_name: config-server
+    depends_on:
+      - eureka
+    ports:
+      - "7090:7090"
+    volumes:
+      - ../common-config:/config:ro
+    environment:
+      SPRING_PROFILES_ACTIVE: native
+      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config/{application},file:/config
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    restart: unless-stopped
+
 volumes:
   postgres_data:

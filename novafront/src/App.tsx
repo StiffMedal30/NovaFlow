@@ -4,7 +4,7 @@ import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./store/authStore";
 import RootLayout from "./Pages/Home/layout";
 import { HomeContents } from "./components/home-contents";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import LoginPage from "./Pages/Login/page";
 import RegisterPage from "./Pages/Register/page";
 import SuperSecretPage from "./Pages/SuperSecret/page";
@@ -27,17 +27,18 @@ function AppContent() {
     <RootLayout>
       <Routes>
         {/*Unprotected Routes (Anyone can access)*/}
-        <Route path="/" element={<HomeContents />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="*" element={<HomeContents />} />
 
         {/*Protected Routes*/}
         <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomeContents />} />
+          <Route path="/home" element={<HomeContents />} />
           <Route path="/SuperSecret" element={<SuperSecretPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/idea" element={<IdeaPage />} />
           <Route path="/idea/:ideaId" element={<IdeaPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </RootLayout>

@@ -1,6 +1,5 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="NovaFlow - All Local Apps" type="CompoundRunConfigurationType">
-    <toRun name="NovaFlow - Config Server" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - API Gateway" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - User Service" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - Idea Service" type="GradleRunConfiguration" />

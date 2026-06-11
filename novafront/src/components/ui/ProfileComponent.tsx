@@ -1,6 +1,7 @@
 import { CircleUserRound, Settings } from "lucide-react";
 import { SettingsDropdown } from "./settings-dropdown"
 import { useTheme } from "../../context/ThemeContext";
+import LoginStateButton from "../settingsItems/LoginStateButton";
 
 const ProfileComponent = () => {
   const { currentTheme } = useTheme();
@@ -18,6 +19,8 @@ const ProfileComponent = () => {
           {/* Settings Button */}
           <SettingsDropdown>
             <button
+              type="button"
+              aria-label="Settings"
               className="flex items-center justify-center p-1 cursor-pointer outline-none hover:opacity-80 transition-opacity"
               style={{
                 background: 'none',
@@ -31,8 +34,12 @@ const ProfileComponent = () => {
             </button>
           </SettingsDropdown>
 
+          <LoginStateButton />
+
           {/* Profile Dropdown */}
           <button
+            type="button"
+            aria-label="Profile"
             className="flex items-center justify-center p-2 rounded-lg hover:opacity-70 transition-opacity"
             style={{ color: currentTheme.colors.text }}
           >

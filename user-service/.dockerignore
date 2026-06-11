@@ -1,6 +1,5 @@
-**/target
-**/.idea
-**/.git
-**/*.iml
-Dockerfile
-README.md
+*
+!Dockerfile
+!target/
+!target/libs/
+!target/libs/*.jar
