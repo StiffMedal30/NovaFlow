@@ -17,17 +17,26 @@ function UpdateBranch() {
 }
 
 function Build-Service($service) {
-    Write-Host "Changing directory to $service..."
-    Set-Location (Join-Path $PSScriptRoot "..\$service") -ErrorAction Stop
+    $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    $serviceDirectory = Join-Path $repoRoot $service
 
     UpdateBranch
 
-    Write-Host "Running Gradle clean build for $service..."
+    Write-Host "Running root Gradle build for $service..."
     try {
-        gradle clean build
+        Push-Location $repoRoot
+        & (Join-Path $repoRoot "gradlew.bat") ":${service}:clean" ":${service}:build"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Gradle exited with code $LASTEXITCODE"
+        }
     } catch {
         ErrorExit "Gradle build failed for $service"
+    } finally {
+        Pop-Location
     }
+
+    Write-Host "Changing directory to $service..."
+    Push-Location $serviceDirectory
 
     Write-Host "Stopping old Docker container (if exists)..."
     docker container stop $service 2>$null
@@ -49,18 +58,26 @@ function Build-Service($service) {
 }
 
 function Build-Novafront() {
-    Write-Host "Changing directory to novafront..."
-    Set-Location (Join-Path $PSScriptRoot "../novafront") -ErrorAction Stop
+    $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    $frontendDirectory = Join-Path $repoRoot "novafront"
 
     UpdateBranch
 
-    Write-Host "Running npm build for novafront..."
+    Write-Host "Running root Gradle build for novafront..."
     try {
-        npm install
-        npm run build
+        Push-Location $repoRoot
+        & (Join-Path $repoRoot "gradlew.bat") ":novafront:clean" ":novafront:build"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Gradle exited with code $LASTEXITCODE"
+        }
     } catch {
         ErrorExit "Frontend build failed for novafront"
+    } finally {
+        Pop-Location
     }
+
+    Write-Host "Changing directory to novafront..."
+    Push-Location $frontendDirectory
 
     Write-Host "Building new Docker image for novafront..."
     try {
@@ -74,7 +91,7 @@ function Build-Novafront() {
 
 function Start-Compose([string[]]$services) {
     Write-Host "Changing directory to builder..."
-    Set-Location (Join-Path $PSScriptRoot "../builder") -ErrorAction Stop
+    Push-Location (Join-Path $PSScriptRoot "../builder") -ErrorAction Stop
 
     # UpdateBranch  # optional
 

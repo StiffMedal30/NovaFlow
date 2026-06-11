@@ -1,45 +1,34 @@
 import { LogInIcon, LogOutIcon } from "lucide-react";
-import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../store/authStore";
 
 export default function LoginStateButton() {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const { state, logout } = useAuth();
+
+  const handleAuthClick = () => {
+    if (state.isAuthenticated) {
+      logout();
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    navigate("/login");
+  };
 
   return (
-    <div>
-      {isLoggedIn && (
-        <div>
-          {/* Logout Button */}
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => setIsLoggedIn(false)}
-          >
-            <LogOutIcon className="text-red-500" size={25} strokeWidth={1} />
-            <a className="ml-3 text-red-500 hover:text-red-600 transition-colors inline-block text-sm font-medium">
-              Logout
-            </a>
-          </div>
-        </div>
-      )}
-      {!isLoggedIn && (
-        <div>
-          {/* Login Button */}
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => {
-              // Route to login page
-              navigate("/login");
-              setIsLoggedIn(true); // For testing only, remove in production
-            }}
-          >
-            <LogInIcon className="text-text" size={25} strokeWidth={1} />
-            <a className="ml-3 text-text hover:text-primary transition-colors inline-block text-sm font-normal">
-              Login
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={handleAuthClick}
+      className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-opacity hover:opacity-80 ${
+        state.isAuthenticated ? "text-red-400" : "text-text"
+      }`}
+      aria-label={state.isAuthenticated ? "Log out" : "Log in"}
+    >
+      {state.isAuthenticated
+        ? <LogOutIcon size={18} strokeWidth={1.5} />
+        : <LogInIcon size={18} strokeWidth={1.5} />}
+      {state.isAuthenticated ? "Logout" : "Login"}
+    </button>
   );
 }

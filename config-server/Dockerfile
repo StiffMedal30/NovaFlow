@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y git openssh-client && rm -rf /var/lib/a
 WORKDIR /app
 
 # Copy the built jar (make sure you build it first!)
-COPY ./build/libs/config-server-*.jar app.jar
+COPY ./target/libs/config-server-*.jar app.jar
 
 ENV GIT_SSH_COMMAND="ssh -i /root/.ssh/bitbucket_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts"
 

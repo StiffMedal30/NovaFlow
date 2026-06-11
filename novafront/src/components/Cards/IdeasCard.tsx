@@ -5,6 +5,41 @@ import type { Idea } from "../../app/Types";
 import { useEffect, useState } from "react";
 import { fetchIdeas } from "../../../apiClient/IdeaClient";
 
+function getIdeaTimestamp(idea: Idea): number {
+    const timestamp = Date.parse(idea.updatedDate || idea.createdDate);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function getRecentUniqueIdeas(ideas: Idea[]): Idea[] {
+    const latestByTitle = new Map<string, Idea>();
+
+    ideas.forEach((idea) => {
+        const normalizedTitle = idea.title.trim().toLocaleLowerCase();
+        const key = normalizedTitle || idea.id;
+        const current = latestByTitle.get(key);
+
+        if (!current || getIdeaTimestamp(idea) > getIdeaTimestamp(current)) {
+            latestByTitle.set(key, idea);
+        }
+    });
+
+    return [...latestByTitle.values()]
+        .sort((left, right) => getIdeaTimestamp(right) - getIdeaTimestamp(left));
+}
+
+function formatIdeaDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value.split("T")[0] || value;
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    }).format(date);
+}
+
 function IdeasCard() {
     const { currentTheme } = useTheme();
     const navigate = useNavigate();
@@ -18,7 +53,7 @@ function IdeasCard() {
         setErrorMessage("");
         try {
             const response = await fetchIdeas();
-            setIdeas(response);
+            setIdeas(getRecentUniqueIdeas(response));
         } catch (error) {
             console.error("Error fetching ideas:", error);
             setIdeas([]);
@@ -101,7 +136,7 @@ function IdeasCard() {
                                     </h4>
                                     <div className="flex items-center gap-1 mt-2 text-xs text-text opacity-50">
                                         <Clock size={12} />
-                                        {idea.createdDate}
+                                        {formatIdeaDate(idea.updatedDate || idea.createdDate)}
                                     </div>
                                 </div>
 

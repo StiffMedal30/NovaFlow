@@ -3,15 +3,15 @@ package za.co.novaflow.config;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "eureka.client.enabled=false", // Disable Eureka client
-                "spring.cloud.config.enabled=false" // Optionally disable Spring Cloud Config if not needed
+                "eureka.client.enabled=false",
+                "spring.cloud.discovery.enabled=false",
+                "spring.cloud.config.server.git.clone-on-start=false"
         }
 )
 class ConfigApplicationTests {
@@ -23,10 +23,10 @@ class ConfigApplicationTests {
     private int serverPort;
 
     @Test
-    void gitUriIsAccessibleAndValid() {
-        assertThat(gitUri).isNotNull();
-        assertThat(gitUri).startsWith("https://");
-        assertThat(gitUri).contains("github.com");
+    void gitUriIsConfigured() {
+        assertThat(gitUri)
+                .isNotBlank()
+                .endsWith("common-config.git");
     }
 
     @Test

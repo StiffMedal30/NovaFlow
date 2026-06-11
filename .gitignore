@@ -1,6 +1,7 @@
 # Gradle and Java build output
 .gradle/
 **/.gradle/
+**/target/
 **/build/
 **/bin/
 **/out/

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import DarkVeil from "../../components/DarkVeil";
 import toast, { Toaster } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
@@ -8,6 +8,7 @@ import { useAuth } from "../../store/authStore";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state, login: authLogin, startLogin, loginFailure } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -45,8 +46,11 @@ export default function LoginPage() {
       });
 
       toast.success("Login successful!");
+      const destination = typeof location.state?.from === "string"
+        ? location.state.from
+        : "/";
       setTimeout(() => {
-        navigate("/");
+        navigate(destination, { replace: true });
       }, 1000);
 
     } catch {

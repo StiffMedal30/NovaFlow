@@ -1,37 +1,211 @@
 # NovaFlow
 
-NovaFlow is a single Gradle multi-project repository containing the Spring
-services, React frontend, shared configuration, and local infrastructure.
+NovaFlow turns a rough idea into an actionable plan. An idea submitted by the
+React frontend passes through the API gateway to the idea service, where it is
+stored and sent to the AI service for planning and feasibility analysis.
 
-## Modules
+This repository is a single Gradle multi-project build containing the frontend,
+Spring services, shared configuration, and local Docker infrastructure.
 
-- `config-server` - Spring Cloud Config server
-- `api-gateway` - API gateway and authentication boundary
-- `user-service` - users and login
-- `idea-service` - idea persistence and orchestration
-- `ai-service` - OpenAI-backed planning and analysis
-- `chat-service` - chat workflows
-- `email-service` - email delivery
-- `novafront` - React and Vite frontend
+## Current features
 
-Supporting directories:
+- Register and authenticate users through the API gateway
+- Submit and save ideas
+- Generate a prioritized, step-by-step execution plan with OpenAI
+- Reopen recent ideas and continue working on their steps
+- Track progress against generated idea steps
+- Generate a country-specific feasibility study
+- Download generated planning material as PDF
+- Delete ideas and their saved planning history
 
-- `common-config` - externalized Spring configuration
-- `builder` - Docker infrastructure and local development documentation
-- `eureka` - legacy Eureka Docker configuration
+## Project structure
 
-## Build
+| Module | Purpose |
+| --- | --- |
+| `novafront` | React and Vite frontend |
+| `api-gateway` | Public API, routing, and authentication boundary |
+| `user-service` | Users, login, JWT issuing, and the development seed user |
+| `idea-service` | Idea persistence, steps, progress, and AI orchestration |
+| `ai-service` | OpenAI planning, feasibility studies, and transcription |
+| `chat-service` | Chat workflows |
+| `email-service` | Email delivery |
+| `config-server` | Spring Cloud Config server, always run in Docker |
+| `common-config` | Externalized development and production configuration |
+| `builder` | Docker Compose files and build scripts |
 
-Use the root wrapper for every module:
+## Prerequisites
+
+- Java 17
+- Docker Desktop or Rancher Desktop
+- IntelliJ IDEA with Gradle support
+- Node.js and npm
+
+Use the checked-in Gradle wrapper where possible. The project wrapper uses
+Gradle 8.14.3:
+
+```powershell
+.\gradlew.bat --version
+```
+
+## Local configuration
+
+Create `builder/.env` for the Docker infrastructure:
+
+```properties
+POSTGRES_USER=sa
+POSTGRES_PASSWORD=StiffMedal30
+```
+
+The password must match the development datasource configuration under
+`common-config`.
+
+Create `ai-service/.env` to enable OpenAI features:
+
+```properties
+OPENAI_API_KEY=your-api-key
+OPENAI_MODEL=gpt-5.2
+```
+
+Both `.env` files are ignored by Git.
+
+## Start with IntelliJ
+
+Open the repository root in one IntelliJ window and import the root
+`settings.gradle`. Wait for the Gradle sync to finish.
+
+Start the application in this order:
+
+1. Start Docker Desktop or Rancher Desktop.
+2. On the first checkout, or after changing `config-server`, run
+   `NovaFlow - Build Config Server Image`.
+3. Run `NovaFlow - Infrastructure`.
+4. Wait for PostgreSQL on `5432`, Eureka on `8761`, and the config server on
+   `7090`.
+5. Run `NovaFlow - All Local Apps`.
+6. Open [http://localhost:3000](http://localhost:3000).
+
+`NovaFlow - Infrastructure` starts PostgreSQL, Eureka, and the config server in
+Docker. `NovaFlow - All Local Apps` starts the remaining Spring services and
+the frontend locally from IntelliJ.
+
+The config server is always a Docker service and is never started by the local
+application compound launcher.
+
+## Development login
+
+Liquibase inserts one development-only user when the user database is created:
+
+```text
+Username: admin
+Password: admin
+```
+
+This account is seed data for local testing only. It is not production data and
+must not be used in a deployed environment.
+
+## Manual startup
+
+The IntelliJ configurations are the simplest way to run the complete stack.
+For terminal startup, keep each long-running command in its own terminal.
+
+First build the config-server image. This is required after a fresh checkout
+and whenever the config-server code changes:
+
+```powershell
+.\gradlew.bat configServerImage
+```
+
+Then start PostgreSQL, Eureka, and the config server:
+
+```powershell
+docker-compose --env-file builder/.env -f builder/docker-compose.local.yml up -d
+```
+
+After all three infrastructure services are available, start the application
+services in separate terminals:
+
+```powershell
+.\gradlew.bat :user-service:bootRun
+.\gradlew.bat :idea-service:bootRun
+.\gradlew.bat :ai-service:bootRun
+.\gradlew.bat :chat-service:bootRun
+.\gradlew.bat :email-service:bootRun
+```
+
+Start the gateway after the services:
+
+```powershell
+.\gradlew.bat :api-gateway:bootRun
+```
+
+Start the frontend last:
+
+```powershell
+.\gradlew.bat :novafront:npmDev
+```
+
+## Local ports
+
+| Process | Port |
+| --- | ---: |
+| Frontend | 3000 |
+| PostgreSQL | 5432 |
+| Config server | 7090 |
+| Email service | 8050 |
+| API gateway | 8081 |
+| User service | 8082 |
+| Idea service | 8083 |
+| AI service | 8084 |
+| Chat service | 8085 |
+| Eureka | 8761 |
+
+Useful local addresses:
+
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- API gateway: [http://localhost:8081](http://localhost:8081)
+- Eureka dashboard: [http://localhost:8761](http://localhost:8761)
+
+## Build and test
+
+Build all locally run backend services and run their tests:
+
+```powershell
+.\gradlew.bat clean backendBuild
+```
+
+Build the locally run backend services and frontend:
+
+```powershell
+.\gradlew.bat clean buildAll
+```
+
+The aggregate `backendBuild`, `backendClasses`, and `buildAll` tasks exclude the
+config server because it is deployed only as a Docker service. Build its image
+separately with:
+
+```powershell
+.\gradlew.bat configServerImage
+```
+
+Compile the backend without running tests:
 
 ```powershell
 .\gradlew.bat backendClasses
-.\gradlew.bat backendBuild
-.\gradlew.bat buildAll
 ```
 
-Open this repository root in IntelliJ and import `settings.gradle`. Run
-`NovaFlow - Infrastructure`, followed by `NovaFlow - All Local Apps`.
+All generated output is written to each module's `target` directory. Runnable
+Spring Boot jars are created under `<service>/target/libs`, and the frontend
+production bundle is created under `novafront/target`.
 
-See [builder/LOCAL_DEVELOPMENT.md](builder/LOCAL_DEVELOPMENT.md) for ports and
-startup details.
+## Troubleshooting
+
+- If a service reports that its port is already in use, stop older terminal or
+  Docker instances before using the IntelliJ compound launcher.
+- If services cannot load configuration, confirm the config server is running
+  in Docker on `7090`.
+- If database connections fail, confirm PostgreSQL is running and the password
+  in `builder/.env` matches the development configuration.
+- If Eureka registration fails, confirm
+  [http://localhost:8761](http://localhost:8761) is reachable.
+- If AI requests fail, confirm `OPENAI_API_KEY` is present in
+  `ai-service/.env`.

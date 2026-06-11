@@ -6,13 +6,17 @@ window as modules of the `novaflow` Gradle build.
 
 ## Start the stack
 
-1. Run `NovaFlow - Infrastructure`.
-2. Wait for PostgreSQL on port `5432` and Eureka on port `8761`.
-3. Run `NovaFlow - All Local Apps`.
+1. Start Docker Desktop or Rancher Desktop.
+2. On the first checkout, or after changing `config-server`, run
+   `NovaFlow - Build Config Server Image`.
+3. Run `NovaFlow - Infrastructure`.
+4. Wait for PostgreSQL on `5432`, Eureka on `8761`, and the config server on
+   `7090`.
+5. Run `NovaFlow - All Local Apps`.
 
-The compound configuration starts the config server, all Spring services, and
-the Vite frontend. The services retry config-server startup while it becomes
-available.
+The infrastructure configuration starts PostgreSQL, Eureka, and the config
+server in Docker. The compound application configuration starts the remaining
+Spring services and the Vite frontend locally.
 
 Use the root Gradle wrapper for command-line builds:
 
@@ -21,6 +25,17 @@ Use the root Gradle wrapper for command-line builds:
 .\gradlew.bat backendBuild
 .\gradlew.bat buildAll
 ```
+
+These aggregate build tasks exclude `config-server`. Build its Docker image
+separately:
+
+```powershell
+.\gradlew.bat configServerImage
+```
+
+Build output is stored in each module's `target` directory. Backend jars are
+created under `<service>/target/libs`, and the frontend production bundle is
+written to `novafront/target`.
 
 The AI service reads `OPENAI_API_KEY` from `ai-service/.env`. The Docker
 infrastructure configuration reads database values from `builder/.env`.

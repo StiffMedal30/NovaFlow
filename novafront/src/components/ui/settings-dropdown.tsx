@@ -1,7 +1,6 @@
 import React from "react";
 import AccountSettings from "../settingsItems/AccountSettings";
 import AppearanceSettings from "../settingsItems/AppearanceSettings";
-import LoginStateButton from "../settingsItems/LoginStateButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,9 +34,6 @@ export function SettingsDropdown({ children }: SettingsDropdownProps) {
           </div>
           <div className="py-1">
             <AppearanceSettings />
-          </div>
-          <div className="py-1">
-            <LoginStateButton />
           </div>
         </div>
       </DropdownMenuContent>

@@ -3,6 +3,9 @@
 set -e  # Exit on any error
 set -o pipefail  # Catch errors in pipelines
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Helper function for error messages
 error_exit() {
     echo "❌ ERROR: $1"
@@ -19,15 +22,16 @@ update_branch() {
 # Function to build a service
 build_service() {
     local service=$1
-    echo "📂 Changing directory to $service..."
-    cd "../$service" || error_exit "Could not find ../$service directory"
 
     update_branch
 
-    echo "🛠 Running Gradle clean build for $service..."
-    if ! gradle clean build; then
+    echo "🛠 Running root Gradle build for $service..."
+    if ! "$REPO_ROOT/gradlew" ":$service:clean" ":$service:build"; then
         error_exit "Gradle build failed for $service"
     fi
+
+    echo "📂 Changing directory to $service..."
+    cd "$REPO_ROOT/$service" || error_exit "Could not find $service directory"
 
     echo "🛑 Stopping old Docker container (if exists)..."
     docker container stop "$service" || echo "ℹ️ No running container to stop"
@@ -48,15 +52,15 @@ build_service() {
 
 # Function to handle novafront (custom build steps)
 build_novafront() {
-    echo "📂 Changing directory to novafront..."
-    cd ../novafront || error_exit "Could not find ../novafront directory"
-
     update_branch
 
-    echo "🛠 Running npm/yarn build for novafront..."
-    if ! npm install && npm run build; then
+    echo "🛠 Running root Gradle build for novafront..."
+    if ! "$REPO_ROOT/gradlew" :novafront:clean :novafront:build; then
         error_exit "Frontend build failed for novafront"
     fi
+
+    echo "📂 Changing directory to novafront..."
+    cd "$REPO_ROOT/novafront" || error_exit "Could not find novafront directory"
 
     echo "📦 Building new Docker image for novafront..."
     if ! docker build -t "novafront" .; then
@@ -69,7 +73,7 @@ build_novafront() {
 # Function to start docker-compose
 start_compose() {
     echo "📂 Changing directory to builder..."
-    cd ../builder || error_exit "Could not find ../builder directory"
+    cd "$REPO_ROOT/builder" || error_exit "Could not find builder directory"
 
     update_branch
 
