@@ -1,61 +1,42 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.4.5'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'base'
 }
 
 group = 'za.co.novaflow'
 version = '0.0.1-SNAPSHOT'
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+def applicationProjects = [
+    project(':ai-service'),
+    project(':api-gateway'),
+    project(':chat-service'),
+    project(':config-server'),
+    project(':email-service'),
+    project(':idea-service'),
+    project(':user-service')
+]
+
+applicationProjects.each { applicationProject ->
+    applicationProject.pluginManager.withPlugin('org.springframework.boot') {
+        applicationProject.tasks.named('bootRun') {
+            workingDir = applicationProject.projectDir
+        }
+    }
 }
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+tasks.register('backendBuild') {
+    group = 'build'
+    description = 'Builds all Spring services.'
+    dependsOn applicationProjects.collect { "${it.path}:build" }
 }
 
-repositories {
-	mavenCentral()
+tasks.register('backendClasses') {
+    group = 'build'
+    description = 'Compiles all Spring services without running tests.'
+    dependsOn applicationProjects.collect { "${it.path}:classes" }
 }
 
-ext {
-	set('springAiVersion', "1.0.0-M8")
-	set('springCloudVersion', "2024.0.1")
-	set('springFeignClientVersion', "2024.0.0")
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.liquibase:liquibase-core'
-	implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
-	implementation 'org.springframework.cloud:spring-cloud-starter-config'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.yaml:snakeyaml:2.2'  // For parsing prompts.yml
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.2'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springFeignClientVersion}"
-	}
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Builds all Spring services and the frontend.'
+    dependsOn 'backendBuild', ':novafront:build'
 }

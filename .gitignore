@@ -1,40 +1,35 @@
-HELP.md
-.env
-.env.*
-!.env.example
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Gradle and Java build output
+.gradle/
+**/.gradle/
+**/build/
+**/bin/
+**/out/
+*.class
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# Frontend output and dependencies
+novafront/node_modules/
+novafront/dist/
+novafront/tmp/
+novafront/out-tsc/
+*.log
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# Local configuration and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE files
+.idea/
+**/.idea/
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+*.iws
 .vscode/
+**/.vscode/
+
+# Local runtime files
+.runlogs/
+
+# Operating system files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+plugins {
+    id 'base'
+}
+
+def npmExecutable = System.getProperty('os.name').toLowerCase().contains('windows')
+    ? 'npm.cmd'
+    : 'npm'
+
+tasks.register('npmInstall', Exec) {
+    group = 'frontend'
+    description = 'Installs frontend dependencies from package-lock.json.'
+    workingDir projectDir
+    commandLine npmExecutable, 'ci'
+}
+
+tasks.register('npmBuild', Exec) {
+    group = 'frontend'
+    description = 'Builds the Vite frontend.'
+    workingDir projectDir
+    commandLine npmExecutable, 'run', 'build'
+}
+
+tasks.register('npmDev', Exec) {
+    group = 'application'
+    description = 'Starts the Vite development server.'
+    workingDir projectDir
+    commandLine npmExecutable, 'run', 'dev'
+}
+
+tasks.named('assemble') {
+    dependsOn 'npmBuild'
+}

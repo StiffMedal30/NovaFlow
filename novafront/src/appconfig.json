@@ -1,0 +1,6 @@
+{
+    "appName": "NovaFlow",
+    "version": "0.0.1",
+    "API_BASE_URL_DEV": "http://localhost:8081",
+    "API_BASE_URL_PROD": "https://api.novaflow.com???? or whatever " 
+}

@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  eureka:
+    image: steeltoeoss/eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_CLIENT_REGISTERWITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCHREGISTRY: "false"
+      EUREKA_SERVER_ENABLESELFPRESERVATION: "false"
+      SPRING_APPLICATION_NAME: discovery-server
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

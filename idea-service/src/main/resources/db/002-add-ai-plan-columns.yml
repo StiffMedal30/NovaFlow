@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: codex
+      changes:
+        - addColumn:
+            tableName: idea
+            columns:
+              - column:
+                  name: status
+                  type: varchar(50)
+                  defaultValue: ACTIVE
+              - column:
+                  name: ai_processed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: ai_response
+                  type: text

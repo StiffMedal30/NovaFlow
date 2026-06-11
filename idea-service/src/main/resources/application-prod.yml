@@ -1,0 +1,26 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: idea-service
+
+  config:
+    import: "configserver:http://config-server:7090/"  # Pull config from config server
+    label: develop
+
+  cloud:
+    config:
+      uri: http://config-server:7090  # Location of config server
+      fail-fast: true
+      retry:
+        max-attempts: 10
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+
+  liquibase:
+    drop-first: false
+
+  jpa:
+    show-sql: true

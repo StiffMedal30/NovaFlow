@@ -1,0 +1,20 @@
+databaseChangeLog:
+#  - CREATE YML
+  - include:
+      file: db/changelog/create/001-create-users-table.yml
+  - include:
+      file: db/changelog/create/002-password-reset-token.yml
+
+# - CONSTRAINTS YML
+#  - include:
+#      file: classpath:/db/changelog/constraints/001-add-index-to-ideas.yml
+
+# - UPDATE YML
+
+
+# - DELETE YML
+
+
+# - SEED YML
+  - include:
+      file: db/changelog/insert_into_user.yml

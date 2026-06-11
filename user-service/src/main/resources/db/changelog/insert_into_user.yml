@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250410-insert-admin-user
+      author: Christiaan Dotze
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: HALT
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "select count(*) from app_user where username = 'admin' or email = 'admin@novaflow.local'"
+      changes:
+        - insert:
+            tableName: app_user
+            columns:
+              - column:
+                  name: email
+                  value: 'admin@novaflow.local'
+              - column:
+                  name: name
+                  value: 'Admin'
+              - column:
+                  name: username
+                  value: 'admin'
+              - column:
+                  name: password
+                  value: '$2a$10$NeIcrmlnkhUuRt0daXxFyOCKMx5b0ppv1I4vUCBrvssdu4YoLQDg.'
+              - column:
+                  name: role
+                  value: 'ADMIN'
+              - column:
+                  name: is_account_non_expired
+                  value: true
+              - column:
+                  name: is_enabled
+                  value: true
+              - column:
+                  name: is_account_non_locked
+                  value: true
+              - column:
+                  name: is_credentials_non_expired
+                  value: true
+              - column:
+                  name: created_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: created_by
+                  value: 'SYSTEM'
+              - column:
+                  name: modified_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: modified_by
+                  value: 'SYSTEM'

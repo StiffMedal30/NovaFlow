@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: codex
+      changes:
+        - createTable:
+            tableName: idea_step
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: idea_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: details
+                  type: text
+              - column:
+                  name: priority
+                  type: varchar(2)
+                  defaultValue: P1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner
+                  type: varchar(255)
+              - column:
+                  name: due_date
+                  type: date
+              - column:
+                  name: completed
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: modified_at
+                  type: timestamp
+        - addForeignKeyConstraint:
+            baseTableName: idea_step
+            baseColumnNames: idea_id
+            referencedTableName: idea
+            referencedColumnNames: id
+            constraintName: fk_idea_step_idea
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: idea_step
+            columnNames: idea_id, position
+            constraintName: uk_idea_step_position
+        - createIndex:
+            tableName: idea_step
+            indexName: idx_idea_step_idea
+            columns:
+              - column:
+                  name: idea_id

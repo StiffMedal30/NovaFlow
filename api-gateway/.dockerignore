@@ -1,0 +1,6 @@
+**/target
+**/.idea
+**/.git
+**/*.iml
+Dockerfile
+README.md
