@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: codex
+      changes:
+        - addColumn:
+            tableName: idea
+            columns:
+              - column:
+                  name: feasibility_country
+                  type: varchar(255)
+              - column:
+                  name: feasibility_response
+                  type: text

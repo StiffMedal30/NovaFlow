@@ -1,0 +1,24 @@
+# application-dev.yml (in config repo)
+
+jwt:
+  expiration: ${JWT_EXPIRATION:3600000}
+  secret: ${JWT_SECRET}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.cloud.gateway: DEBUG
+
+spring:
+  liquibase:
+    enabled: true
+    change-log: db/db.changelog-master.yml
+
+  jpa:
+    hibernate:
+      ddl-auto: update

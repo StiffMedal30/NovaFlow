@@ -1,1 +1,19 @@
-rootProject.name = 'ai-service'
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'novaflow'
+
+include(
+    'ai-service',
+    'api-gateway',
+    'chat-service',
+    'config-server',
+    'email-service',
+    'idea-service',
+    'novafront',
+    'user-service'
+)

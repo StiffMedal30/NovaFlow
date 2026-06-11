@@ -1,0 +1,19 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: chat-service
+
+  config:
+    import: "configserver:http://localhost:7090/"  # Pull config from config server
+
+  cloud:
+    config:
+      uri: http://localhost:7090/  # Location of config server
+      fail-fast: false
+      retry:
+        max-attempts: 10
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000

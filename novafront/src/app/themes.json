@@ -1,0 +1,28 @@
+{
+  "themes": [
+    {
+      "name": "Pure",
+      "colors": {
+        "background": "#f8f8f8",
+        "secondary_background": "#ebebeb",
+        "primary": "#7f5af0",
+        "secondary": "#eaeaea",
+        "accent": "#908df7",
+        "text": "#111111",
+        "border": "#cccccc"
+      }
+    },
+    {
+      "name": "Dark",
+      "colors": {
+        "background": "#100d14",
+        "secondary_background": "#17151b",
+        "primary": "#7f5af0",
+        "secondary": "#211f25",
+        "accent": "#908df7",
+        "text": "#fffffe",
+        "border": "#1a1520"
+      }
+    }
+  ]
+}

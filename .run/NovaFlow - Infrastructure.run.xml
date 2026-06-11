@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="NovaFlow - Infrastructure" type="docker-compose" factoryName="docker-compose.yml">
+    <deployment type="docker-compose.yaml">
+      <settings>
+        <option name="envFilePath" value="$PROJECT_DIR$/builder/.env" />
+        <option name="sourceFilePath" value="$PROJECT_DIR$/builder/docker-compose.local.yml" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
