@@ -5,6 +5,10 @@ import toast, { Toaster } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 import { login } from "../../../apiClient/loginClient";
 import { useAuth } from "../../store/authStore";
+import {
+  isGoogleOAuthEnabled,
+  startGoogleOAuth,
+} from "../../../apiClient/registrationClient";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,6 +19,7 @@ export default function LoginPage() {
     username: "",
     password: ""
   });
+  const [googleOAuthEnabled, setGoogleOAuthEnabled] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -60,7 +65,11 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    toast.success("Under construction!");
+    if (!googleOAuthEnabled) {
+      toast.error("Google sign-in is not configured yet.");
+      return;
+    }
+    startGoogleOAuth();
   };
 
   const navigateToRegister = () => {
@@ -90,6 +99,36 @@ export default function LoginPage() {
       document.documentElement.style.overflow = "";
     };
   }, []);
+
+  React.useEffect(() => {
+    isGoogleOAuthEnabled().then(setGoogleOAuthEnabled).catch(() => {
+      setGoogleOAuthEnabled(false);
+    });
+  }, []);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const activation = params.get("activation");
+    const oauth = params.get("oauth");
+
+    if (activation === "success") {
+      toast.success("Your account is active. You can now sign in.");
+    } else if (activation === "pending") {
+      toast.success("Account created. Check your email for the activation link.");
+    } else if (activation === "expired") {
+      toast.error("That activation link has expired.");
+    } else if (activation === "used") {
+      toast.error("That activation link has already been used.");
+    } else if (activation === "invalid") {
+      toast.error("That activation link is invalid.");
+    } else if (oauth === "failed") {
+      toast.error("Google sign-in could not be completed.");
+    }
+
+    if (activation || oauth) {
+      navigate("/login", { replace: true });
+    }
+  }, [location.search, navigate]);
 
   return (
     <>

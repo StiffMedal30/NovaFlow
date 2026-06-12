@@ -9,7 +9,8 @@ Spring services, shared configuration, and local Docker infrastructure.
 
 ## Current features
 
-- Register and authenticate users through the API gateway
+- Register with email/password or Google through the API gateway
+- Activate new accounts through a single-use email link that expires after 24 hours
 - Queue account, password reset, and invitation emails for asynchronous delivery
 - Submit and save ideas
 - Generate a prioritized, step-by-step execution plan with OpenAI
@@ -73,6 +74,29 @@ OPENAI_MODEL=gpt-5.2
 Both `.env` files are ignored by Git. Local email is captured by Mailpit, so
 SMTP credentials are not required for development.
 
+### Google sign-in
+
+Google sign-in is optional and disabled by default. Copy
+`api-gateway/.env.example` to `api-gateway/.env`, then configure:
+
+```properties
+GOOGLE_OAUTH_ENABLED=true
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+INTERNAL_SERVICE_KEY=novaflow-local-internal-key
+```
+
+In the Google Cloud OAuth client, add this authorized redirect URI:
+
+```text
+http://localhost:8081/login/oauth2/code/google
+```
+
+Use `http://localhost:3000` as the local authorized JavaScript origin. Keep
+`INTERNAL_SERVICE_KEY` identical for the API gateway and user service. It
+protects the internal Google account provisioning endpoint and must be changed
+for a deployed environment.
+
 ## Start with IntelliJ
 
 Open the repository root in one IntelliJ window and import the root
@@ -107,6 +131,20 @@ Password: admin
 
 This account is seed data for local testing only. It is not production data and
 must not be used in a deployed environment.
+
+## Account activation
+
+Manual registration and first-time Google sign-in follow the same lifecycle:
+
+1. The user service creates the account in a disabled state.
+2. It stores a hash of a random activation token and queues an activation email.
+3. The email service sends the message asynchronously through RabbitMQ.
+4. Clicking the link activates the account and redirects to the login page.
+5. The link is rejected after activation or after 24 hours.
+
+Passwords and raw activation tokens are never stored in plain text. In local
+development, open Mailpit at [http://localhost:8025](http://localhost:8025) to
+read and follow activation emails.
 
 ## Manual startup
 
@@ -196,8 +234,11 @@ Run the Docker-based integration tests:
 
 The integration suite starts isolated Testcontainers instances and verifies:
 
-- Registration persists a user in PostgreSQL and publishes an activation event
-  to RabbitMQ.
+- Manual registration persists a disabled user, publishes an activation event,
+  activates the user once, and rejects reuse of the link.
+- Expired activation links cannot enable an account.
+- First-time Google sign-in provisions a disabled Google account and publishes
+  its activation event.
 - The email service consumes a RabbitMQ event and delivers it through a real
   Mailpit SMTP server.
 - Failed SMTP delivery is attempted three times before the original event is

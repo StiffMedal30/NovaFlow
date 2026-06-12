@@ -11,6 +11,7 @@ import SuperSecretPage from "./Pages/SuperSecret/page";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import ChatPage from "./Pages/Chat/page";
 import IdeaPage from "./Pages/Idea";
+import OAuthCallbackPage from "./Pages/OAuthCallback/page";
 
 function AppContent() {
   const { currentTheme } = useTheme();
@@ -29,6 +30,7 @@ function AppContent() {
         {/*Unprotected Routes (Anyone can access)*/}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
         {/*Protected Routes*/}
         <Route element={<ProtectedRoute />}>

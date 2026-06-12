@@ -3,17 +3,26 @@ import { useNavigate } from "react-router-dom";
 import DarkVeil from "../../components/DarkVeil";
 import toast, { Toaster } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
+import { MailCheck } from "lucide-react";
+import {
+  isGoogleOAuthEnabled,
+  register,
+  startGoogleOAuth,
+} from "../../../apiClient/registrationClient";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
+    name: "",
     username: "",
     password: "",
     confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [googleOAuthEnabled, setGoogleOAuthEnabled] = useState(false);
 
   // Remove body margins and overflow to prevent scroll bars
   React.useEffect(() => {
@@ -33,6 +42,12 @@ export default function RegisterPage() {
       document.documentElement.style.padding = "";
       document.documentElement.style.overflow = "";
     };
+  }, []);
+
+  React.useEffect(() => {
+    isGoogleOAuthEnabled().then(setGoogleOAuthEnabled).catch(() => {
+      setGoogleOAuthEnabled(false);
+    });
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,8 +74,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    if (formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
       setIsLoading(false);
       return;
     }
@@ -74,20 +89,27 @@ export default function RegisterPage() {
     }
 
     try {
-      toast.success("Account created successfully!");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
-
-    } catch {
-      toast.error("Registration failed. Please try again.");
+      const response = await register({
+        email: formData.email.trim(),
+        name: formData.name.trim() || undefined,
+        username: formData.username.trim(),
+        password: formData.password,
+      });
+      setRegistrationComplete(true);
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignup = () => {
-    toast.success("Under construction!");
+    if (!googleOAuthEnabled) {
+      toast.error("Google sign-up is not configured yet.");
+      return;
+    }
+    startGoogleOAuth();
   };
 
   const navigateToLogin = () => {
@@ -120,8 +142,45 @@ export default function RegisterPage() {
         />
         <div className="bg-secondary-background/20 backdrop-blur-md rounded-xl border-2 border-border p-8 w-96 min-h-96 max-w-md flex flex-col items-stretch shadow-2xl relative z-10">
           <h1 className="text-3xl font-normal text-text font-['Didact_Gothic'] mb-6">NovaFlow</h1>
-          <h2 className="text-2xl font-normal text-text font-['Didact_Gothic'] mb-6">Create Account</h2>
+          <h2 className="text-2xl font-normal text-text font-['Didact_Gothic'] mb-6">
+            {registrationComplete ? "Verification email sent" : "Create Account"}
+          </h2>
+          {registrationComplete ? (
+            <div className="flex flex-col items-center gap-5 text-center text-text">
+              <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-accent/40 bg-accent/10 text-accent">
+                <MailCheck size={28} aria-hidden="true" />
+              </div>
+              <div className="space-y-3">
+                <p className="leading-7 text-text/80">
+                  Your account has been created. We sent a verification email to
+                </p>
+                <p className="max-w-full text-sm font-medium text-text [overflow-wrap:anywhere]">
+                  {formData.email}
+                </p>
+                <p className="leading-7 text-text/70">
+                  Check your mailbox and follow the activation link. If it is not in your inbox,
+                  check your spam folder. The link expires after 24 hours.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={navigateToLogin}
+                className="w-full rounded-lg bg-accent px-4 py-3 font-medium text-background transition-colors hover:bg-accent/90"
+              >
+                Back to login
+              </button>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <input
+              type="text"
+              name="name"
+              placeholder="Full name (optional)"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="px-4 py-3 bg-secondary border border-border rounded-lg text-text placeholder-text/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all"
+              disabled={isLoading}
+            />
             <input
               type="email"
               name="email"
@@ -187,6 +246,7 @@ export default function RegisterPage() {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </>

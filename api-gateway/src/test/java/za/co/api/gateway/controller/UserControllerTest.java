@@ -58,7 +58,7 @@ class UserControllerTest {
 
 //    @Test
     void registerReturnsOkWhenAuthServiceRespondsSuccessfully() {
-        RegisterUserRequest credentials = new RegisterUserRequest(null, "test", "test", null, null, null, null, null);
+        RegisterUserRequest credentials = new RegisterUserRequest("test", "password", "test@example.com", null);
         Map<String, String> responseBody = Map.of("message", "User registered successfully");
 
         when(restTemplate.postForEntity(eq("http://auth-service/api/user/register"), eq(credentials), eq(Map.class)))
@@ -72,7 +72,7 @@ class UserControllerTest {
 
 //    @Test
     void registerReturnsInternalServerErrorWhenAuthServiceFails() {
-        RegisterUserRequest credentials = new RegisterUserRequest(null, "test", "test", null, null, null, null, null);
+        RegisterUserRequest credentials = new RegisterUserRequest("test", "password", "test@example.com", null);
 
         when(restTemplate.postForEntity(any(String.class), any(Object.class), eq(Map.class)))
                 .thenThrow(new RuntimeException("Registration failed"));

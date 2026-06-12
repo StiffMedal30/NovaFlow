@@ -15,6 +15,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import za.co.api.gateway.util.JwtTokenFilter;
+import za.co.api.gateway.security.GoogleOAuthFailureHandler;
+import za.co.api.gateway.security.GoogleOAuthSuccessHandler;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import java.util.List;
 
@@ -23,9 +27,20 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
+    private final GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
+    private final GoogleOAuthFailureHandler googleOAuthFailureHandler;
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
 
-    public SecurityConfig(JwtTokenFilter jwtTokenFilter) {
+    public SecurityConfig(
+            JwtTokenFilter jwtTokenFilter,
+            GoogleOAuthSuccessHandler googleOAuthSuccessHandler,
+            GoogleOAuthFailureHandler googleOAuthFailureHandler,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations
+    ) {
         this.jwtTokenFilter = jwtTokenFilter;
+        this.googleOAuthSuccessHandler = googleOAuthSuccessHandler;
+        this.googleOAuthFailureHandler = googleOAuthFailureHandler;
+        this.clientRegistrations = clientRegistrations;
     }
 
     @Bean
@@ -35,7 +50,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -45,8 +60,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SecurityPaths.PUBLIC_PATHS).permitAll() // Allow these
                         .anyRequest().authenticated() // All else requires JWT
-                )
-                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                );
+
+        if (clientRegistrations.getIfAvailable() != null) {
+            http.oauth2Login(oauth -> oauth
+                    .successHandler(googleOAuthSuccessHandler)
+                    .failureHandler(googleOAuthFailureHandler)
+            );
+        }
+
+        http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

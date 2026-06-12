@@ -13,6 +13,9 @@ public final class SecurityPaths {
             "/api/link",
             "/api/debug/mappings",
             "/api/user/check-registered",
+            "/api/oauth/google/status",
+            "/oauth2/**",
+            "/login/oauth2/**",
             "/error/**"
     };
 

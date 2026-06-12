@@ -34,7 +34,7 @@ public class LinkRedirectController {
     }
 
     @GetMapping("/reset/password")
-    public ResponseEntity<String> resetPassword(@RequestParam("t") String token, HttpServletResponse response) throws IOException {
+    public ResponseEntity<String> resetPassword(@RequestParam("t") String token) {
         try {
             Boolean success = userService.confirmPasswordReset(token);
             if (!success) {

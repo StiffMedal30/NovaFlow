@@ -25,7 +25,15 @@ spring:
       url: http://localhost:8082
 
 novaflow:
+  frontend:
+    base-url: http://localhost:3000
+  oauth:
+    google:
+      enabled: ${GOOGLE_OAUTH_ENABLED:false}
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
   services:
+    internal-key: ${INTERNAL_SERVICE_KEY:novaflow-local-internal-key}
     user-base: http://localhost:8082
     user: http://localhost:8082/api/user
     collaborator: http://localhost:8082/api/collaborator
