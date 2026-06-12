@@ -31,6 +31,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @RequestMapping("/api/user")
 public class UserController {
 
+    private static final String REGISTRATION_MESSAGE =
+            "Your account has been created. A verification email has been sent. "
+                    + "Please check your mailbox to activate your account.";
+
     @Autowired
     private UserService userService;
 
@@ -41,12 +45,10 @@ public class UserController {
     public ResponseEntity<Map<String, String>> registerUser(@Valid @RequestBody RegisterUserRequest registerRequest) {
         try {
             userService.registerUser(registerRequest);
-            return ResponseEntity.ok(Map.of("message",
-                    "Thank you for registering at NovaFlow. Please check your email to activate your account."));
+            return ResponseEntity.ok(Map.of("message", REGISTRATION_MESSAGE));
         } catch (RuntimeException e) {
             if (Objects.equals(e.getMessage(), "User is disabled")) {
-                return ResponseEntity.ok().body(Map.of("message",
-                        "Thank you for registering at NovaFlow. Please check your email to activate your account."));
+                return ResponseEntity.ok().body(Map.of("message", REGISTRATION_MESSAGE));
             }
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

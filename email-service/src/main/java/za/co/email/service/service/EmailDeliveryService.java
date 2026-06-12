@@ -23,7 +23,7 @@ public class EmailDeliveryService {
     public void send(EmailNotification notification) {
         EmailContent content = contentFor(notification);
         String redirectUrl = createEncodedRedirectUrl(notification.token(), content.actionUrl());
-        String html = content.htmlTemplate().formatted(redirectUrl);
+        String html = content.htmlTemplate().replace("%s", redirectUrl);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();

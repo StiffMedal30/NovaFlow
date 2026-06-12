@@ -6,7 +6,10 @@ spring:
     name: api-gateway
 
   config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - configserver:http://localhost:7090/
 
   cloud:
     config:

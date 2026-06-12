@@ -1,11 +1,12 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="NovaFlow - All Local Apps" type="CompoundRunConfigurationType">
-    <toRun name="NovaFlow - API Gateway" type="GradleRunConfiguration" />
-    <toRun name="NovaFlow - User Service" type="GradleRunConfiguration" />
-    <toRun name="NovaFlow - Idea Service" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - AI Service" type="GradleRunConfiguration" />
+    <toRun name="NovaFlow - API Gateway" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - Chat Service" type="GradleRunConfiguration" />
+    <toRun name="NovaFlow - Config Server" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - Email Service" type="GradleRunConfiguration" />
+    <toRun name="NovaFlow - Idea Service" type="GradleRunConfiguration" />
+    <toRun name="NovaFlow - User Service" type="GradleRunConfiguration" />
     <toRun name="NovaFlow - Frontend" type="js.build_tools.npm" />
     <method v="2" />
   </configuration>

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 import za.co.api.gateway.service.LinkDecoderService;
 
@@ -23,6 +24,9 @@ public class LinkApi {
 
     @Value("${novaflow.services.user-base:http://localhost:8082}")
     private String userServiceBaseUrl;
+
+    @Value("${novaflow.frontend.base-url:http://localhost:3000}")
+    private String frontendBaseUrl;
 
     public LinkApi(LinkDecoderService linkDecoderService, RestTemplate restTemplate) {
         this.linkDecoderService = linkDecoderService;
@@ -50,16 +54,35 @@ public class LinkApi {
                     ? userServiceBaseUrl + "/api/link/redirect/activate?t=" + decodedToken
                     : userServiceBaseUrl + "/api/link/redirect/reset/password?t=" + decodedToken;
 
-            restTemplate.getForEntity(url, Void.class);
-
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create("http://frontend-domain/back/to/login/"))
-                    .build();
+            String result = path.contains("/activate") ? activate(url) : resetPassword(url);
+            URI frontendLocation = UriComponentsBuilder.fromUriString(frontendBaseUrl)
+                    .path("/login")
+                    .queryParam(path.contains("/activate") ? "activation" : "passwordReset", result)
+                    .build()
+                    .toUri();
+            return ResponseEntity.status(HttpStatus.FOUND).location(frontendLocation).build();
 
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Activation failed: " + e.getMessage()));
         }
+    }
+
+    private String activate(String url) {
+        try {
+            restTemplate.getForEntity(url, String.class);
+            return "success";
+        } catch (HttpClientErrorException.Gone exception) {
+            String body = exception.getResponseBodyAsString();
+            return body.toLowerCase().contains("expired") ? "expired" : "used";
+        } catch (HttpClientErrorException.BadRequest exception) {
+            return "invalid";
+        }
+    }
+
+    private String resetPassword(String url) {
+        restTemplate.getForEntity(url, String.class);
+        return "success";
     }
 }

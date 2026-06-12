@@ -54,8 +54,7 @@ public abstract class BaseController {
                     Map.class
             );
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Map.of("error", e.getStatusCode().value() == 404 ? "Idea not found." : "Request failed."));
+            return forwardedError(e);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));
         }
@@ -72,8 +71,7 @@ public abstract class BaseController {
                     Object.class
             );
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Map.of("error", e.getStatusCode().value() == 404 ? "Idea not found." : "Request failed."));
+            return forwardedError(e);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));
         }
@@ -91,8 +89,7 @@ public abstract class BaseController {
                     Map.class
             );
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Map.of("error", e.getStatusCode().value() == 404 ? "Idea not found." : "Request failed."));
+            return forwardedError(e);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));
         }
@@ -109,8 +106,7 @@ public abstract class BaseController {
                     Void.class
             );
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Map.of("error", e.getStatusCode().value() == 404 ? "Idea not found." : "Request failed."));
+            return forwardedError(e);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Request failed: " + e.getMessage()));
         }
@@ -134,5 +130,15 @@ public abstract class BaseController {
             }
         }
         return headers;
+    }
+
+    private ResponseEntity<String> forwardedError(HttpStatusCodeException exception) {
+        String body = exception.getResponseBodyAsString();
+        if (body == null || body.isBlank()) {
+            body = "{\"error\":\"Request failed.\"}";
+        }
+        return ResponseEntity.status(exception.getStatusCode())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 }

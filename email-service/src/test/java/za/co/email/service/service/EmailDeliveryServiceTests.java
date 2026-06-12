@@ -33,7 +33,9 @@ class EmailDeliveryServiceTests {
         properties.setBaseRedirectUrl("http://localhost:8081/api/link?t=");
         properties.setAccountActivationUrl("http://localhost:8081/api/account/activate");
         properties.setActivateAccountSubject("Activate account");
-        properties.setActivateAccountMessageBody("<a href=\"%s\">Activate</a>");
+        properties.setActivateAccountMessageBody(
+                "<table style=\"width:100%\"><tr><td><a href=\"%s\">Activate</a></td></tr></table>"
+        );
 
         emailDeliveryService = new EmailDeliveryService(mailSender, properties);
     }

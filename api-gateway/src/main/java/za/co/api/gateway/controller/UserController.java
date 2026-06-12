@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 import za.co.api.gateway.records.CheckUserRequest;
 import za.co.api.gateway.records.LoginRequest;
 import za.co.api.gateway.records.PasswordResetRequest;
@@ -28,7 +29,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterUserRequest newUser) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterUserRequest newUser) {
         try {
             return forwardPostRequest(userService + "/register", newUser);
         } catch (Exception e) {
