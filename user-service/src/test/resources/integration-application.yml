@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: user-service
+
+app:
+  account-activation:
+    token-ttl: 24h
+  messaging:
+    email:
+      exchange: novaflow.notifications
+      queue: novaflow.email.delivery
+      routing-key: email.send
+      dead-letter-exchange: novaflow.notifications.dlx
+      dead-letter-queue: novaflow.email.delivery.dlq
+      dead-letter-routing-key: email.failed
+
+novaflow:
+  internal-service-key: integration-internal-key

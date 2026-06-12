@@ -23,6 +23,10 @@ def localApplicationProjects = springProjects.findAll {
     it.path != ':config-server'
 }
 
+def sharedProjects = [
+    project(':notification-contracts')
+]
+
 springProjects.each { applicationProject ->
     applicationProject.pluginManager.withPlugin('org.springframework.boot') {
         applicationProject.tasks.named('bootRun') {
@@ -37,19 +41,25 @@ springProjects.each { applicationProject ->
 tasks.register('backendBuild') {
     group = 'build'
     description = 'Builds all locally run Spring services.'
-    dependsOn localApplicationProjects.collect { "${it.path}:build" }
+    dependsOn((sharedProjects + localApplicationProjects).collect { "${it.path}:build" })
 }
 
 tasks.register('backendClasses') {
     group = 'build'
     description = 'Compiles all locally run Spring services without running tests.'
-    dependsOn localApplicationProjects.collect { "${it.path}:classes" }
+    dependsOn((sharedProjects + localApplicationProjects).collect { "${it.path}:classes" })
 }
 
 tasks.register('buildAll') {
     group = 'build'
     description = 'Builds all locally run Spring services and the frontend.'
     dependsOn 'backendBuild', ':novafront:build'
+}
+
+tasks.register('integrationTest') {
+    group = 'verification'
+    description = 'Runs the Docker-based integration tests for asynchronous email delivery.'
+    dependsOn ':user-service:integrationTest', ':email-service:integrationTest'
 }
 
 tasks.register('configServerImage', Exec) {

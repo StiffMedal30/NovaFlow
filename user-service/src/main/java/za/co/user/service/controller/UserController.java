@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus; 
 import za.co.user.service.records.AppUserRecord;
+import za.co.user.service.records.GoogleOAuthRequest;
 import za.co.user.service.records.JwtResponseRecord;
 import za.co.user.service.records.NewPasswordRecord;
+import za.co.user.service.records.OAuthAccountResponse;
+import za.co.user.service.records.RegisterUserRequest;
 import za.co.user.service.service.UserService;
 import za.co.user.service.service.impl.UserServiceImpl;
 import za.co.user.service.records.CheckUserRequest; 
@@ -18,6 +21,11 @@ import jakarta.validation.Valid;
 
 import java.util.Map;
 import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController
 @RequestMapping("/api/user")
@@ -26,8 +34,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Value("${novaflow.internal-service-key}")
+    private String internalServiceKey;
+
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> registerUser(@RequestBody AppUserRecord registerRequest) {
+    public ResponseEntity<Map<String, String>> registerUser(@Valid @RequestBody RegisterUserRequest registerRequest) {
         try {
             userService.registerUser(registerRequest);
             return ResponseEntity.ok(Map.of("message",
@@ -40,6 +51,20 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
 
+    }
+
+    @PostMapping("/oauth/google")
+    public ResponseEntity<OAuthAccountResponse> googleOAuth(
+            @RequestHeader("X-Internal-Service-Key") String suppliedKey,
+            @Valid @RequestBody GoogleOAuthRequest request
+    ) {
+        if (!MessageDigest.isEqual(
+                internalServiceKey.getBytes(StandardCharsets.UTF_8),
+                suppliedKey.getBytes(StandardCharsets.UTF_8)
+        )) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(userService.authenticateGoogleUser(request));
     }
 
     @PostMapping("/password/reset")

@@ -5,4 +5,39 @@ spring:
   application:
     name: email-service
   config:
-    import: optional:configserver:http://localhost:7090/
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:configserver:http://localhost:7090/
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:novaflow}
+    password: ${RABBITMQ_PASSWORD:novaflow}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          max-attempts: 4
+          max-interval: 10s
+          multiplier: 2
+  mail:
+    host: ${EMAIL_HOST:localhost}
+    port: ${EMAIL_PORT:1025}
+    username: ${EMAIL_USERNAME:}
+    password: ${EMAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${EMAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${EMAIL_STARTTLS:false}
+
+app:
+  messaging:
+    email:
+      exchange: novaflow.notifications
+      queue: novaflow.email.delivery
+      routing-key: email.send
+      dead-letter-exchange: novaflow.notifications.dlx
+      dead-letter-queue: novaflow.email.delivery.dlq
+      dead-letter-routing-key: email.failed

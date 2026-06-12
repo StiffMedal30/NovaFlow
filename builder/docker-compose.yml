@@ -30,6 +30,26 @@ services:
       - app-network
     restart: always
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: always
+
   eureka:
     image: steeltoeoss/eureka-server
     container_name: eureka-server
@@ -71,21 +91,51 @@ services:
       - eureka
       - config-server
       - postgres
+      - rabbitmq
     ports:
       - "7010:8082"
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - EMAIL_PROTOCOL=${EMAIL_PROTOCOL}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
       - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
+    networks:
+      - app-network
+    restart: always
+
+  email-service:
+    image: email-service
+    container_name: email-service
+    depends_on:
+      - eureka
+      - config-server
+      - rabbitmq
+    ports:
+      - "8050:8050"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_SMTP_AUTH=${EMAIL_SMTP_AUTH:-true}
+      - EMAIL_STARTTLS=${EMAIL_STARTTLS:-true}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NovaFlow}
+      - PUBLIC_API_URL=${PUBLIC_API_URL}
     networks:
       - app-network
     restart: always
@@ -196,5 +246,6 @@ volumes:
   postgres_data:
   pgadmin_data:
   loki-data:
+  rabbitmq_data:
 
 
