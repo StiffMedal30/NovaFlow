@@ -1,5 +1,50 @@
 # NovaFlow
 
+## Custom Gradle commands
+
+Run these commands from the repository root. On macOS or Linux, replace
+`.\gradlew.bat` with `./gradlew`.
+
+### Required Docker infrastructure
+
+Docker Desktop or Rancher Desktop must be running before starting NovaFlow.
+The following containers must be up before any application service or the
+frontend is started:
+
+- `config-server`
+- `eureka-server`
+- `postgres`
+- `rabbitmq`
+- `mailpit`
+
+On the first checkout, or after changing `config-server`, build its image:
+
+```powershell
+.\gradlew.bat configServerImage
+```
+
+Then start all required containers with the IntelliJ run configuration
+`NovaFlow - Infrastructure`, or from the command line:
+
+```powershell
+docker compose --env-file builder/.env -f builder/docker-compose.local.yml up -d
+```
+
+Wait for the containers to be ready before starting the local applications.
+
+| Command | Purpose |
+| --- | --- |
+| `.\gradlew.bat backendClasses` | Compile all locally run Spring services without running tests. |
+| `.\gradlew.bat backendBuild` | Build and test all locally run Spring services. |
+| `.\gradlew.bat buildAll` | Build all locally run Spring services and the frontend. |
+| `.\gradlew.bat integrationTest` | Run the user and email service integration tests with Testcontainers. |
+| `.\gradlew.bat :user-service:integrationTest` | Run only the user service integration tests with Testcontainers. |
+| `.\gradlew.bat :email-service:integrationTest` | Run only the email service integration tests with Testcontainers. |
+| `.\gradlew.bat configServerImage` | Build the config server executable JAR and Docker image. |
+| `.\gradlew.bat :novafront:npmInstall` | Install frontend dependencies with `npm ci`. |
+| `.\gradlew.bat :novafront:npmBuild` | Build the Vite frontend. |
+| `.\gradlew.bat :novafront:npmDev` | Start the Vite development server. |
+
 NovaFlow turns a rough idea into an actionable plan. An idea submitted by the
 React frontend passes through the API gateway to the idea service, where it is
 stored and sent to the AI service for planning and feasibility analysis.
