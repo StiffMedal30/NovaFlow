@@ -106,7 +106,7 @@ function Start-Compose([string[]]$services) {
 }
 
 # MAIN
-$services = @("config-server", "ai-service", "api-gateway", "idea-service", "user-service", "novafront")
+$services = @("config-server", "ai-service", "api-gateway", "email-service", "idea-service", "user-service", "novafront")
 
 if ($Target) {
     if ($services -contains $Target) {
@@ -131,7 +131,7 @@ if ($Target) {
     }
 
     # Start config-server first, then dependencies
-    Start-Compose @("config-server", "ai-service", "user-service", "idea-service", "api-gateway")
+    Start-Compose @("config-server", "ai-service", "user-service", "email-service", "idea-service", "api-gateway")
 }
 
 Write-Host "Build and deployment completed successfully!" -ForegroundColor Green

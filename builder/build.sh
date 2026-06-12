@@ -89,7 +89,7 @@ start_compose() {
 # MAIN SCRIPT
 # ///////////////////////////////////////////////////////////////////////////
 
-SERVICES=("config-server" "ai-service" "api-gateway" "idea-service" "user-service" "novafront")
+SERVICES=("config-server" "ai-service" "api-gateway" "email-service" "idea-service" "user-service" "novafront")
 
 TARGET=$1
 
@@ -113,7 +113,7 @@ else
             build_service "$service"
         fi
     done
-    start_compose ai-service user-service idea-service api-gateway config-server
+    start_compose ai-service user-service email-service idea-service api-gateway config-server
 fi
 
 echo "✅ Build and deployment completed successfully!"

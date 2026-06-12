@@ -10,6 +10,7 @@ Spring services, shared configuration, and local Docker infrastructure.
 ## Current features
 
 - Register and authenticate users through the API gateway
+- Queue account, password reset, and invitation emails for asynchronous delivery
 - Submit and save ideas
 - Generate a prioritized, step-by-step execution plan with OpenAI
 - Reopen recent ideas and continue working on their steps
@@ -28,7 +29,8 @@ Spring services, shared configuration, and local Docker infrastructure.
 | `idea-service` | Idea persistence, steps, progress, and AI orchestration |
 | `ai-service` | OpenAI planning, feasibility studies, and transcription |
 | `chat-service` | Chat workflows |
-| `email-service` | Email delivery |
+| `email-service` | Asynchronous email delivery and templates |
+| `notification-contracts` | Shared notification message contracts |
 | `config-server` | Spring Cloud Config server, always run in Docker |
 | `common-config` | Externalized development and production configuration |
 | `builder` | Docker Compose files and build scripts |
@@ -49,11 +51,13 @@ Gradle 8.14.3:
 
 ## Local configuration
 
-Create `builder/.env` for the Docker infrastructure:
+Copy `builder/.env.example` to `builder/.env` for the Docker infrastructure:
 
 ```properties
 POSTGRES_USER=sa
 POSTGRES_PASSWORD=StiffMedal30
+RABBITMQ_USERNAME=novaflow
+RABBITMQ_PASSWORD=novaflow
 ```
 
 The password must match the development datasource configuration under
@@ -66,7 +70,8 @@ OPENAI_API_KEY=your-api-key
 OPENAI_MODEL=gpt-5.2
 ```
 
-Both `.env` files are ignored by Git.
+Both `.env` files are ignored by Git. Local email is captured by Mailpit, so
+SMTP credentials are not required for development.
 
 ## Start with IntelliJ
 
@@ -79,14 +84,14 @@ Start the application in this order:
 2. On the first checkout, or after changing `config-server`, run
    `NovaFlow - Build Config Server Image`.
 3. Run `NovaFlow - Infrastructure`.
-4. Wait for PostgreSQL on `5432`, Eureka on `8761`, and the config server on
-   `7090`.
+4. Wait for PostgreSQL on `5432`, RabbitMQ on `5672`, Eureka on `8761`, and
+   the config server on `7090`.
 5. Run `NovaFlow - All Local Apps`.
 6. Open [http://localhost:3000](http://localhost:3000).
 
-`NovaFlow - Infrastructure` starts PostgreSQL, Eureka, and the config server in
-Docker. `NovaFlow - All Local Apps` starts the remaining Spring services and
-the frontend locally from IntelliJ.
+`NovaFlow - Infrastructure` starts PostgreSQL, RabbitMQ, Mailpit, Eureka, and
+the config server in Docker. `NovaFlow - All Local Apps` starts the remaining
+Spring services and the frontend locally from IntelliJ.
 
 The config server is always a Docker service and is never started by the local
 application compound launcher.
@@ -115,7 +120,7 @@ and whenever the config-server code changes:
 .\gradlew.bat configServerImage
 ```
 
-Then start PostgreSQL, Eureka, and the config server:
+Then start PostgreSQL, RabbitMQ, Mailpit, Eureka, and the config server:
 
 ```powershell
 docker-compose --env-file builder/.env -f builder/docker-compose.local.yml up -d
@@ -150,7 +155,9 @@ Start the frontend last:
 | --- | ---: |
 | Frontend | 3000 |
 | PostgreSQL | 5432 |
+| RabbitMQ | 5672 |
 | Config server | 7090 |
+| Mailpit web UI | 8025 |
 | Email service | 8050 |
 | API gateway | 8081 |
 | User service | 8082 |
@@ -163,6 +170,8 @@ Useful local addresses:
 
 - Frontend: [http://localhost:3000](http://localhost:3000)
 - API gateway: [http://localhost:8081](http://localhost:8081)
+- Mailpit inbox: [http://localhost:8025](http://localhost:8025)
+- RabbitMQ management: [http://localhost:15672](http://localhost:15672)
 - Eureka dashboard: [http://localhost:8761](http://localhost:8761)
 
 ## Build and test
@@ -172,6 +181,30 @@ Build all locally run backend services and run their tests:
 ```powershell
 .\gradlew.bat clean backendBuild
 ```
+
+Run the fast unit and mocked tests for the asynchronous email flow:
+
+```powershell
+.\gradlew.bat :user-service:test :email-service:test
+```
+
+Run the Docker-based integration tests:
+
+```powershell
+.\gradlew.bat integrationTest
+```
+
+The integration suite starts isolated Testcontainers instances and verifies:
+
+- Registration persists a user in PostgreSQL and publishes an activation event
+  to RabbitMQ.
+- The email service consumes a RabbitMQ event and delivers it through a real
+  Mailpit SMTP server.
+- Failed SMTP delivery is attempted three times before the original event is
+  sent to `novaflow.email.delivery.dlq`.
+
+Docker Desktop or Rancher Desktop must be running for `integrationTest`. The
+normal `test` and `backendBuild` tasks do not run the container tests.
 
 Build the locally run backend services and frontend:
 
@@ -203,6 +236,8 @@ production bundle is created under `novafront/target`.
   Docker instances before using the IntelliJ compound launcher.
 - If services cannot load configuration, confirm the config server is running
   in Docker on `7090`.
+- If email notifications are not delivered, check RabbitMQ on `15672`, the
+  `novaflow.email.delivery.dlq` queue, and the Mailpit inbox on `8025`.
 - If database connections fail, confirm PostgreSQL is running and the password
   in `builder/.env` matches the development configuration.
 - If Eureka registration fails, confirm

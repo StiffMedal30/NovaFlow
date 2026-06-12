@@ -1,21 +1,23 @@
-package za.co.user.service.properties;
+package za.co.email.service.config;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-@ConfigurationProperties(prefix = "app.mail")
 @Getter
 @Setter
+@ConfigurationProperties(prefix = "app.mail")
 public class MailProperties {
+    private String fromAddress;
+    private String fromName;
     private String baseRedirectUrl;
     private String accountActivationUrl;
     private String resetPasswordUrl;
     private String collaboratorInviteUrl;
+    private String activateAccountSubject;
     private String activateAccountMessageBody;
+    private String resetPasswordSubject;
     private String resetPasswordMessageBody;
+    private String invitationSubject;
     private String invitationMessageBody;
 }
-

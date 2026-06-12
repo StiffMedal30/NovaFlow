@@ -12,6 +12,32 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-novaflow}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-novaflow}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.30.1
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
   eureka:
     image: steeltoeoss/eureka-server
     container_name: eureka-server
@@ -41,3 +67,4 @@ services:
 
 volumes:
   postgres_data:
+  rabbitmq_data:

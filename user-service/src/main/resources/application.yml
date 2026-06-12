@@ -27,48 +27,24 @@ spring:
   jpa:
     show-sql: true
 
-  mail:
-    host: mail.dotze.co.za
-    port: 465
-    username: no-reply@dotze.co.za
-    password: OjaX?oW^c0@6
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
-
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:novaflow}
+    password: ${RABBITMQ_PASSWORD:novaflow}
 
 app:
-  mail:
-    account-activation-url: http://localhost:8081/api-gateway/api/account/activate
-    reset-password-url: http://localhost:8081/api-gateway/api/reset/password
-    collaborator-invite-url: http://localhost:8081/api-gateway/api/invite/collaborator
-    base-redirect-url: http://localhost:8081/api/link?t=
-    activate-account-message-body: |
-      <html>
-        <body>
-          <h2>Welcome to NovaFlow!</h2>
-          <p>Thanks for registering. Please click the link below to activate your account:</p>
-          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Activate Account</a>
-          <p>If you didn't register, you can safely ignore this email.</p>
-        </body>
-      </html>
-    reset-password-message-body: |
-      <html>
-        <body>
-          <h2>NovaFlow!</h2>
-          <p>Your password has been reset. Please click the link below to confirm that this was you:</p>
-          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Confirm Reset</a>
-          <p>If you didn't request a password reset, you can safely ignore this email.</p>
-        </body>
-      </html>
-    invitation-message-body: |
-      <html>
-          <body>
-          <h2>NovaFlow!</h2>
-          <p>You have been invited to join a project. Please click the link below to accept the invitation:</p>
-          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Accept Invitation</a>
-          <p>If you are not aware of this, you can safely ignore it.</p>
-          <p>This email will expire in 24 hours</p>
-          </body>
-      </html>
+  account-activation:
+    token-ttl: 24h
+  messaging:
+    email:
+      exchange: novaflow.notifications
+      queue: novaflow.email.delivery
+      routing-key: email.send
+      dead-letter-exchange: novaflow.notifications.dlx
+      dead-letter-queue: novaflow.email.delivery.dlq
+      dead-letter-routing-key: email.failed
+
+novaflow:
+  internal-service-key: ${INTERNAL_SERVICE_KEY:novaflow-local-internal-key}
 

@@ -1,0 +1,54 @@
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+  mail:
+    host: ${EMAIL_HOST}
+    port: ${EMAIL_PORT:587}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: ${EMAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${EMAIL_STARTTLS:true}
+
+app:
+  mail:
+    from-address: ${EMAIL_FROM_ADDRESS}
+    from-name: ${EMAIL_FROM_NAME:NovaFlow}
+    account-activation-url: ${PUBLIC_API_URL}/api-gateway/api/account/activate
+    reset-password-url: ${PUBLIC_API_URL}/api-gateway/api/reset/password
+    collaborator-invite-url: ${PUBLIC_API_URL}/api-gateway/api/invite/collaborator
+    base-redirect-url: ${PUBLIC_API_URL}/api/link?t=
+    activate-account-subject: Verify your NovaFlow account
+    activate-account-message-body: |
+      <html>
+        <body>
+          <h2>Welcome to NovaFlow!</h2>
+          <p>Thanks for registering. Please click the link below to activate your account:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Activate Account</a>
+          <p>If you didn't register, you can safely ignore this email.</p>
+        </body>
+      </html>
+    reset-password-subject: Reset your NovaFlow password
+    reset-password-message-body: |
+      <html>
+        <body>
+          <h2>NovaFlow</h2>
+          <p>Your password has been reset. Please click the link below to confirm that this was you:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Confirm Reset</a>
+          <p>If you didn't request a password reset, you can safely ignore this email.</p>
+        </body>
+      </html>
+    invitation-subject: NovaFlow account invitation
+    invitation-message-body: |
+      <html>
+        <body>
+          <h2>NovaFlow</h2>
+          <p>You have been invited to join a project. Please click the link below to accept the invitation:</p>
+          <a href="%s" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">Accept Invitation</a>
+          <p>If you are not aware of this, you can safely ignore it.</p>
+          <p>This email will expire in 24 hours.</p>
+        </body>
+      </html>

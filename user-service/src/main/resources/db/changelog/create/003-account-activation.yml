@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-account-activation-token
+      author: codex
+      changes:
+        - addColumn:
+            tableName: app_user
+            columns:
+              - column:
+                  name: auth_provider
+                  type: varchar(32)
+                  defaultValue: LOCAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_subject
+                  type: varchar(255)
+        - addUniqueConstraint:
+            tableName: app_user
+            columnNames: auth_provider, provider_subject
+            constraintName: uk_app_user_auth_provider_subject
+        - createTable:
+            tableName: account_activation_token
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: created_by
+                  type: varchar(255)
+              - column:
+                  name: modified_at
+                  type: timestamp
+              - column:
+                  name: modified_by
+                  type: varchar(255)
+              - column:
+                  name: token_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_activation_token_user
+                    references: app_user(id)
+              - column:
+                  name: expiry_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: used_at
+                  type: timestamp

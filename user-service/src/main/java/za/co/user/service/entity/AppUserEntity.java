@@ -17,6 +17,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import za.co.user.service.entity.base.BaseEntity;
 import za.co.user.service.enums.Role;
+import za.co.user.service.enums.AuthProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,6 +36,11 @@ public class AppUserEntity extends BaseEntity implements UserDetails {
     private String username;
     @Column(name = "password", nullable = false)
     private String password;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+    @Column(name = "provider_subject")
+    private String providerSubject;
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
