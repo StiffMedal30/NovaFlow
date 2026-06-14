@@ -27,10 +27,48 @@ def sharedProjects = [
     project(':notification-contracts')
 ]
 
+def rootEnvironment = {
+    def envFile = rootProject.file('.env')
+    if (!envFile.exists()) {
+        return [:]
+    }
+
+    envFile.readLines()
+        .collect { it.trim() }
+        .findAll { it && !it.startsWith('#') && it.contains('=') }
+        .collectEntries { line ->
+            def separator = line.indexOf('=')
+            def key = line.substring(0, separator).trim()
+            def value = line.substring(separator + 1).trim()
+            if ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.substring(1, value.length() - 1)
+            }
+            [(key): value]
+        }
+}
+
+def deployableServices = (springProjects*.name + ['novafront']).sort()
+def requestedService = {
+    def serviceName = providers.gradleProperty('service').orNull
+    if (!serviceName) {
+        throw new GradleException(
+            "Missing service name. Use -Pservice=<name>. Available services: ${deployableServices.join(', ')}"
+        )
+    }
+    if (!deployableServices.contains(serviceName)) {
+        throw new GradleException(
+            "Unknown service '${serviceName}'. Available services: ${deployableServices.join(', ')}"
+        )
+    }
+    serviceName
+}
+
 springProjects.each { applicationProject ->
     applicationProject.pluginManager.withPlugin('org.springframework.boot') {
         applicationProject.tasks.named('bootRun') {
             workingDir = applicationProject.projectDir
+            environment rootEnvironment()
         }
         applicationProject.tasks.named('jar') {
             enabled = false
@@ -68,4 +106,35 @@ tasks.register('configServerImage', Exec) {
     dependsOn ':config-server:bootJar'
     workingDir project(':config-server').projectDir
     commandLine 'docker', 'build', '-t', 'config-server', '.'
+}
+
+tasks.register('serviceImage', Exec) {
+    group = 'docker'
+    description = 'Builds one service and its Docker image. Use -Pservice=<name>.'
+    dependsOn {
+        [":${requestedService()}:build"]
+    }
+    doFirst {
+        def serviceName = requestedService()
+        workingDir project(":${serviceName}").projectDir
+        commandLine 'docker', 'build', '-t', serviceName, '.'
+    }
+}
+
+tasks.register('restartService', Exec) {
+    group = 'docker'
+    description = 'Builds and recreates one Docker Compose service. Use -Pservice=<name>.'
+    dependsOn 'serviceImage'
+    workingDir layout.projectDirectory.dir('builder')
+    doFirst {
+        commandLine(
+            'docker-compose',
+            '--env-file', '../.env',
+            '-f', 'docker-compose.yml',
+            'up', '-d',
+            '--no-deps',
+            '--force-recreate',
+            requestedService()
+        )
+    }
 }

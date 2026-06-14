@@ -4,16 +4,11 @@ server:
 spring:
   config:
     import:
-      - optional:file:.env[.properties]
       - optional:file:../.env[.properties]
   application:
     name: ai-service
   profiles:
     active: dev   # <-- this makes sure it fetches ai-service-dev.yml + application-dev.yml
-  ai:
-    ollama:
-      base-url: http://localhost:11434
-
   cloud:
     config:
       uri: http://localhost:7090  # Location of config server

@@ -4,16 +4,14 @@ server:
 spring:
   application:
     name: config-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:native}
 
   cloud:
     config:
       server:
-        git:
-          uri: git@bitbucket.org:novaflow/common-config.git
-          private-key: /root/.ssh/bitbucket_rsa
-          clone-on-start: true
-          strict-host-key-checking: false
-          searchPaths: '{application}'
+        native:
+          search-locations: ${SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS:file:../common-config/{application},file:../common-config}
 
 eureka:
   client:

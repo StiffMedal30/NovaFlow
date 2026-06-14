@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/user_service_db
-    username: sa
-    password: StiffMedal30
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:change-me}
     driver-class-name: org.postgresql.Driver
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

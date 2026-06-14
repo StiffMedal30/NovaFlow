@@ -27,6 +27,17 @@ novafront/out-tsc/
 *.iws
 .vscode/
 **/.vscode/
+.apt_generated/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.springBeans
+**/.sts4-cache/
+**/nbproject/private/
+**/nbbuild/
+**/nbdist/
+.pnp*
 
 # Local runtime files
 .runlogs/

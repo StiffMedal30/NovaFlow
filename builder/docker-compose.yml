@@ -3,8 +3,8 @@ services:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: "sa"
-      POSTGRES_PASSWORD: "StiffMedal30"
+      POSTGRES_USER: ${POSTGRES_USER:-sa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     networks:
@@ -22,8 +22,8 @@ services:
     ports:
       - "8090:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.com
-      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -73,11 +73,9 @@ services:
       - "7090:7090"
     volumes:
       - ../common-config:/config:ro
-      - ${HOME}/.ssh:/root/.ssh   # Mount host SSH keys
     environment:
       - SPRING_PROFILES_ACTIVE=native
       - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config/{application},file:/config
-      - GIT_SSH_COMMAND=ssh -i /root/.ssh/bitbucket_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
     networks:
@@ -167,11 +165,14 @@ services:
       - postgres
     ports:
       - "7030:8084"
-    env_file:
-      - ../ai-service/.env
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5.2}
+      - OPENAI_REFINEMENT_MODEL=${OPENAI_REFINEMENT_MODEL:-gpt-5.2}
+      - OPENAI_TRANSCRIPTION_MODEL=${OPENAI_TRANSCRIPTION_MODEL:-gpt-4o-mini-transcribe}
       - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network

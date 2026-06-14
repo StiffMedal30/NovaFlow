@@ -1,6 +1,6 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/idea_service_db
-    username: sa
-    password: StiffMedal30
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:change-me}
     driver-class-name: org.postgresql.Driver

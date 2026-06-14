@@ -1,30 +1,27 @@
 plugins {
     id 'base'
+    id 'com.github.node-gradle.node' version '7.1.0'
 }
 
-def npmExecutable = System.getProperty('os.name').toLowerCase().contains('windows')
-    ? 'npm.cmd'
-    : 'npm'
-
-tasks.register('npmInstall', Exec) {
-    group = 'frontend'
-    description = 'Installs frontend dependencies from package-lock.json.'
-    workingDir projectDir
-    commandLine npmExecutable, 'ci'
+node {
+    version = '22.14.0'
+    npmVersion = '10.9.2'
+    download = true
+    nodeProjectDir = projectDir
 }
 
-tasks.register('npmBuild', Exec) {
+tasks.register('npmBuild', NpmTask) {
     group = 'frontend'
     description = 'Builds the Vite frontend.'
-    workingDir projectDir
-    commandLine npmExecutable, 'run', 'build'
+    dependsOn tasks.named('npmInstall')
+    args = ['run', 'build']
 }
 
-tasks.register('npmDev', Exec) {
+tasks.register('npmDev', NpmTask) {
     group = 'application'
     description = 'Starts the Vite development server.'
-    workingDir projectDir
-    commandLine npmExecutable, 'run', 'dev'
+    dependsOn tasks.named('npmInstall')
+    args = ['run', 'dev']
 }
 
 tasks.named('assemble') {
