@@ -4,11 +4,5 @@ spring:
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:change-me}
     driver-class-name: org.postgresql.Driver
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:novaflow}
-    password: ${RABBITMQ_PASSWORD:novaflow}
-
 novaflow:
   internal-service-key: ${INTERNAL_SERVICE_KEY:novaflow-local-internal-key}

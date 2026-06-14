@@ -5,17 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c6d3d93-d165-4a18-a5be-0d91eb880a00" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-Bubo8A52.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-mJlH9bPa.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Pages/Login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/Pages/Login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Cards/IdeasCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Cards/IdeasCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ProtectedRoute.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ProtectedRoute.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/settingsItems/LoginStateButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/settingsItems/LoginStateButton.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/ProfileComponent.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/ProfileComponent.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/settings-dropdown.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/settings-dropdown.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../builder/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../builder/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../email-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../email-service/src/main/resources/application.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,23 +61,28 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
     "javascript.preferred.runtime.type.id": "node",
+    "last_opened_file_path": "C:/dev/NovaFlow/novafront",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_interpreter_path": "C:/Users/chris/AppData/Roaming/JetBrains/WebStorm2026.1/node/versions/24.16.0/node",
     "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "C:\\git\\play-ground\\novaflow\\novafront\\node_modules\\typescript\\lib",
+    "ts.external.directory.path": "C:\\dev\\NovaFlow\\novafront\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.23567.141" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.24374.125" />
       </set>
     </attachedChunks>
   </component>
@@ -99,6 +95,7 @@
       <updated>1780041330958</updated>
       <workItem from="1780041333618" duration="7000" />
       <workItem from="1781171171395" duration="1280000" />
+      <workItem from="1781463185880" duration="1067000" />
     </task>
     <servers />
   </component>
