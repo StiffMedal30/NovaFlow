@@ -1,18 +1,3 @@
-spring:
-  rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME}
-    password: ${RABBITMQ_PASSWORD}
-  mail:
-    host: ${EMAIL_HOST}
-    port: ${EMAIL_PORT:587}
-    username: ${EMAIL_USERNAME}
-    password: ${EMAIL_PASSWORD}
-    properties:
-      mail.smtp.auth: ${EMAIL_SMTP_AUTH:true}
-      mail.smtp.starttls.enable: ${EMAIL_STARTTLS:true}
-
 app:
   mail:
     from-address: ${EMAIL_FROM_ADDRESS}

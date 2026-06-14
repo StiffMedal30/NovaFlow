@@ -3,8 +3,8 @@ services:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-sa}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: sa
+      POSTGRES_PASSWORD: change-me
     ports:
       - "5432:5432"
     networks:
@@ -22,8 +22,8 @@ services:
     ports:
       - "8090:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: change-me
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -34,8 +34,8 @@ services:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-novaflow}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-novaflow}
     ports:
       - "5672:5672"
       - "15672:15672"

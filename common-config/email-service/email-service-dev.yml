@@ -1,18 +1,3 @@
-spring:
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:novaflow}
-    password: ${RABBITMQ_PASSWORD:novaflow}
-  mail:
-    host: ${EMAIL_HOST:localhost}
-    port: ${EMAIL_PORT:1025}
-    username: ${EMAIL_USERNAME:}
-    password: ${EMAIL_PASSWORD:}
-    properties:
-      mail.smtp.auth: ${EMAIL_SMTP_AUTH:false}
-      mail.smtp.starttls.enable: ${EMAIL_STARTTLS:false}
-
 app:
   mail:
     from-address: ${EMAIL_FROM_ADDRESS:no-reply@novaflow.local}
