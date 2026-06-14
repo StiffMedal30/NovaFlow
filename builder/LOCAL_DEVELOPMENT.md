@@ -18,6 +18,9 @@ The infrastructure configuration starts PostgreSQL, RabbitMQ, Mailpit, Eureka,
 and the config server in Docker. The compound application configuration starts
 the remaining Spring services and the Vite frontend locally.
 
+Gradle downloads the frontend's pinned Node.js and npm toolchain automatically;
+Node.js does not need to be installed globally.
+
 Use the root Gradle wrapper for command-line builds:
 
 ```powershell
@@ -37,8 +40,8 @@ Build output is stored in each module's `target` directory. Backend jars are
 created under `<service>/target/libs`, and the frontend production bundle is
 written to `novafront/target`.
 
-The AI service reads `OPENAI_API_KEY` from `ai-service/.env`. Copy
-`builder/.env.example` to `builder/.env` for the Docker infrastructure values.
+Copy `.env.example` to the repository root as `.env`. Gradle loads it into
+local Spring services, and Docker Compose uses it for container configuration.
 
 ## Local ports
 
@@ -58,7 +61,7 @@ The AI service reads `OPENAI_API_KEY` from `ai-service/.env`. Copy
 | Eureka | 8761 |
 
 RabbitMQ management is available at `http://localhost:15672` using the
-credentials from `builder/.env`. Development emails are available at
+credentials from the root `.env`. Development emails are available at
 `http://localhost:8025`.
 
 The Spring service ports can be overridden with `SERVER_PORT`, but the shared

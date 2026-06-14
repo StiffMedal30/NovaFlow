@@ -20,8 +20,8 @@ SMTP host: localhost
 SMTP port: 1025
 ```
 
-No real SMTP credentials are required for local development. Copy
-`.env.example` to `.env` only when overriding the defaults.
+No real SMTP credentials are required for local development. Put overrides in
+the repository root `.env`.
 
 Run the service with:
 
