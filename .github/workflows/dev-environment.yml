@@ -1,0 +1,92 @@
+name: Dev environment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-dev-environment:
+    name: Validate dev environment
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      POSTGRES_USER: ${{ vars.POSTGRES_USER || 'sa' }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DB_USERNAME: ${{ vars.DB_USERNAME || vars.POSTGRES_USER || 'sa' }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD || secrets.POSTGRES_PASSWORD }}
+      PGADMIN_DEFAULT_EMAIL: ${{ vars.PGADMIN_DEFAULT_EMAIL || 'admin@local.com' }}
+      PGADMIN_DEFAULT_PASSWORD: ${{ secrets.PGADMIN_DEFAULT_PASSWORD || secrets.POSTGRES_PASSWORD }}
+      RABBITMQ_USERNAME: ${{ vars.RABBITMQ_USERNAME || 'novaflow' }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRATION: ${{ vars.JWT_EXPIRATION || '3600000' }}
+      INTERNAL_SERVICE_KEY: ${{ secrets.INTERNAL_SERVICE_KEY }}
+      FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'http://localhost:3000' }}
+      PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || 'http://localhost:8081' }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL || 'https://api.openai.com/v1' }}
+      OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.2' }}
+      OPENAI_REFINEMENT_MODEL: ${{ vars.OPENAI_REFINEMENT_MODEL || vars.OPENAI_MODEL || 'gpt-5.2' }}
+      OPENAI_TRANSCRIPTION_MODEL: ${{ vars.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe' }}
+      GOOGLE_OAUTH_ENABLED: ${{ vars.GOOGLE_OAUTH_ENABLED || 'false' }}
+      GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      EMAIL_HOST: ${{ vars.EMAIL_HOST || 'localhost' }}
+      EMAIL_PORT: ${{ vars.EMAIL_PORT || '1025' }}
+      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      EMAIL_SMTP_AUTH: ${{ vars.EMAIL_SMTP_AUTH || 'false' }}
+      EMAIL_STARTTLS: ${{ vars.EMAIL_STARTTLS || 'false' }}
+      EMAIL_FROM_ADDRESS: ${{ vars.EMAIL_FROM_ADDRESS || 'no-reply@novaflow.local' }}
+      EMAIL_FROM_NAME: ${{ vars.EMAIL_FROM_NAME || 'NovaFlow' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secret-backed settings
+        shell: bash
+        run: |
+          missing=0
+          for name in POSTGRES_PASSWORD DB_PASSWORD PGADMIN_DEFAULT_PASSWORD RABBITMQ_PASSWORD JWT_SECRET INTERNAL_SERVICE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing dev secret::$name is not configured for the GitHub environment named dev."
+              missing=1
+            fi
+          done
+
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::notice title=OpenAI disabled::OPENAI_API_KEY is empty, so AI calls will fail until that dev secret is configured."
+          fi
+
+          exit "$missing"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Compile backend
+        run: ./gradlew backendClasses
+
+      - name: Build config server image
+        run: ./gradlew configServerImage
+
+      - name: Validate Compose interpolation
+        run: docker compose -f builder/docker-compose.local.yml config --quiet
+
+      - name: Start dev infrastructure
+        run: docker compose -f builder/docker-compose.local.yml up -d
+
+      - name: Show infrastructure status
+        run: docker compose -f builder/docker-compose.local.yml ps
+
+      - name: Stop dev infrastructure
+        if: always()
+        run: docker compose -f builder/docker-compose.local.yml down -v

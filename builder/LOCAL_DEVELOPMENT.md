@@ -40,8 +40,12 @@ Build output is stored in each module's `target` directory. Backend jars are
 created under `<service>/target/libs`, and the frontend production bundle is
 written to `novafront/target`.
 
-Copy `.env.example` to the repository root as `.env`. Gradle loads it into
-local Spring services, and Docker Compose uses it for container configuration.
+Set the environment variables documented in the root `.env.example` before
+starting the stack. In GitHub Actions, the `dev` environment supplies those
+names from GitHub environment variables and secrets. On a laptop, export the
+same names in your shell or configure them in IntelliJ. A root `.env` file is
+still supported as an ignored local fallback, but it is not required when the
+process environment already has the values.
 
 ## Local ports
 
@@ -61,8 +65,8 @@ local Spring services, and Docker Compose uses it for container configuration.
 | Eureka | 8761 |
 
 RabbitMQ management is available at `http://localhost:15672` using the
-credentials from the root `.env`. Development emails are available at
-`http://localhost:8025`.
+configured `RABBITMQ_USERNAME` and `RABBITMQ_PASSWORD`. Development emails are
+available at `http://localhost:8025`.
 
 The Spring service ports can be overridden with `SERVER_PORT`, but the shared
 IntelliJ configurations pin the values above to prevent accidental conflicts.

@@ -27,7 +27,7 @@ Then start all required containers with the IntelliJ run configuration
 `NovaFlow - Infrastructure`, or from the command line:
 
 ```powershell
-docker compose --env-file .env -f builder/docker-compose.local.yml up -d
+docker compose -f builder/docker-compose.local.yml up -d
 ```
 
 Wait for the containers to be ready before starting the local applications.
@@ -39,7 +39,7 @@ without deleting data with:
 
 ```powershell
 Get-Content builder/init/init.sql -Raw |
-    docker-compose --env-file .env -f builder/docker-compose.local.yml exec -T postgres `
+    docker-compose -f builder/docker-compose.local.yml exec -T postgres `
         sh -c 'psql -U "$POSTGRES_USER" -d postgres'
 ```
 
@@ -108,31 +108,56 @@ Gradle 8.14.3:
 .\gradlew.bat --version
 ```
 
-## Local configuration
+## Configuration
 
-Copy the root template once:
+NovaFlow reads configuration from environment variables. In GitHub, create an
+environment named `dev`, then store sensitive values as environment secrets and
+non-sensitive settings as environment variables. The
+`.github/workflows/dev-environment.yml` workflow maps those GitHub values into
+the names used by Gradle, Spring, and Docker Compose.
 
-```powershell
-Copy-Item .env.example .env
-```
+Required `dev` environment secrets:
 
-Use the root `.env` for all local and Docker configuration. At minimum, set
-strong database, RabbitMQ, JWT, and internal-service secrets. Add the OpenAI
-credentials to enable AI features:
+| Secret | Used for |
+| --- | --- |
+| `POSTGRES_PASSWORD` | PostgreSQL container password |
+| `DB_PASSWORD` | Spring datasource password; can match `POSTGRES_PASSWORD` |
+| `RABBITMQ_PASSWORD` | RabbitMQ default user password |
+| `JWT_SECRET` | JWT signing key |
+| `INTERNAL_SERVICE_KEY` | Gateway-to-user-service internal calls |
+
+Optional secrets include `OPENAI_API_KEY`, `GOOGLE_CLIENT_SECRET`,
+`PGADMIN_DEFAULT_PASSWORD`, `EMAIL_USERNAME`, and `EMAIL_PASSWORD`. Common
+GitHub environment variables are `POSTGRES_USER`, `DB_USERNAME`,
+`RABBITMQ_USERNAME`, `JWT_EXPIRATION`, `FRONTEND_BASE_URL`, `PUBLIC_API_URL`,
+`OPENAI_MODEL`, `GOOGLE_OAUTH_ENABLED`, `GOOGLE_CLIENT_ID`, and the email
+transport settings from `.env.example`.
+
+GitHub secrets are injected into GitHub-hosted execution contexts such as
+Actions. They cannot be downloaded back to a normal laptop shell. For laptop
+development, export the same variable names in your shell or configure them in
+IntelliJ. A root `.env` file is still supported as an ignored local fallback;
+Gradle only uses `.env` values that are not already present in the process
+environment, and Docker Compose can use the process environment directly.
+
+Add the OpenAI credentials to enable AI features:
 
 ```properties
 OPENAI_API_KEY=your-api-key
 OPENAI_MODEL=gpt-5.2
 ```
 
-Gradle loads the root `.env` into every local Spring `bootRun` process. Docker
-Compose uses the same file but passes only the relevant values to each
-container.
+The example file documents the complete set of local names:
+
+```powershell
+Copy-Item .env.example .env
+```
 
 ### Google sign-in
 
-Google sign-in is optional and disabled by default. Configure these values in
-the root `.env`:
+Google sign-in is optional and disabled by default. Configure these values as
+GitHub `dev` environment variables/secrets, shell variables, IntelliJ
+environment entries, or optional root `.env` fallback values:
 
 ```properties
 GOOGLE_OAUTH_ENABLED=true
@@ -220,7 +245,7 @@ and whenever the config-server code changes:
 Then start PostgreSQL, RabbitMQ, Mailpit, Eureka, and the config server:
 
 ```powershell
-docker-compose --env-file .env -f builder/docker-compose.local.yml up -d
+docker-compose -f builder/docker-compose.local.yml up -d
 ```
 
 After all three infrastructure services are available, start the application
@@ -351,7 +376,8 @@ production bundle is created under `novafront/target`.
 - If email notifications are not delivered, check RabbitMQ on `15672`, the
   `novaflow.email.delivery.dlq` queue, and the Mailpit inbox on `8025`.
 - If database connections fail, confirm PostgreSQL is running and
-  `POSTGRES_PASSWORD` and `DB_PASSWORD` in `.env` match.
+  `POSTGRES_PASSWORD` and `DB_PASSWORD` are set to matching values.
 - If Eureka registration fails, confirm
   [http://localhost:8761](http://localhost:8761) is reachable.
-- If AI requests fail, confirm `OPENAI_API_KEY` is present in the root `.env`.
+- If AI requests fail, confirm `OPENAI_API_KEY` is present in the runtime
+  environment.
