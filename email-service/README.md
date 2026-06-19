@@ -21,7 +21,8 @@ SMTP port: 1025
 ```
 
 No real SMTP credentials are required for local development. Put overrides in
-the repository root `.env`.
+environment variables, or in the repository root `.env` as an ignored local
+fallback.
 
 Run the service with:
 

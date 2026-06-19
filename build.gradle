@@ -27,12 +27,13 @@ def sharedProjects = [
     project(':notification-contracts')
 ]
 
-def rootEnvironment = {
+def localDotenvEnvironment = {
     def envFile = rootProject.file('.env')
     if (!envFile.exists()) {
         return [:]
     }
 
+    def processEnvironment = System.getenv()
     envFile.readLines()
         .collect { it.trim() }
         .findAll { it && !it.startsWith('#') && it.contains('=') }
@@ -44,7 +45,7 @@ def rootEnvironment = {
                 (value.startsWith("'") && value.endsWith("'"))) {
                 value = value.substring(1, value.length() - 1)
             }
-            [(key): value]
+            processEnvironment.containsKey(key) ? [:] : [(key): value]
         }
 }
 
@@ -64,11 +65,16 @@ def requestedService = {
     serviceName
 }
 
+def dockerComposeEnvFileArgs = {
+    def envFile = rootProject.file('.env')
+    envFile.exists() ? ['--env-file', envFile.absolutePath] : []
+}
+
 springProjects.each { applicationProject ->
     applicationProject.pluginManager.withPlugin('org.springframework.boot') {
         applicationProject.tasks.named('bootRun') {
             workingDir = applicationProject.projectDir
-            environment rootEnvironment()
+            environment localDotenvEnvironment()
         }
         applicationProject.tasks.named('jar') {
             enabled = false
@@ -127,14 +133,15 @@ tasks.register('restartService', Exec) {
     dependsOn 'serviceImage'
     workingDir layout.projectDirectory.dir('builder')
     doFirst {
-        commandLine(
-            'docker-compose',
-            '--env-file', '../.env',
+        def composeCommand = ['docker-compose']
+        composeCommand.addAll(dockerComposeEnvFileArgs())
+        composeCommand.addAll([
             '-f', 'docker-compose.yml',
             'up', '-d',
             '--no-deps',
             '--force-recreate',
             requestedService()
-        )
+        ])
+        commandLine composeCommand
     }
 }

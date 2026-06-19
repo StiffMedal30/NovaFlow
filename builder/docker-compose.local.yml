@@ -4,7 +4,7 @@ services:
     container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-sa}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD from a GitHub secret or local environment variable}
     ports:
       - "5432:5432"
     volumes:
@@ -17,7 +17,7 @@ services:
     container_name: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-novaflow}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-novaflow}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a GitHub secret or local environment variable}
     ports:
       - "5672:5672"
       - "15672:15672"
