@@ -4,14 +4,17 @@ server:
 spring:
   config:
     import:
+      - optional:file:.env[.properties]
       - optional:file:../.env[.properties]
+      - optional:file:builder/.env[.properties]
+      - optional:file:../builder/.env[.properties]
   application:
     name: ai-service
   profiles:
     active: dev   # <-- this makes sure it fetches ai-service-dev.yml + application-dev.yml
   cloud:
     config:
-      uri: http://localhost:7090  # Location of config server
+      uri: ${CONFIG_SERVER_URL:http://localhost:7090}  # Location of config server
       fail-fast: true
       retry:
         max-attempts: 10

@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NovaFlow Local URLs</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d9dee8;
+      --teal: #0f766e;
+      --blue: #1d4ed8;
+      --amber: #a15c07;
+      --rose: #b42318;
+      --green-soft: #e8f6f3;
+      --blue-soft: #eaf1ff;
+      --amber-soft: #fff4df;
+      --rose-soft: #fff0ee;
+      --shadow: 0 14px 34px rgba(30, 41, 59, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 56px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 380px);
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .mark {
+      display: grid;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--teal);
+      font-weight: 800;
+      letter-spacing: 0;
+      box-shadow: var(--shadow);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search label {
+      display: block;
+      margin-bottom: 8px;
+      color: #344054;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .search input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      font: inherit;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+      outline: none;
+    }
+
+    .search input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.13);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0 34px;
+    }
+
+    .quick-link {
+      display: flex;
+      min-height: 76px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+      text-decoration: none;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .quick-link:hover {
+      border-color: #98a2b3;
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .quick-link strong {
+      display: block;
+      font-size: 0.98rem;
+    }
+
+    .quick-link span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.78rem;
+      overflow-wrap: anywhere;
+    }
+
+    .section {
+      margin-top: 28px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .section h2 {
+      font-size: 1.35rem;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: right;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      display: grid;
+      min-height: 190px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+      gap: 12px;
+      align-content: space-between;
+    }
+
+    .card.hidden,
+    .section.hidden {
+      display: none;
+    }
+
+    .card-head {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .card h3 {
+      font-size: 1.02rem;
+      line-height: 1.25;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .tag.app {
+      background: var(--green-soft);
+      color: var(--teal);
+    }
+
+    .tag.infra {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .tag.api {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .tag.docker {
+      background: var(--rose-soft);
+      color: var(--rose);
+    }
+
+    .description {
+      min-height: 42px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .url {
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid #e4e7ec;
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: #0f172a;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      display: inline-flex;
+      min-width: 76px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #cfd6e2;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #1f2937;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 800;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #ffffff;
+    }
+
+    .button:hover {
+      border-color: #667085;
+    }
+
+    .button.primary:hover {
+      border-color: #115e59;
+      background: #115e59;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: #475467;
+      font-size: 0.78rem;
+    }
+
+    .meta span {
+      padding: 4px 8px;
+      border: 1px solid #e4e7ec;
+      border-radius: 999px;
+      background: #ffffff;
+    }
+
+    .card-credentials {
+      display: grid;
+      gap: 2px;
+      min-width: 136px;
+      margin-left: 6px;
+      color: #101828;
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .card-credentials span {
+      overflow-wrap: anywhere;
+    }
+
+    .card-credentials code {
+      color: #0f172a;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.8rem;
+    }
+
+    .footer {
+      margin-top: 36px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 960px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .quick-grid,
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .section-note {
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 24px, 1160px);
+        padding-top: 24px;
+      }
+
+      .brand {
+        align-items: flex-start;
+      }
+
+      .mark {
+        width: 44px;
+        height: 44px;
+      }
+
+      .quick-grid,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .card-credentials {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">NF</div>
+        <div>
+          <h1>NovaFlow URLs</h1>
+          <p class="subtitle">Local browser links, service endpoints, and direct Docker ports in one place.</p>
+        </div>
+      </div>
+
+      <div class="search">
+        <label for="filter">Filter links</label>
+        <input id="filter" type="search" placeholder="gateway, rabbit, docker, 8083..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="quick-grid" aria-label="Common NovaFlow links">
+      <a class="quick-link" href="http://localhost:3000" target="_blank" rel="noreferrer">
+        <strong>Frontend</strong>
+        <span>http://localhost:3000</span>
+      </a>
+      <a class="quick-link" href="http://localhost:8081" target="_blank" rel="noreferrer">
+        <strong>API Gateway</strong>
+        <span>http://localhost:8081</span>
+      </a>
+      <a class="quick-link" href="http://localhost:15672" target="_blank" rel="noreferrer">
+        <strong>RabbitMQ</strong>
+        <span>http://localhost:15672</span>
+      </a>
+      <a class="quick-link" href="http://localhost:8025" target="_blank" rel="noreferrer">
+        <strong>Mailpit</strong>
+        <span>http://localhost:8025</span>
+      </a>
+    </div>
+
+    <section class="section" data-section>
+      <div class="section-header">
+        <h2>Open First</h2>
+        <p class="section-note">The everyday app links and dashboards you are most likely to need.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Frontend</h3>
+              <span class="tag app">APP</span>
+            </div>
+            <p class="description">Main React/Vite application.</p>
+          </div>
+          <code class="url">http://localhost:3000</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:3000" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:3000" type="button">Copy</button>
+            <div class="card-credentials" aria-label="Seed app user credentials">
+              <span>Username: <code>admin</code></span>
+              <span>Password: <code>admin</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>Vite dev</span><span>Seed user</span><span>Docker maps 3000:80</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>API Gateway</h3>
+              <span class="tag app">APP</span>
+            </div>
+            <p class="description">Public API boundary used by the frontend.</p>
+          </div>
+          <code class="url">http://localhost:8081</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>Public API</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Eureka Dashboard</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Service discovery dashboard.</p>
+          </div>
+          <code class="url">http://localhost:8761</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8761" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8761" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Discovery</span><span>Docker infra</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>RabbitMQ Management</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Queue dashboard. Local user is usually from RABBITMQ_USERNAME.</p>
+          </div>
+          <code class="url">http://localhost:15672</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:15672" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:15672" type="button">Copy</button>
+            <div class="card-credentials" aria-label="RabbitMQ management credentials">
+              <span>Username: <code>novaflow</code></span>
+              <span>Password: <code>novaflow</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>Management UI</span><span>AMQP on 5672</span><span>Local infra fallback</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Mailpit Inbox</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Local email inbox for account activation and reset messages.</p>
+          </div>
+          <code class="url">http://localhost:8025</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8025" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8025" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Web UI</span><span>SMTP on 1025</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>pgAdmin</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">PostgreSQL admin UI from the full Docker compose file.</p>
+          </div>
+          <code class="url">http://localhost:8090</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8090" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8090" type="button">Copy</button>
+            <div class="card-credentials" aria-label="pgAdmin credentials">
+              <span>Email: <code>admin@local.com</code></span>
+              <span>Password: <code>change-me</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>Full compose</span><span>PGADMIN_DEFAULT_EMAIL</span><span>Check builder/.env</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" data-section>
+      <div class="section-header">
+        <h2>Gateway APIs</h2>
+        <p class="section-note">Use these through the gateway when testing the app path.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>User API</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Login, register, reset password, and user checks.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/user</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/user" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/user" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>/login</span><span>/register</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Idea API</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Idea CRUD, planning, steps, and feasibility routes.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/idea</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/idea" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/idea" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>JWT usually required</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>AI API</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Planning, feasibility, and transcription gateway routes.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/ai</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/ai" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/ai" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>/process</span><span>/feasibility</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Chat Test</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Simple GET endpoint for checking the chat route.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/chat/test</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/chat/test" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/chat/test" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>GET</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Google OAuth Status</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Checks whether Google OAuth is enabled for this runtime.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/oauth/google/status</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/oauth/google/status" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/oauth/google/status" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>GET</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Debug Mappings</h3>
+              <span class="tag api">API</span>
+            </div>
+            <p class="description">Gateway controller mapping list.</p>
+          </div>
+          <code class="url">http://localhost:8081/api/debug/mappings</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8081/api/debug/mappings" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8081/api/debug/mappings" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Gateway</span><span>Debug</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" data-section>
+      <div class="section-header">
+        <h2>Direct Local Services</h2>
+        <p class="section-note">These match the IntelliJ and bootRun service ports from local development.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>User Service</h3>
+              <span class="tag app">LOCAL</span>
+            </div>
+            <p class="description">Direct user-service API when it runs locally on its own port.</p>
+          </div>
+          <code class="url">http://localhost:8082/api/user</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8082/api/user" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8082/api/user" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>bootRun</span><span>8082</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Idea Service</h3>
+              <span class="tag app">LOCAL</span>
+            </div>
+            <p class="description">Direct idea-service API.</p>
+          </div>
+          <code class="url">http://localhost:8083/api/idea</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8083/api/idea" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8083/api/idea" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>bootRun</span><span>8083</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>AI Service</h3>
+              <span class="tag app">LOCAL</span>
+            </div>
+            <p class="description">Direct AI service API.</p>
+          </div>
+          <code class="url">http://localhost:8084/api/ai</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8084/api/ai" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8084/api/ai" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>bootRun</span><span>8084</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Chat Service</h3>
+              <span class="tag app">LOCAL</span>
+            </div>
+            <p class="description">Direct chat-service test route.</p>
+          </div>
+          <code class="url">http://localhost:8085/api/chat/test</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8085/api/chat/test" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8085/api/chat/test" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>bootRun</span><span>8085</span><span>GET</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Email Service</h3>
+              <span class="tag app">LOCAL</span>
+            </div>
+            <p class="description">Service port for the email worker application.</p>
+          </div>
+          <code class="url">http://localhost:8050</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8050" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8050" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>bootRun</span><span>8050</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Config Server</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Spring Cloud Config server used by the services.</p>
+          </div>
+          <code class="url">http://localhost:7090</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:7090" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:7090" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>Docker infra</span><span>7090</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" data-section>
+      <div class="section-header">
+        <h2>Full Docker Ports</h2>
+        <p class="section-note">These are the host ports from builder/docker-compose.yml when the full stack runs in Docker.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Docker User Service</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Host port mapped to container port 8082.</p>
+          </div>
+          <code class="url">http://localhost:7010/api/user</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:7010/api/user" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:7010/api/user" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>7010:8082</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Docker Idea Service</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Host port mapped to container port 8083.</p>
+          </div>
+          <code class="url">http://localhost:7020/api/idea</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:7020/api/idea" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:7020/api/idea" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>7020:8083</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Docker AI Service</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Host port mapped to container port 8084.</p>
+          </div>
+          <code class="url">http://localhost:7030/api/ai</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:7030/api/ai" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:7030/api/ai" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>7030:8084</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Docker Chat Service</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Chat service keeps the same host port in full Docker mode.</p>
+          </div>
+          <code class="url">http://localhost:8085/api/chat/test</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:8085/api/chat/test" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:8085/api/chat/test" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>8085:8085</span><span>GET</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Grafana</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Grafana dashboard service from the full compose file.</p>
+          </div>
+          <code class="url">http://localhost:3001</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:3001" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:3001" type="button">Copy</button>
+            <div class="card-credentials" aria-label="Grafana credentials">
+              <span>Username: <code>admin</code></span>
+              <span>Password: <code>admin</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>3001:3000</span><span>May ask for new password</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Loki Ready Check</h3>
+              <span class="tag docker">DOCKER</span>
+            </div>
+            <p class="description">Simple readiness endpoint for the local Loki service.</p>
+          </div>
+          <code class="url">http://localhost:3100/ready</code>
+          <div class="actions">
+            <a class="button primary" href="http://localhost:3100/ready" target="_blank" rel="noreferrer">Open</a>
+            <button class="button copy-button" data-copy="http://localhost:3100/ready" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>3100:3100</span><span>GET</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" data-section>
+      <div class="section-header">
+        <h2>Connection Strings</h2>
+        <p class="section-note">Not all of these open in a browser, but they are handy to copy.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>PostgreSQL</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Database server used by user, idea, and AI service schemas.</p>
+          </div>
+          <code class="url">jdbc:postgresql://localhost:5432/postgres</code>
+          <div class="actions">
+            <button class="button copy-button" data-copy="jdbc:postgresql://localhost:5432/postgres" type="button">Copy</button>
+            <div class="card-credentials" aria-label="PostgreSQL credentials">
+              <span>User: <code>sa</code></span>
+              <span>Password: <code>change-me</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>POSTGRES_USER</span><span>POSTGRES_PASSWORD</span><span>Check builder/.env</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>RabbitMQ AMQP</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">Broker endpoint used by the user and email services.</p>
+          </div>
+          <code class="url">amqp://localhost:5672</code>
+          <div class="actions">
+            <button class="button copy-button" data-copy="amqp://localhost:5672" type="button">Copy</button>
+            <div class="card-credentials" aria-label="RabbitMQ AMQP credentials">
+              <span>Username: <code>novaflow</code></span>
+              <span>Password: <code>novaflow</code></span>
+            </div>
+          </div>
+          <div class="meta"><span>RABBITMQ_USERNAME</span><span>RABBITMQ_PASSWORD</span><span>Local infra fallback</span></div>
+        </article>
+
+        <article class="card" data-card>
+          <div>
+            <div class="card-head">
+              <h3>Mailpit SMTP</h3>
+              <span class="tag infra">INFRA</span>
+            </div>
+            <p class="description">SMTP endpoint for local email delivery.</p>
+          </div>
+          <code class="url">smtp://localhost:1025</code>
+          <div class="actions">
+            <button class="button copy-button" data-copy="smtp://localhost:1025" type="button">Copy</button>
+          </div>
+          <div class="meta"><span>EMAIL_HOST</span><span>EMAIL_PORT</span></div>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer">
+      Port map follows README.md, builder/LOCAL_DEVELOPMENT.md, builder/docker-compose.local.yml, and builder/docker-compose.yml.
+      <span id="result-count" aria-live="polite"></span>
+    </p>
+  </main>
+
+  <script>
+    const filterInput = document.querySelector("#filter");
+    const cards = Array.from(document.querySelectorAll("[data-card]"));
+    const sections = Array.from(document.querySelectorAll("[data-section]"));
+    const resultCount = document.querySelector("#result-count");
+
+    function setResultCount(visibleCount) {
+      const total = cards.length;
+      resultCount.textContent = visibleCount === total ? "" : ` Showing ${visibleCount} of ${total}.`;
+    }
+
+    function applyFilter() {
+      const query = filterInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matches = card.textContent.toLowerCase().includes(query);
+        card.classList.toggle("hidden", !matches);
+        if (matches) visibleCount += 1;
+      });
+
+      sections.forEach((section) => {
+        const visibleCards = section.querySelectorAll("[data-card]:not(.hidden)").length;
+        section.classList.toggle("hidden", visibleCards === 0);
+      });
+
+      setResultCount(visibleCount);
+    }
+
+    async function copyText(value) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest(".copy-button");
+      if (!button) return;
+
+      const originalText = button.textContent;
+      try {
+        await copyText(button.dataset.copy);
+        button.textContent = "Copied";
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 1200);
+      } catch {
+        button.textContent = "Copy failed";
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 1600);
+      }
+    });
+
+    filterInput.addEventListener("input", applyFilter);
+    setResultCount(cards.length);
+  </script>
+</body>
+</html>

@@ -27,13 +27,12 @@ def sharedProjects = [
     project(':notification-contracts')
 ]
 
-def localDotenvEnvironment = {
-    def envFile = rootProject.file('.env')
-    if (!envFile.exists()) {
-        return [:]
-    }
+def localDotenvFiles = [
+    rootProject.file('.env'),
+    rootProject.file('builder/.env')
+]
 
-    def processEnvironment = System.getenv()
+def parseDotenvFile = { envFile ->
     envFile.readLines()
         .collect { it.trim() }
         .findAll { it && !it.startsWith('#') && it.contains('=') }
@@ -45,8 +44,23 @@ def localDotenvEnvironment = {
                 (value.startsWith("'") && value.endsWith("'"))) {
                 value = value.substring(1, value.length() - 1)
             }
-            processEnvironment.containsKey(key) ? [:] : [(key): value]
+            [(key): value]
         }
+}
+
+def localDotenvEnvironment = {
+    def processEnvironment = System.getenv()
+    def values = [:]
+
+    localDotenvFiles.findAll { it.exists() }.each { envFile ->
+        parseDotenvFile(envFile).each { key, value ->
+            if (!processEnvironment.containsKey(key) && !values.containsKey(key)) {
+                values[key] = value
+            }
+        }
+    }
+
+    values
 }
 
 def deployableServices = (springProjects*.name + ['novafront']).sort()
@@ -66,8 +80,8 @@ def requestedService = {
 }
 
 def dockerComposeEnvFileArgs = {
-    def envFile = rootProject.file('.env')
-    envFile.exists() ? ['--env-file', envFile.absolutePath] : []
+    def envFile = localDotenvFiles.find { it.exists() }
+    envFile ? ['--env-file', envFile.absolutePath] : []
 }
 
 springProjects.each { applicationProject ->

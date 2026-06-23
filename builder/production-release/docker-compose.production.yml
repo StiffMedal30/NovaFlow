@@ -1,44 +1,33 @@
 services:
   postgres:
-    image: postgres:15
+    image: ${POSTGRES_IMAGE:-postgres:15}
     container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-${DB_USERNAME:-sa}}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-${DB_PASSWORD:?Set POSTGRES_PASSWORD or DB_PASSWORD from a GitHub secret or environment variable}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD or DB_PASSWORD from a production secret}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     networks:
       - app-network
     volumes:
-      - ./init:/docker-entrypoint-initdb.d
+      - ../init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
-    restart: always
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    depends_on:
-      - postgres
-    ports:
-      - "8090:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-${POSTGRES_PASSWORD:?Set PGADMIN_DEFAULT_PASSWORD or POSTGRES_PASSWORD from a GitHub secret or environment variable}}
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     restart: always
 
   rabbitmq:
-    image: rabbitmq:3.13-management
+    image: ${RABBITMQ_IMAGE:-rabbitmq:3.13-management}
     container_name: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-novaflow}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a GitHub secret or environment variable}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a production secret}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_HOST_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_HOST_PORT:-15672}:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -47,53 +36,43 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 6
-    restart: always
-
-  mailpit:
-    image: axllent/mailpit:v1.30.1
-    container_name: mailpit
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-    networks:
-      - app-network
+      retries: 12
     restart: always
 
   eureka:
-    image: steeltoeoss/eureka-server
+    image: ${EUREKA_IMAGE:-steeltoeoss/eureka-server}
     container_name: eureka-server
     ports:
-      - "8761:8761"
+      - "${EUREKA_HOST_PORT:-8761}:8761"
     environment:
       EUREKA_CLIENT_REGISTERWITH_EUREKA: "false"
       EUREKA_CLIENT_FETCHREGISTRY: "false"
       EUREKA_SERVER_ENABLESELFPRESERVATION: "false"
-      SPRING_APPLICATION_NAME: "discovery-server"
+      SPRING_APPLICATION_NAME: discovery-server
     networks:
       - app-network
     restart: always
 
   config-server:
-    image: config-server
+    image: ${CONFIG_SERVER_IMAGE:-config-server:latest}
     container_name: config-server
     depends_on:
       - eureka
     ports:
-      - "7090:7090"
+      - "${CONFIG_SERVER_HOST_PORT:-7090}:7090"
     volumes:
-      - ../common-config:/config:ro
+      - ../../common-config:/config:ro
     environment:
       - SPRING_PROFILES_ACTIVE=native
       - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config/{application},file:/config
-      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a GitHub secret or environment variable}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a production secret}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
     networks:
       - app-network
     restart: always
 
   user-service:
-    image: user-service
+    image: ${IMAGE_PREFIX:-}user-service:${IMAGE_TAG:-latest}
     container_name: user-service
     depends_on:
       - eureka
@@ -101,17 +80,17 @@ services:
       - postgres
       - rabbitmq
     ports:
-      - "7010:8082"
+      - "${USER_SERVICE_HOST_PORT:-7010}:8082"
     environment:
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
-      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a GitHub secret or environment variable}}
+      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-novaflow}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a GitHub secret or environment variable}
-      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a GitHub secret or environment variable}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a production secret}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a production secret}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
-      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:?Set INTERNAL_SERVICE_KEY from a GitHub secret or environment variable}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:?Set INTERNAL_SERVICE_KEY from a production secret}
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
       - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
@@ -121,15 +100,14 @@ services:
     restart: always
 
   email-service:
-    image: email-service
+    image: ${IMAGE_PREFIX:-}email-service:${IMAGE_TAG:-latest}
     container_name: email-service
     depends_on:
       - eureka
       - config-server
       - rabbitmq
-      - mailpit
     ports:
-      - "8050:8050"
+      - "${EMAIL_SERVICE_HOST_PORT:-8050}:8050"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
@@ -138,32 +116,32 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-novaflow}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a GitHub secret or environment variable}
-      - EMAIL_HOST=mailpit
-      - EMAIL_PORT=${EMAIL_PORT:-1025}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a production secret}
+      - EMAIL_HOST=${EMAIL_HOST:?Set EMAIL_HOST for production SMTP}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
       - EMAIL_USERNAME=${EMAIL_USERNAME:-}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
       - EMAIL_SMTP_AUTH=${EMAIL_SMTP_AUTH:-true}
       - EMAIL_STARTTLS=${EMAIL_STARTTLS:-true}
-      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-no-reply@novaflow.local}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:?Set EMAIL_FROM_ADDRESS for production email}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NovaFlow}
-      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8081}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:?Set PUBLIC_API_URL for production links}
     networks:
       - app-network
     restart: always
 
   idea-service:
-    image: idea-service
+    image: ${IMAGE_PREFIX:-}idea-service:${IMAGE_TAG:-latest}
     container_name: idea-service
     depends_on:
       - eureka
       - config-server
       - postgres
     ports:
-      - "7020:8083"
+      - "${IDEA_SERVICE_HOST_PORT:-7020}:8083"
     environment:
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
-      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a GitHub secret or environment variable}}
+      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
       - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
@@ -173,18 +151,18 @@ services:
     restart: always
 
   ai-service:
-    image: ai-service
+    image: ${IMAGE_PREFIX:-}ai-service:${IMAGE_TAG:-latest}
     container_name: ai-service
     depends_on:
       - eureka
       - config-server
       - postgres
     ports:
-      - "7030:8084"
+      - "${AI_SERVICE_HOST_PORT:-7030}:8084"
     environment:
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
-      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a GitHub secret or environment variable}}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?Set OPENAI_API_KEY from a production secret}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5.2}
       - OPENAI_REFINEMENT_MODEL=${OPENAI_REFINEMENT_MODEL:-gpt-5.2}
@@ -198,21 +176,21 @@ services:
     restart: always
 
   api-gateway:
-    image: api-gateway
+    image: ${IMAGE_PREFIX:-}api-gateway:${IMAGE_TAG:-latest}
     container_name: api-gateway
     depends_on:
       - eureka
       - config-server
     ports:
-      - "8081:8081"
+      - "${API_GATEWAY_HOST_PORT:-8081}:8081"
     environment:
-      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a GitHub secret or environment variable}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET from a production secret}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
-      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:?Set INTERNAL_SERVICE_KEY from a GitHub secret or environment variable}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:?Set INTERNAL_SERVICE_KEY from a production secret}
       - GOOGLE_OAUTH_ENABLED=${GOOGLE_OAUTH_ENABLED:-false}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:3000}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:?Set FRONTEND_BASE_URL for production}
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
       - SPRING_CLOUD_CONFIG_URI=http://config-server:7090
@@ -222,13 +200,13 @@ services:
     restart: always
 
   chat-service:
-    image: chat-service
+    image: ${IMAGE_PREFIX:-}chat-service:${IMAGE_TAG:-latest}
     container_name: chat-service
     depends_on:
       - eureka
       - config-server
     ports:
-      - "8085:8085"
+      - "${CHAT_SERVICE_HOST_PORT:-8085}:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:7090/
@@ -239,36 +217,13 @@ services:
     restart: always
 
   novafront:
-    image: novafront
+    image: ${IMAGE_PREFIX:-}novafront:${IMAGE_TAG:-latest}
     container_name: novafront
     ports:
-      - "3000:80"
+      - "${FRONTEND_HOST_PORT:-3000}:80"
     networks:
       - app-network
     restart: always
-
-  loki:
-    image: grafana/loki:2.9.8
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki/local-config.yml:/etc/loki/local-config.yml
-      - loki-data:/loki
-    command: -config.file=/etc/loki/local-config.yml
-
-  promtail:
-    image: grafana/promtail:2.9.8
-    volumes:
-      - ./promtail/config.yml:/etc/promtail/config.yml
-      - /var/log:/var/log
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: -config.file=/etc/promtail/config.yml
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3001:3000"
 
 networks:
   app-network:
@@ -276,8 +231,4 @@ networks:
 
 volumes:
   postgres_data:
-  pgadmin_data:
-  loki-data:
   rabbitmq_data:
-
-

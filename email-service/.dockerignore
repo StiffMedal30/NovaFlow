@@ -1,5 +1,5 @@
-.gradle
-target
-build
-.env
-.env.*
+*
+!Dockerfile
+!target/
+!target/libs/
+!target/libs/*.jar

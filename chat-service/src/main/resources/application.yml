@@ -12,7 +12,7 @@ spring:
 
   cloud:
     config:
-      uri: http://localhost:7090/  # Location of config server
+      uri: ${CONFIG_SERVER_URL:http://localhost:7090/}  # Location of config server
       fail-fast: false
       retry:
         max-attempts: 10

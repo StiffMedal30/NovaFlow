@@ -8,12 +8,17 @@ spring:
     active: dev
 
   config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:file:builder/.env[.properties]
+      - optional:file:../builder/.env[.properties]
+      - configserver:${CONFIG_SERVER_URL:http://localhost:7090/}
     # label: develop
 
   cloud:
     config:
-      uri: http://localhost:7090  # Location of config server
+      uri: ${CONFIG_SERVER_URL:http://localhost:7090}  # Location of config server
       fail-fast: true
       retry:
         max-attempts: 10

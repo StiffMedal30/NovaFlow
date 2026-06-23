@@ -18,6 +18,7 @@ novafront/out-tsc/
 **/.env
 **/.env.*
 !**/.env.example
+./builder/.env
 
 # IDE files
 .idea/

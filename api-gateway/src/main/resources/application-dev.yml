@@ -7,7 +7,10 @@ spring:
 
   config:
     import:
+      - optional:file:.env[.properties]
       - optional:file:../.env[.properties]
+      - optional:file:builder/.env[.properties]
+      - optional:file:../builder/.env[.properties]
       - configserver:http://localhost:7090/
 
   cloud:

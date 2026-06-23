@@ -6,7 +6,12 @@ spring:
     name: chat-service
 
   config:
-    import: "configserver:http://localhost:7090/"  # Pull config from config server
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:file:builder/.env[.properties]
+      - optional:file:../builder/.env[.properties]
+      - configserver:http://localhost:7090/
 
   cloud:
     config:

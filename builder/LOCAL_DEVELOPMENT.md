@@ -42,10 +42,11 @@ written to `novafront/target`.
 
 Set the environment variables documented in the root `.env.example` before
 starting the stack. In GitHub Actions, the `dev` environment supplies those
-names from GitHub environment variables and secrets. On a laptop, export the
-same names in your shell or configure them in IntelliJ. A root `.env` file is
-still supported as an ignored local fallback, but it is not required when the
-process environment already has the values.
+names from GitHub environment variables and secrets. GitHub secrets are not
+available to local laptop processes, so export the same names in your shell,
+configure them in IntelliJ, or create an ignored `.env` file. Gradle and Spring
+read both `.env` and `builder/.env`; the Docker Compose run configuration uses
+`builder/.env`.
 
 ## Local ports
 

@@ -14,6 +14,7 @@ public final class SecurityPaths {
             "/api/debug/mappings",
             "/api/user/check-registered",
             "/api/oauth/google/status",
+            "/actuator/health",
             "/oauth2/**",
             "/login/oauth2/**",
             "/error/**"
