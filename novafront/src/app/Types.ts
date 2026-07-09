@@ -7,6 +7,13 @@ export interface Idea {
     id: string;
     title: string;
     description: string;
+    problem: string;
+    goal: string;
+    targetUsers: string;
+    mustHaveFeatures: string;
+    constraints: string;
+    techPreferences: string;
+    unknowns: string;
     createdBy: string;
     createdDate: string;
     updatedDate?: string;
@@ -21,12 +28,37 @@ export interface Idea {
 export interface IdeaRequest {
     title: string;
     description: string;
+    problem: string;
+    goal: string;
+    targetUsers: string;
+    mustHaveFeatures: string;
+    constraints: string;
+    techPreferences: string;
+    unknowns: string;
 }
 
 export interface IdeaResponse {
     ideaId: string | null;
     message: string;
     refinement: string | null;
+    steps: IdeaStep[];
+}
+
+export type IdeaRefinementAction = 'EXPLAIN' | 'CHALLENGE' | 'EXPAND' | 'REWRITE' | 'SIMPLIFY' | 'ADD_STEPS';
+
+export interface IdeaRefinementRequest {
+    action: IdeaRefinementAction;
+    sectionTitle: string;
+    sectionContent: string;
+    instruction: string;
+}
+
+export interface IdeaRefinementResponse {
+    ideaId: string;
+    message: string;
+    refinement: string;
+    assistantOutput: string;
+    planUpdated: boolean;
     steps: IdeaStep[];
 }
 

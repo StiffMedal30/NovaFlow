@@ -24,6 +24,27 @@ public class IdeaEntity {
     @Column(columnDefinition = "text")
     private String description;
 
+    @Column(columnDefinition = "text")
+    private String problem;
+
+    @Column(columnDefinition = "text")
+    private String goal;
+
+    @Column(name = "target_users", columnDefinition = "text")
+    private String targetUsers;
+
+    @Column(name = "must_have_features", columnDefinition = "text")
+    private String mustHaveFeatures;
+
+    @Column(columnDefinition = "text")
+    private String constraints;
+
+    @Column(name = "tech_preferences", columnDefinition = "text")
+    private String techPreferences;
+
+    @Column(columnDefinition = "text")
+    private String unknowns;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -83,6 +104,62 @@ public class IdeaEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getProblem() {
+        return problem;
+    }
+
+    public void setProblem(String problem) {
+        this.problem = problem;
+    }
+
+    public String getGoal() {
+        return goal;
+    }
+
+    public void setGoal(String goal) {
+        this.goal = goal;
+    }
+
+    public String getTargetUsers() {
+        return targetUsers;
+    }
+
+    public void setTargetUsers(String targetUsers) {
+        this.targetUsers = targetUsers;
+    }
+
+    public String getMustHaveFeatures() {
+        return mustHaveFeatures;
+    }
+
+    public void setMustHaveFeatures(String mustHaveFeatures) {
+        this.mustHaveFeatures = mustHaveFeatures;
+    }
+
+    public String getConstraints() {
+        return constraints;
+    }
+
+    public void setConstraints(String constraints) {
+        this.constraints = constraints;
+    }
+
+    public String getTechPreferences() {
+        return techPreferences;
+    }
+
+    public void setTechPreferences(String techPreferences) {
+        this.techPreferences = techPreferences;
+    }
+
+    public String getUnknowns() {
+        return unknowns;
+    }
+
+    public void setUnknowns(String unknowns) {
+        this.unknowns = unknowns;
     }
 
     public LocalDateTime getCreatedAt() {

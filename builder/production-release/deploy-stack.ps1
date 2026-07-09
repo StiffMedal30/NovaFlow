@@ -13,6 +13,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:COMPOSE_ANSI = if ($env:COMPOSE_ANSI) { $env:COMPOSE_ANSI } else { "never" }
+$env:COMPOSE_PROGRESS = if ($env:COMPOSE_PROGRESS) { $env:COMPOSE_PROGRESS } else { "plain" }
+$env:COMPOSE_MENU = if ($env:COMPOSE_MENU) { $env:COMPOSE_MENU } else { "false" }
+$env:COMPOSE_PROJECT_NAME = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { "novaflow-production" }
+$env:DOCKER_CLI_HINTS = if ($env:DOCKER_CLI_HINTS) { $env:DOCKER_CLI_HINTS } else { "false" }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $ComposeFilePath = (Resolve-Path $ComposeFile).Path
@@ -330,7 +335,7 @@ $ShouldPullImages = -not $SkipPull -and ($PullImages -or -not [string]::IsNullOr
 
 Write-Host "Ensuring production dependencies are running..."
 foreach ($Service in $PrerequisiteServices) {
-    Invoke-DockerCompose -Arguments @("up", "-d", $Service.Name)
+    Invoke-DockerCompose -Arguments @("up", "-d", "--no-build", $Service.Name)
     Wait-ServiceReady -Service $Service.Name -Url $Service.Url
 }
 
@@ -343,7 +348,7 @@ foreach ($Service in $RolloutServices) {
 
     Invoke-DockerCompose -Arguments @("stop", $Service.Name)
     Invoke-DockerCompose -Arguments @("rm", "-f", $Service.Name)
-    Invoke-DockerCompose -Arguments @("up", "-d", "--no-deps", "--force-recreate", $Service.Name)
+    Invoke-DockerCompose -Arguments @("up", "-d", "--no-deps", "--no-build", "--force-recreate", $Service.Name)
     Wait-ServiceReady -Service $Service.Name -Url $Service.Url
 }
 

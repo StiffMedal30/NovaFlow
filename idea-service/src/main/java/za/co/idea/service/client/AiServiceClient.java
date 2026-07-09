@@ -3,6 +3,7 @@ package za.co.idea.service.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import za.co.idea.service.records.AiRefinementRequest;
 import za.co.idea.service.records.AiServiceResponse;
 import za.co.idea.service.records.AiFeasibilityRequest;
 import za.co.idea.service.records.IdeaRecord;
@@ -15,6 +16,9 @@ public interface AiServiceClient {
 
     @PostMapping("/api/ai/feasibility")
     AiServiceResponse generateFeasibilityStudy(@RequestBody AiFeasibilityRequest request);
+
+    @PostMapping("/api/ai/refine")
+    AiServiceResponse refineIdea(@RequestBody AiRefinementRequest request);
 
 }
 

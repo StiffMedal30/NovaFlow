@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, FileText, Globe2, Loader2, Mic, RotateCcw, Send, Square, Trash2 } from "lucide-react";
+import {
+    Download,
+    FileText,
+    Globe2,
+    HelpCircle,
+    ListPlus,
+    Loader2,
+    MessageSquareText,
+    Mic,
+    PenLine,
+    RotateCcw,
+    Send,
+    Sparkles,
+    Square,
+    Trash2,
+} from "lucide-react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { useNavigate, useParams } from "react-router-dom";
 import { IdeaSideMenu } from "../../components/ui/idea-side-menu";
@@ -9,14 +24,35 @@ import {
     deleteIdea,
     fetchIdea,
     generateFeasibilityStudy,
+    refineIdea,
     transcribeIdeaAudio,
     updateIdea,
     updateIdeaStep,
 } from "../../../apiClient/IdeaClient";
-import type { IdeaStep } from "../../app/Types";
+import type { IdeaRefinementAction, IdeaStep } from "../../app/Types";
 import { downloadTextPdf } from "../../utils/downloadPdf";
 
-type SubmitStatus = "idle" | "loading" | "recording" | "transcribing" | "planning" | "feasibility" | "deleting" | "done" | "error";
+type SubmitStatus = "idle" | "loading" | "recording" | "transcribing" | "planning" | "refining" | "feasibility" | "deleting" | "done" | "error";
+type PlanSection = {
+    id: string;
+    title: string;
+    content: string;
+};
+
+const PLAN_UPDATING_ACTIONS = new Set<IdeaRefinementAction>(["EXPAND", "REWRITE", "SIMPLIFY", "ADD_STEPS"]);
+
+const REFINEMENT_ACTIONS: Array<{
+    action: IdeaRefinementAction;
+    label: string;
+    icon: typeof HelpCircle;
+}> = [
+    { action: "EXPLAIN", label: "Explain", icon: HelpCircle },
+    { action: "CHALLENGE", label: "Challenge", icon: MessageSquareText },
+    { action: "EXPAND", label: "Expand", icon: Sparkles },
+    { action: "REWRITE", label: "Rewrite", icon: PenLine },
+    { action: "SIMPLIFY", label: "Simplify", icon: RotateCcw },
+    { action: "ADD_STEPS", label: "Add steps", icon: ListPlus },
+];
 
 const REGION_EXCLUSIONS = new Set(["AC", "CP", "DG", "EA", "EU", "EZ", "IC", "QO", "TA", "UN", "XA", "XB"]);
 
@@ -37,6 +73,51 @@ function getCountryNames(): string[] {
     return [...new Set(countries)].sort((left, right) => left.localeCompare(right));
 }
 
+function parsePlanSections(markdown: string): PlanSection[] {
+    const text = markdown.trim();
+    if (!text) {
+        return [];
+    }
+
+    const matches = [...text.matchAll(/^##\s+(.+)$/gm)];
+    if (matches.length === 0) {
+        return [{ id: "full-plan", title: "Full plan", content: text }];
+    }
+
+    return matches.map((match, index) => {
+        const start = match.index ?? 0;
+        const next = matches[index + 1]?.index ?? text.length;
+        const title = match[1].trim();
+        return {
+            id: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `section-${index + 1}`,
+            title,
+            content: text.slice(start, next).trim(),
+        };
+    });
+}
+
+function formatPlanSectionForDisplay(markdown: string): string {
+    return markdown
+        .replace(/\*\*/g, "")
+        .replace(/^##\s+(.+)$/gm, "$1")
+        .replace(/^\s*\d+[.)]\s+Priority:\s*(P[012])\s*[—-]\s*(.+)$/gm, "- $1 - $2")
+        .replace(/^\s*\d+[.)]\s+(.+)$/gm, "- $1")
+        .replace(/^\s*-\s+(Outcome|Actions|Done when):/gm, "  - $1:")
+        .trim();
+}
+
+function getActionDetailItems(details: string): string[] {
+    return details
+        .replace(/\*\*/g, "")
+        .split(/\r?\n/)
+        .map((line) => line
+            .replace(/^\s*[-*]\s*/, "")
+            .replace(/^\s*\d+[.)]\s*/, "")
+            .trim())
+        .filter((line) => line.length > 0)
+        .filter((line) => !/^Actions:?$/i.test(line));
+}
+
 const IdeaPage = () => {
     const { currentTheme } = useTheme();
     const navigate = useNavigate();
@@ -53,10 +134,20 @@ const IdeaPage = () => {
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [problem, setProblem] = useState("");
+    const [goal, setGoal] = useState("");
+    const [targetUsers, setTargetUsers] = useState("");
+    const [mustHaveFeatures, setMustHaveFeatures] = useState("");
+    const [constraints, setConstraints] = useState("");
+    const [unknowns, setUnknowns] = useState("");
     const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
     const [status, setStatus] = useState<SubmitStatus>("idle");
     const [message, setMessage] = useState("");
     const [refinement, setRefinement] = useState("");
+    const [selectedSectionId, setSelectedSectionId] = useState("");
+    const [refinementAction, setRefinementAction] = useState<IdeaRefinementAction>("EXPLAIN");
+    const [refinementInstruction, setRefinementInstruction] = useState("");
+    const [assistantOutput, setAssistantOutput] = useState("");
     const [feasibilityCountry, setFeasibilityCountry] = useState("");
     const [studyCountry, setStudyCountry] = useState("");
     const [feasibilityStudy, setFeasibilityStudy] = useState("");
@@ -65,6 +156,7 @@ const IdeaPage = () => {
     const [savingStepId, setSavingStepId] = useState<string | null>(null);
     const [stepError, setStepError] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showAdditionalNotes, setShowAdditionalNotes] = useState(false);
     const countries = useMemo(getCountryNames, []);
 
     const ideaDescription = useMemo(() => {
@@ -75,13 +167,42 @@ const IdeaPage = () => {
         return description.trim();
     }, [description, transcript]);
 
+    const briefPayload = useMemo(() => ({
+        problem: problem.trim(),
+        goal: goal.trim(),
+        targetUsers: targetUsers.trim(),
+        mustHaveFeatures: mustHaveFeatures.trim(),
+        constraints: constraints.trim(),
+        techPreferences: "",
+        unknowns: unknowns.trim(),
+    }), [constraints, goal, mustHaveFeatures, problem, targetUsers, unknowns]);
+
+    const briefHasContent = useMemo(() => Object.values(briefPayload).some((value) => value.length > 0), [briefPayload]);
+    const planSections = useMemo(() => parsePlanSections(refinement), [refinement]);
+    const selectedPlanSection = useMemo(() => (
+        planSections.find((section) => section.id === selectedSectionId) ?? planSections[0]
+    ), [planSections, selectedSectionId]);
+
     const isBusy = status === "loading"
         || status === "recording"
         || status === "transcribing"
         || status === "planning"
+        || status === "refining"
         || status === "feasibility"
         || status === "deleting";
-    const canSubmit = title.trim().length > 0 && (description.trim().length > 0 || transcript.trim().length > 0 || recordedAudio);
+    const canSubmit = title.trim().length > 0 && (description.trim().length > 0 || transcript.trim().length > 0 || Boolean(recordedAudio) || briefHasContent);
+    const canRefine = Boolean(ideaId && selectedPlanSection && refinement && !isBusy);
+
+    useEffect(() => {
+        if (planSections.length === 0) {
+            setSelectedSectionId("");
+            return;
+        }
+
+        if (!planSections.some((section) => section.id === selectedSectionId)) {
+            setSelectedSectionId(planSections[0].id);
+        }
+    }, [planSections, selectedSectionId]);
 
     useEffect(() => {
         let active = true;
@@ -95,6 +216,8 @@ const IdeaPage = () => {
         setStatus("loading");
         setMessage("");
         setRefinement("");
+        setSelectedSectionId("");
+        setAssistantOutput("");
         setFeasibilityCountry("");
         setStudyCountry("");
         setFeasibilityStudy("");
@@ -102,6 +225,7 @@ const IdeaPage = () => {
         setSavedPlanSteps([]);
         setStepError("");
         setRecordedAudio(null);
+        setShowAdditionalNotes(false);
         resetTranscript();
 
         fetchIdea(ideaId)
@@ -110,7 +234,14 @@ const IdeaPage = () => {
                     return;
                 }
                 setTitle(idea.title);
-                setDescription(idea.description);
+                setDescription(idea.description ?? "");
+                setShowAdditionalNotes(Boolean(idea.description?.trim()));
+                setProblem(idea.problem ?? "");
+                setGoal(idea.goal ?? "");
+                setTargetUsers(idea.targetUsers ?? "");
+                setMustHaveFeatures(idea.mustHaveFeatures ?? "");
+                setConstraints(idea.constraints ?? "");
+                setUnknowns(idea.unknowns ?? "");
                 setRefinement(idea.aiResponse ?? "");
                 setFeasibilityCountry(idea.feasibilityCountry ?? "");
                 setStudyCountry(idea.feasibilityCountry ?? "");
@@ -126,6 +257,13 @@ const IdeaPage = () => {
                 }
                 setTitle("");
                 setDescription("");
+                setProblem("");
+                setGoal("");
+                setTargetUsers("");
+                setMustHaveFeatures("");
+                setConstraints("");
+                setUnknowns("");
+                setShowAdditionalNotes(false);
                 setStatus("error");
                 setMessage(error instanceof Error ? error.message : "Could not load idea.");
             });
@@ -138,6 +276,9 @@ const IdeaPage = () => {
     const startRecording = async () => {
         setMessage("");
         setRefinement("");
+        setSelectedSectionId("");
+        setAssistantOutput("");
+        setShowAdditionalNotes(true);
         setFeasibilityCountry("");
         setStudyCountry("");
         setFeasibilityStudy("");
@@ -206,13 +347,24 @@ const IdeaPage = () => {
 
         setTitle("");
         setDescription("");
+        setProblem("");
+        setGoal("");
+        setTargetUsers("");
+        setMustHaveFeatures("");
+        setConstraints("");
+        setUnknowns("");
         setRecordedAudio(null);
         setStatus("idle");
         setMessage("");
         setRefinement("");
+        setSelectedSectionId("");
+        setAssistantOutput("");
+        setRefinementInstruction("");
+        setRefinementAction("EXPLAIN");
         setPlanSteps([]);
         setSavedPlanSteps([]);
         setStepError("");
+        setShowAdditionalNotes(false);
         resetTranscript();
         if (ideaId) {
             navigate("/idea");
@@ -226,6 +378,7 @@ const IdeaPage = () => {
 
         setMessage("");
         setRefinement("");
+        setAssistantOutput("");
 
         try {
             let finalDescription = ideaDescription;
@@ -235,16 +388,18 @@ const IdeaPage = () => {
                 const transcription = await transcribeIdeaAudio(recordedAudio);
                 finalDescription = transcription.text.trim();
                 setDescription(finalDescription);
+                setShowAdditionalNotes(true);
             }
 
-            if (!finalDescription) {
-                throw new Error("Add an idea description or record a voice note first.");
+            if (!finalDescription && !briefHasContent) {
+                throw new Error("Fill in at least one brief field, add notes, or record a voice note first.");
             }
 
             setStatus("planning");
             const idea = {
                 title: title.trim(),
                 description: finalDescription,
+                ...briefPayload,
             };
             const response = ideaId
                 ? await updateIdea(ideaId, idea)
@@ -254,6 +409,8 @@ const IdeaPage = () => {
             setPlanSteps(response.steps ?? []);
             setSavedPlanSteps(response.steps ?? []);
             setStepError("");
+            setRefinementInstruction("");
+            setRefinementAction("EXPLAIN");
             setFeasibilityCountry("");
             setStudyCountry("");
             setFeasibilityStudy("");
@@ -265,6 +422,41 @@ const IdeaPage = () => {
         } catch (error) {
             setStatus("error");
             setMessage(error instanceof Error ? error.message : "Could not submit idea.");
+        }
+    };
+
+    const runRefinementAction = async () => {
+        if (!ideaId || !selectedPlanSection || !refinement || isBusy) {
+            return;
+        }
+
+        setStatus("refining");
+        setMessage("");
+        setAssistantOutput("");
+
+        try {
+            const response = await refineIdea(ideaId, {
+                action: refinementAction,
+                sectionTitle: selectedPlanSection.title,
+                sectionContent: selectedPlanSection.content,
+                instruction: refinementInstruction.trim(),
+            });
+
+            if (response.planUpdated) {
+                setRefinement(response.refinement ?? "");
+                setPlanSteps(response.steps ?? []);
+                setSavedPlanSteps(response.steps ?? []);
+                setStepError("");
+                setRefinementInstruction("");
+            } else {
+                setAssistantOutput(response.assistantOutput ?? "");
+            }
+
+            setMessage(response.message);
+            setStatus("done");
+        } catch (error) {
+            setStatus("error");
+            setMessage(error instanceof Error ? error.message : "Could not refine idea.");
         }
     };
 
@@ -290,21 +482,50 @@ const IdeaPage = () => {
     };
 
     const downloadPlanPdf = (includeFeasibility: boolean) => {
-        const sections = [
-            { heading: "Idea", body: `${title}\n\n${description}` },
-            { heading: "Prioritized plan", body: refinement },
-        ];
+        const briefLines = [
+            ["Problem", problem],
+            ["Goal", goal],
+            ["Target users", targetUsers],
+            ["Must-have features", mustHaveFeatures],
+            ["Constraints", constraints],
+            ["Open questions", unknowns],
+        ]
+            .filter(([, value]) => value.trim().length > 0)
+            .map(([label, value]) => `### ${label}\n${value}`);
+
+        const sections: Array<{ heading: string; body: string }> = [];
+
+        if (description.trim().length > 0) {
+            sections.push({
+                heading: "Idea notes",
+                body: description,
+            });
+        }
+
+        if (briefLines.length > 0) {
+            sections.push({
+                heading: "Structured brief",
+                body: briefLines.join("\n\n"),
+            });
+        }
+
+        sections.push({ heading: "Prioritized plan", body: refinement });
 
         if (planSteps.length > 0) {
             sections.push({
                 heading: "Action tracker",
                 body: planSteps.map((step) => {
+                    const detailItems = getActionDetailItems(step.details);
                     const assignment = [
-                        step.priority,
+                        `Priority: ${step.priority}`,
                         step.owner ? `Owner: ${step.owner}` : "Owner: unassigned",
                         step.dueDate ? `Due: ${step.dueDate}` : "Due: not set",
-                    ].join(" | ");
-                    return `${step.completed ? "[x]" : "[ ]"} ${step.position}. ${step.title}\n${assignment}`;
+                    ].map((item) => `- ${item}`);
+                    return [
+                        `### ${step.completed ? "[x]" : "[ ]"} ${step.position}. ${step.title}`,
+                        ...assignment,
+                        ...detailItems.map((item) => `- ${item}`),
+                    ].join("\n");
                 }).join("\n\n"),
             });
         }
@@ -389,6 +610,45 @@ const IdeaPage = () => {
         }
     };
 
+    const briefFields = [
+        {
+            label: "Problem",
+            value: problem,
+            onChange: setProblem,
+            placeholder: "Manual stock checks miss fast-moving items.",
+        },
+        {
+            label: "Goal",
+            value: goal,
+            onChange: setGoal,
+            placeholder: "Give pharmacies a weekly reorder forecast.",
+        },
+        {
+            label: "Target users",
+            value: targetUsers,
+            onChange: setTargetUsers,
+            placeholder: "Independent pharmacy owners and buyers.",
+        },
+        {
+            label: "Must-have features",
+            value: mustHaveFeatures,
+            onChange: setMustHaveFeatures,
+            placeholder: "CSV import, forecast view, reorder suggestions.",
+        },
+        {
+            label: "Constraints",
+            value: constraints,
+            onChange: setConstraints,
+            placeholder: "Small budget, works without POS integration first.",
+        },
+        {
+            label: "Open questions",
+            value: unknowns,
+            onChange: setUnknowns,
+            placeholder: "Which stock systems export useful data?",
+        },
+    ];
+
     return (
         <>
         <div
@@ -458,24 +718,54 @@ const IdeaPage = () => {
                                     />
                                 </label>
 
-                                <label className="flex flex-col gap-2">
-                                    <span className="text-sm font-medium opacity-80">Idea notes</span>
-                                    <textarea
-                                        value={transcript || description}
-                                        onChange={(event) => {
-                                            resetTranscript();
-                                            setDescription(event.target.value);
-                                        }}
-                                        placeholder="Type the rough idea here, or record a voice note and let NovaFlow use the transcript."
-                                        rows={10}
-                                        className="min-h-[260px] resize-none rounded-md border px-4 py-3 outline-none"
-                                        style={{
-                                            background: currentTheme.colors.secondary_background,
-                                            borderColor: currentTheme.colors.border,
-                                            color: currentTheme.colors.text,
-                                        }}
-                                    />
-                                </label>
+                                <div className="flex flex-col gap-4">
+                                    {briefFields.map((field) => (
+                                        <label key={field.label} className="flex flex-col gap-2">
+                                            <span className="text-sm font-medium opacity-80">{field.label}</span>
+                                            <textarea
+                                                value={field.value}
+                                                onChange={(event) => field.onChange(event.target.value)}
+                                                placeholder={field.placeholder}
+                                                rows={4}
+                                                className="min-h-[136px] resize-y rounded-md border px-4 py-3 text-base leading-7 outline-none"
+                                                style={{
+                                                    background: currentTheme.colors.secondary_background,
+                                                    borderColor: currentTheme.colors.border,
+                                                    color: currentTheme.colors.text,
+                                                }}
+                                            />
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <details
+                                    open={showAdditionalNotes}
+                                    onToggle={(event) => setShowAdditionalNotes(event.currentTarget.open)}
+                                    className="rounded-md border"
+                                    style={{ borderColor: currentTheme.colors.border }}
+                                >
+                                    <summary className="cursor-pointer px-4 py-3 text-sm font-medium opacity-80">
+                                        Additional notes
+                                    </summary>
+                                    <label className="flex flex-col gap-2 px-4 pb-4">
+                                        <span className="sr-only">Additional notes</span>
+                                        <textarea
+                                            value={transcript || description}
+                                            onChange={(event) => {
+                                                resetTranscript();
+                                                setDescription(event.target.value);
+                                            }}
+                                            placeholder="Extra context, rough notes, or voice transcript."
+                                            rows={4}
+                                            className="min-h-[124px] resize-y rounded-md border px-4 py-3 text-base leading-7 outline-none"
+                                            style={{
+                                                background: currentTheme.colors.secondary_background,
+                                                borderColor: currentTheme.colors.border,
+                                                color: currentTheme.colors.text,
+                                            }}
+                                        />
+                                    </label>
+                                </details>
 
                                 <div className="flex flex-wrap items-center gap-3">
                                     {status === "recording" ? (
@@ -530,6 +820,7 @@ const IdeaPage = () => {
                                         {status === "loading" && "Loading saved idea..."}
                                         {status === "transcribing" && "Transcribing voice note..."}
                                         {status === "planning" && "Generating prioritized steps..."}
+                                        {status === "refining" && "Working on the selected section..."}
                                         {status === "feasibility" && "Generating country feasibility study..."}
                                         {status === "idle" && recordedAudio && "Recording ready"}
                                     </span>
@@ -614,7 +905,7 @@ const IdeaPage = () => {
                         </div>
                     </section>
 
-                    {(message || refinement) && (
+                    {(message || refinement || assistantOutput) && (
                         <section
                             className="rounded-lg border p-6 shadow-lg"
                             style={{
@@ -628,9 +919,117 @@ const IdeaPage = () => {
                                 </p>
                             )}
 
-                            {refinement && (
-                                <div className="mt-4 whitespace-pre-wrap rounded-md border p-4 text-sm leading-6" style={{ borderColor: currentTheme.colors.border }}>
-                                    {refinement}
+                            {refinement && selectedPlanSection && (
+                                <div className="mt-4 grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_320px]">
+                                    <nav
+                                        className="rounded-md border p-2"
+                                        style={{
+                                            background: currentTheme.colors.secondary_background,
+                                            borderColor: currentTheme.colors.border,
+                                        }}
+                                        aria-label="Plan sections"
+                                    >
+                                        {planSections.map((section) => {
+                                            const isSelected = section.id === selectedPlanSection.id;
+                                            return (
+                                                <button
+                                                    key={section.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedSectionId(section.id)}
+                                                    className="mb-1 w-full rounded px-3 py-2 text-left text-sm transition-opacity last:mb-0 hover:opacity-80"
+                                                    style={{
+                                                        background: isSelected ? currentTheme.colors.primary : "transparent",
+                                                        color: isSelected ? currentTheme.colors.text : currentTheme.colors.text,
+                                                    }}
+                                                >
+                                                    {section.title}
+                                                </button>
+                                            );
+                                        })}
+                                    </nav>
+
+                                    <article
+                                        className="min-h-[280px] whitespace-pre-wrap rounded-md border p-4 text-sm leading-6"
+                                        style={{ borderColor: currentTheme.colors.border }}
+                                    >
+                                        {formatPlanSectionForDisplay(selectedPlanSection.content)}
+                                    </article>
+
+                                    <aside
+                                        className="rounded-md border p-4"
+                                        style={{
+                                            background: currentTheme.colors.secondary_background,
+                                            borderColor: currentTheme.colors.border,
+                                        }}
+                                    >
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {REFINEMENT_ACTIONS.map((item) => {
+                                                const Icon = item.icon;
+                                                const isSelected = refinementAction === item.action;
+                                                return (
+                                                    <button
+                                                        key={item.action}
+                                                        type="button"
+                                                        onClick={() => setRefinementAction(item.action)}
+                                                        disabled={isBusy}
+                                                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-50"
+                                                        style={{
+                                                            background: isSelected ? currentTheme.colors.background : "transparent",
+                                                            borderColor: isSelected ? currentTheme.colors.primary : currentTheme.colors.border,
+                                                        }}
+                                                    >
+                                                        <Icon size={15} />
+                                                        {item.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <label className="mt-4 flex flex-col gap-2">
+                                            <span className="text-sm font-medium opacity-80">Instruction</span>
+                                            <textarea
+                                                value={refinementInstruction}
+                                                onChange={(event) => setRefinementInstruction(event.target.value)}
+                                                placeholder={PLAN_UPDATING_ACTIONS.has(refinementAction)
+                                                    ? "Add Google login, split backend tasks, or make this more concrete."
+                                                    : "What should NovaFlow focus on?"}
+                                                rows={4}
+                                                disabled={isBusy}
+                                                className="resize-none rounded-md border px-3 py-3 text-sm outline-none disabled:opacity-50"
+                                                style={{
+                                                    background: currentTheme.colors.background,
+                                                    borderColor: currentTheme.colors.border,
+                                                    color: currentTheme.colors.text,
+                                                }}
+                                            />
+                                        </label>
+
+                                        <button
+                                            type="button"
+                                            onClick={runRefinementAction}
+                                            disabled={!canRefine}
+                                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                                            style={{
+                                                background: currentTheme.colors.text,
+                                                color: currentTheme.colors.background,
+                                            }}
+                                        >
+                                            {status === "refining" ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
+                                            {PLAN_UPDATING_ACTIONS.has(refinementAction) ? "Update plan" : "Ask AI"}
+                                        </button>
+
+                                        {assistantOutput && (
+                                            <div
+                                                className="mt-4 max-h-[320px] overflow-auto whitespace-pre-wrap rounded-md border p-3 text-sm leading-6"
+                                                style={{
+                                                    background: currentTheme.colors.background,
+                                                    borderColor: currentTheme.colors.border,
+                                                }}
+                                            >
+                                                {assistantOutput}
+                                            </div>
+                                        )}
+                                    </aside>
                                 </div>
                             )}
                         </section>
@@ -680,6 +1079,7 @@ const IdeaPage = () => {
                                 {planSteps.map((step) => {
                                     const isSaving = savingStepId === step.id;
                                     const isDirty = hasStepChanges(step);
+                                    const detailItems = getActionDetailItems(step.details);
 
                                     return (
                                         <article key={step.id} className="py-5 first:pt-2 last:pb-0">
@@ -712,10 +1112,12 @@ const IdeaPage = () => {
                                                             {step.priority}
                                                         </span>
                                                     </div>
-                                                    {step.details && (
-                                                        <div className="mt-2 whitespace-pre-wrap text-sm leading-6 opacity-75">
-                                                            {step.details}
-                                                        </div>
+                                                    {detailItems.length > 0 && (
+                                                        <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-6 opacity-75">
+                                                            {detailItems.map((detail, index) => (
+                                                                <li key={`${index}-${detail}`}>{detail}</li>
+                                                            ))}
+                                                        </ul>
                                                     )}
                                                 </div>
                                             </div>

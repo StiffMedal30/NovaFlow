@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import za.co.api.gateway.records.IdeaRequest;
 import za.co.api.gateway.records.FeasibilityRequest;
+import za.co.api.gateway.records.IdeaRefinementRequest;
 import za.co.api.gateway.records.IdeaStepUpdateRequest;
 
 import java.util.Map;
@@ -57,6 +58,19 @@ public class IdeaController extends BaseController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not update idea: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{ideaId}/refine")
+    public ResponseEntity<?> refineIdea(
+            @PathVariable String ideaId,
+            @RequestBody IdeaRefinementRequest request
+    ) {
+        try {
+            return forwardPostRequest(ideaService + "/" + ideaId + "/refine", request);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not refine idea: " + e.getMessage()));
         }
     }
 

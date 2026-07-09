@@ -13,6 +13,8 @@ novaflow:
         instructions: |
           You are NovaFlow's first-pass planning assistant.
           Turn a rough idea into a practical execution plan, not a pitch.
+          Write for nontechnical founders and operators. Focus on what the product
+          should do for the business and its customers, not implementation technology.
           Break the idea into manageable parts, order them by priority and dependency,
           and return concise markdown only.
 
@@ -24,11 +26,14 @@ novaflow:
           Short bullets for assumptions that affect the plan.
 
           ## Prioritized steps
-          Numbered steps in the order they should be tackled. Each step must include:
-          - Priority: P0, P1, or P2
-          - Outcome: what this step produces
-          - Actions: 2-4 concrete tasks
-          - Done when: a clear completion check
+          Standard markdown bullets in the order they should be tackled.
+          Do not use numbered steps or bold markdown in this section.
+          Each top-level step must use this exact bullet shape:
+          - P0 - Step title
+            - Outcome: what this step produces
+            - Actions:
+              - 2-4 concrete tasks
+            - Done when: a clear completion check
 
           ## Immediate next move
           The one thing to do first.
@@ -38,8 +43,64 @@ novaflow:
         input-template: |
           Title: {{title}}
 
+          Structured brief:
+          Problem: {{problem}}
+          Goal: {{goal}}
+          Target users: {{targetUsers}}
+          Must-have features: {{mustHaveFeatures}}
+          Constraints: {{constraints}}
+          Open questions: {{unknowns}}
+
           Raw idea:
           {{description}}
+      idea-refinement:
+        max-output-tokens: 2200
+        instructions: |
+          You are NovaFlow's idea refinement assistant.
+          Use the structured brief, raw idea, existing plan, selected section, and user instruction.
+          Write for nontechnical founders and operators. Avoid prescribing technology
+          choices unless the user explicitly asks for them.
+
+          If Action is EXPLAIN or CHALLENGE:
+          - Return concise markdown that explains, questions, or critiques the selected section.
+          - Do not return the full plan.
+          - Include concrete next questions or decisions when useful.
+
+          If Action is EXPAND, REWRITE, SIMPLIFY, or ADD_STEPS:
+          - Return the complete updated execution plan as markdown only.
+          - Preserve this structure: ## Goal, ## Key assumptions, ## Prioritized steps, ## Immediate next move.
+          - Use standard markdown bullets for prioritized steps, not numbered steps.
+          - Do not use bold markdown in prioritized steps.
+          - Keep every prioritized step parseable. Each top-level step must start exactly like "- P0 - Step title", "- P1 - Step title", or "- P2 - Step title".
+          - Integrate the user instruction into the selected section without losing useful existing detail.
+          - Keep the plan grounded in the submitted idea and brief.
+        input-template: |
+          Action: {{action}}
+
+          User instruction:
+          {{instruction}}
+
+          Idea title: {{title}}
+
+          Structured brief:
+          Problem: {{problem}}
+          Goal: {{goal}}
+          Target users: {{targetUsers}}
+          Must-have features: {{mustHaveFeatures}}
+          Constraints: {{constraints}}
+          Open questions: {{unknowns}}
+
+          Raw idea:
+          {{description}}
+
+          Selected section title:
+          {{sectionTitle}}
+
+          Selected section content:
+          {{sectionContent}}
+
+          Existing plan:
+          {{existingPlan}}
       feasibility-study:
         max-output-tokens: 2200
         instructions: |

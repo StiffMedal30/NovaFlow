@@ -17,6 +17,13 @@ tasks.register('npmBuild', NpmTask) {
     args = ['run', 'build']
 }
 
+tasks.register('npmLint', NpmTask) {
+    group = 'verification'
+    description = 'Runs ESLint for the frontend.'
+    dependsOn tasks.named('npmInstall')
+    args = ['run', 'lint']
+}
+
 tasks.register('npmDev', NpmTask) {
     group = 'application'
     description = 'Starts the Vite development server.'

@@ -1,6 +1,8 @@
 import type {
     FeasibilityResponse,
     Idea,
+    IdeaRefinementRequest,
+    IdeaRefinementResponse,
     IdeaRequest,
     IdeaResponse,
     IdeaStep,
@@ -98,6 +100,31 @@ export const updateIdea = async (ideaId: string, idea: IdeaRequest): Promise<Ide
     }
 
     return payload as IdeaResponse;
+};
+
+export const refineIdea = async (
+    ideaId: string,
+    request: IdeaRefinementRequest
+): Promise<IdeaRefinementResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/idea/${ideaId}/refine`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+        },
+        body: JSON.stringify(request),
+    });
+
+    if (response.status === 404) {
+        throw new Error("Idea not found.");
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(payload.error ?? payload.message ?? "Could not refine idea.");
+    }
+
+    return payload as IdeaRefinementResponse;
 };
 
 export const deleteIdea = async (ideaId: string): Promise<void> => {

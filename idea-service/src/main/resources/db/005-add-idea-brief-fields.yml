@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: codex
+      changes:
+        - addColumn:
+            tableName: idea
+            columns:
+              - column:
+                  name: problem
+                  type: text
+              - column:
+                  name: goal
+                  type: text
+              - column:
+                  name: target_users
+                  type: text
+              - column:
+                  name: must_have_features
+                  type: text
+              - column:
+                  name: constraints
+                  type: text
+              - column:
+                  name: tech_preferences
+                  type: text
+              - column:
+                  name: unknowns
+                  type: text

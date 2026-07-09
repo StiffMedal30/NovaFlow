@@ -1,3 +1,5 @@
+name: novaflow
+
 services:
   postgres:
     image: postgres:15

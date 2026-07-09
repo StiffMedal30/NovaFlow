@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import za.co.idea.service.records.IdeaRecord;
+import za.co.idea.service.records.IdeaRefinementRequest;
+import za.co.idea.service.records.IdeaRefinementResponse;
 import za.co.idea.service.records.IdeaResponse;
 import za.co.idea.service.records.IdeaStepResponse;
 import za.co.idea.service.records.IdeaStepUpdateRequest;
@@ -60,6 +62,28 @@ public class IdeaController {
                 return ResponseEntity.notFound().build();
             }
             return ResponseEntity.badRequest().body(new IdeaResponse(String.valueOf(ideaId), e.getMessage(), null, List.of()));
+        }
+    }
+
+    @PostMapping("/{ideaId}/refine")
+    public ResponseEntity<IdeaRefinementResponse> refineIdea(
+            @PathVariable Long ideaId,
+            @RequestBody IdeaRefinementRequest request
+    ) {
+        try {
+            return ResponseEntity.ok(ideaService.refineIdea(ideaId, request));
+        } catch (IllegalArgumentException e) {
+            if ("Idea not found.".equals(e.getMessage())) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(new IdeaRefinementResponse(
+                    String.valueOf(ideaId),
+                    e.getMessage(),
+                    "",
+                    "",
+                    false,
+                    List.of()
+            ));
         }
     }
 

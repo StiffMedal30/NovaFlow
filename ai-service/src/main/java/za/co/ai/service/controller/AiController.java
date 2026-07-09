@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import za.co.ai.service.record.AiResponse;
 import za.co.ai.service.record.FeasibilityRequest;
 import za.co.ai.service.record.IdeaRecord;
+import za.co.ai.service.record.IdeaRefinementRequest;
 import za.co.ai.service.record.TranscriptionResponse;
 import za.co.ai.service.service.AiService;
 
@@ -25,6 +26,11 @@ public class AiController {
     public AiResponse processIdea(@RequestBody IdeaRecord idea) {
         String result = aiService.refineIdea(idea);
         return new AiResponse(result);
+    }
+
+    @PostMapping("/refine")
+    public AiResponse refineIdea(@RequestBody IdeaRefinementRequest request) {
+        return new AiResponse(aiService.refineIdeaSection(request));
     }
 
     @PostMapping("/feasibility")

@@ -1,6 +1,6 @@
 package za.co.idea.service.records;
 
-public record IdeaRecord(
+public record AiRefinementRequest(
         String title,
         String description,
         String problem,
@@ -9,6 +9,11 @@ public record IdeaRecord(
         String mustHaveFeatures,
         String constraints,
         String techPreferences,
-        String unknowns
+        String unknowns,
+        String existingPlan,
+        String action,
+        String sectionTitle,
+        String sectionContent,
+        String instruction
 ) {
 }

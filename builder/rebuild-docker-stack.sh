@@ -7,6 +7,12 @@ COMPOSE_FILE=${COMPOSE_FILE:-"$SCRIPT_DIR/docker-compose.yml"}
 ENV_FILE=${ENV_FILE:-}
 SKIP_GIT_PULL=${SKIP_GIT_PULL:-0}
 GIT_PULL_MODE=${GIT_PULL_MODE:-ff-only}
+export BUILDKIT_PROGRESS=${BUILDKIT_PROGRESS:-plain}
+export COMPOSE_ANSI=${COMPOSE_ANSI:-never}
+export COMPOSE_PROGRESS=${COMPOSE_PROGRESS:-plain}
+export COMPOSE_MENU=${COMPOSE_MENU:-false}
+export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-novaflow}
+export DOCKER_CLI_HINTS=${DOCKER_CLI_HINTS:-false}
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     echo "Could not find Docker Compose file: $COMPOSE_FILE" >&2
@@ -134,7 +140,7 @@ compose_stack rm -f
 
 echo
 echo "Creating containers from the new images..."
-compose_stack up -d --force-recreate --remove-orphans
+compose_stack up -d --no-build --force-recreate --remove-orphans
 
 echo
 echo "Docker stack recreated."

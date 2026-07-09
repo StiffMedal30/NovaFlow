@@ -12,6 +12,11 @@ PULL_IMAGES=${PULL_IMAGES:-auto}
 SKIP_PULL=${SKIP_PULL:-0}
 SKIP_GIT_PULL=${SKIP_GIT_PULL:-0}
 GIT_PULL_MODE=${GIT_PULL_MODE:-ff-only}
+export COMPOSE_ANSI=${COMPOSE_ANSI:-never}
+export COMPOSE_PROGRESS=${COMPOSE_PROGRESS:-plain}
+export COMPOSE_MENU=${COMPOSE_MENU:-false}
+export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-novaflow-production}
+export DOCKER_CLI_HINTS=${DOCKER_CLI_HINTS:-false}
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     echo "Could not find Docker Compose file: $COMPOSE_FILE" >&2
@@ -240,7 +245,7 @@ fi
 echo "Ensuring production dependencies are running..."
 while IFS='|' read -r service url; do
     [ -z "$service" ] && continue
-    run_compose up -d "$service"
+    run_compose up -d --no-build "$service"
     wait_service_ready "$service" "$url"
 done <<EOF
 postgres|
@@ -260,7 +265,7 @@ while IFS='|' read -r service url; do
 
     run_compose stop "$service"
     run_compose rm -f "$service"
-    run_compose up -d --no-deps --force-recreate "$service"
+    run_compose up -d --no-deps --no-build --force-recreate "$service"
     wait_service_ready "$service" "$url"
 done <<EOF
 user-service|$USER_SERVICE_URL

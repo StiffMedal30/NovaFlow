@@ -14,10 +14,12 @@ import za.co.ai.service.config.AiPromptProperties;
 import za.co.ai.service.config.OpenAiProperties;
 import za.co.ai.service.record.FeasibilityRequest;
 import za.co.ai.service.record.IdeaRecord;
+import za.co.ai.service.record.IdeaRefinementRequest;
 import za.co.ai.service.service.AiService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,6 +27,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class AiServiceImpl implements AiService {
     private static final String IDEA_PLANNING_PROMPT = "idea-planning";
+    private static final String IDEA_REFINEMENT_PROMPT = "idea-refinement";
     private static final String FEASIBILITY_STUDY_PROMPT = "feasibility-study";
 
     private final RestClient openAiRestClient;
@@ -37,11 +40,32 @@ public class AiServiceImpl implements AiService {
 
         return generateResponse(
                 prompt,
-                Map.of(
-                        "title", idea.title(),
-                        "description", idea.description()
-                )
+                promptValues(idea.title(), idea.description(), idea.problem(), idea.goal(), idea.targetUsers(),
+                        idea.mustHaveFeatures(), idea.constraints(), idea.techPreferences(), idea.unknowns())
         );
+    }
+
+    @Override
+    public String refineIdeaSection(IdeaRefinementRequest request) {
+        AiPromptProperties.PromptDefinition prompt = aiPromptProperties.require(IDEA_REFINEMENT_PROMPT);
+        Map<String, String> values = promptValues(
+                request.title(),
+                request.description(),
+                request.problem(),
+                request.goal(),
+                request.targetUsers(),
+                request.mustHaveFeatures(),
+                request.constraints(),
+                request.techPreferences(),
+                request.unknowns()
+        );
+        values.put("existingPlan", valueOrEmpty(request.existingPlan()));
+        values.put("action", valueOrEmpty(request.action()));
+        values.put("sectionTitle", valueOrEmpty(request.sectionTitle()));
+        values.put("sectionContent", valueOrEmpty(request.sectionContent()));
+        values.put("instruction", valueOrEmpty(request.instruction()));
+
+        return generateResponse(prompt, values);
     }
 
     @Override
@@ -57,6 +81,34 @@ public class AiServiceImpl implements AiService {
                         "country", request.country()
                 )
         );
+    }
+
+    private Map<String, String> promptValues(
+            String title,
+            String description,
+            String problem,
+            String goal,
+            String targetUsers,
+            String mustHaveFeatures,
+            String constraints,
+            String techPreferences,
+            String unknowns
+    ) {
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("title", valueOrEmpty(title));
+        values.put("description", valueOrEmpty(description));
+        values.put("problem", valueOrEmpty(problem));
+        values.put("goal", valueOrEmpty(goal));
+        values.put("targetUsers", valueOrEmpty(targetUsers));
+        values.put("mustHaveFeatures", valueOrEmpty(mustHaveFeatures));
+        values.put("constraints", valueOrEmpty(constraints));
+        values.put("techPreferences", valueOrEmpty(techPreferences));
+        values.put("unknowns", valueOrEmpty(unknowns));
+        return values;
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private String generateResponse(AiPromptProperties.PromptDefinition prompt, Map<String, String> values) {

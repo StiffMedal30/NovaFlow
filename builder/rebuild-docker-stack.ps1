@@ -8,6 +8,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:BUILDKIT_PROGRESS = if ($env:BUILDKIT_PROGRESS) { $env:BUILDKIT_PROGRESS } else { "plain" }
+$env:COMPOSE_ANSI = if ($env:COMPOSE_ANSI) { $env:COMPOSE_ANSI } else { "never" }
+$env:COMPOSE_PROGRESS = if ($env:COMPOSE_PROGRESS) { $env:COMPOSE_PROGRESS } else { "plain" }
+$env:COMPOSE_MENU = if ($env:COMPOSE_MENU) { $env:COMPOSE_MENU } else { "false" }
+$env:COMPOSE_PROJECT_NAME = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { "novaflow" }
+$env:DOCKER_CLI_HINTS = if ($env:DOCKER_CLI_HINTS) { $env:DOCKER_CLI_HINTS } else { "false" }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ComposeFilePath = (Resolve-Path $ComposeFile).Path
@@ -165,7 +171,7 @@ Invoke-DockerCompose -Arguments @("rm", "-f")
 
 Write-Host ""
 Write-Host "Creating containers from the new images..."
-Invoke-DockerCompose -Arguments @("up", "-d", "--force-recreate", "--remove-orphans")
+Invoke-DockerCompose -Arguments @("up", "-d", "--no-build", "--force-recreate", "--remove-orphans")
 
 Write-Host ""
 Write-Host "Docker stack recreated."

@@ -8,8 +8,11 @@ import za.co.idea.service.client.AiServiceClient;
 import za.co.idea.service.entity.IdeaEntity;
 import za.co.idea.service.entity.IdeaStepEntity;
 import za.co.idea.service.records.AiFeasibilityRequest;
+import za.co.idea.service.records.AiRefinementRequest;
 import za.co.idea.service.records.FeasibilityResponse;
 import za.co.idea.service.records.IdeaRecord;
+import za.co.idea.service.records.IdeaRefinementRequest;
+import za.co.idea.service.records.IdeaRefinementResponse;
 import za.co.idea.service.records.IdeaResponse;
 import za.co.idea.service.records.IdeaStepResponse;
 import za.co.idea.service.records.IdeaStepUpdateRequest;
@@ -31,8 +34,11 @@ import java.util.regex.Pattern;
 @Transactional
 public class IdeaServiceImpl implements IdeaService {
 
-    private static final Pattern STEP_HEADING = Pattern.compile("(?m)^\\s*(\\d+)\\.\\s+(.+?)\\s*$");
-    private static final Pattern PRIORITY_LINE = Pattern.compile("(?im)^\\s*-\\s*Priority:\\s*(P[012])\\s*$");
+    private static final Pattern STEP_HEADING = Pattern.compile("(?m)^\\s*(?:(\\d+)[.)]\\s+|-\\s*(P[012])\\s*[-—:]\\s*)(.+?)\\s*$");
+    private static final Pattern HEADING_PRIORITY = Pattern.compile("(?i)^\\s*(?:priority\\s*:\\s*)?(P[012])\\s*(?:[-—:]\\s*)?(.+?)\\s*$");
+    private static final Pattern PRIORITY_LINE = Pattern.compile("(?im)^\\s*-\\s*(?:\\*\\*)?Priority\\s*:\\s*(?:\\*\\*)?\\s*(P[012])\\s*$");
+    private static final List<String> PLAN_UPDATE_ACTIONS = List.of("EXPAND", "REWRITE", "SIMPLIFY", "ADD_STEPS");
+    private static final List<String> ASSISTANT_ONLY_ACTIONS = List.of("EXPLAIN", "CHALLENGE");
 
     private final AiServiceClient aiClient;
     private final IdeaRepository ideaRepository;
@@ -42,11 +48,10 @@ public class IdeaServiceImpl implements IdeaService {
     public IdeaResponse addIdea(IdeaRecord idea) {
         validate(idea);
 
-        IdeaRecord normalizedIdea = new IdeaRecord(idea.title().trim(), idea.description().trim());
+        IdeaRecord normalizedIdea = normalizeIdea(idea);
 
         IdeaEntity entity = new IdeaEntity();
-        entity.setTitle(normalizedIdea.title());
-        entity.setDescription(normalizedIdea.description());
+        applyIdea(entity, normalizedIdea);
         entity.setCreatedBy("local");
         entity.setStatus("ACTIVE");
         entity.setAiProcessed(false);
@@ -89,9 +94,8 @@ public class IdeaServiceImpl implements IdeaService {
         validate(idea);
 
         IdeaEntity entity = findIdea(ideaId);
-        IdeaRecord normalizedIdea = new IdeaRecord(idea.title().trim(), idea.description().trim());
-        entity.setTitle(normalizedIdea.title());
-        entity.setDescription(normalizedIdea.description());
+        IdeaRecord normalizedIdea = normalizeIdea(idea);
+        applyIdea(entity, normalizedIdea);
         entity.setFeasibilityCountry(null);
         entity.setFeasibilityResponse(null);
         entity.setModifiedBy("local");
@@ -116,6 +120,61 @@ public class IdeaServiceImpl implements IdeaService {
                     getSteps(entity.getId())
             );
         }
+    }
+
+    @Override
+    public IdeaRefinementResponse refineIdea(Long ideaId, IdeaRefinementRequest request) {
+        IdeaEntity entity = findIdea(ideaId);
+        if (request == null) {
+            throw new IllegalArgumentException("Refinement request is required.");
+        }
+
+        String action = normalizeAction(request.action());
+        String output = aiClient.refineIdea(new AiRefinementRequest(
+                entity.getTitle(),
+                valueOrEmpty(entity.getDescription()),
+                valueOrEmpty(entity.getProblem()),
+                valueOrEmpty(entity.getGoal()),
+                valueOrEmpty(entity.getTargetUsers()),
+                valueOrEmpty(entity.getMustHaveFeatures()),
+                valueOrEmpty(entity.getConstraints()),
+                valueOrEmpty(entity.getTechPreferences()),
+                valueOrEmpty(entity.getUnknowns()),
+                valueOrEmpty(entity.getAiResponse()),
+                action,
+                valueOrDefault(request.sectionTitle(), "Full plan"),
+                valueOrEmpty(request.sectionContent()),
+                valueOrEmpty(request.instruction())
+        )).output();
+
+        if (PLAN_UPDATE_ACTIONS.contains(action)) {
+            if (output == null || output.isBlank()) {
+                throw new IllegalStateException("AI did not return an updated plan.");
+            }
+
+            entity.setAiResponse(output);
+            entity.setAiProcessed(true);
+            entity.setModifiedBy("ai-service");
+            ideaRepository.save(entity);
+            List<IdeaStepResponse> steps = replaceSteps(entity.getId(), output);
+            return new IdeaRefinementResponse(
+                    String.valueOf(entity.getId()),
+                    "Plan updated.",
+                    output,
+                    "",
+                    true,
+                    steps
+            );
+        }
+
+        return new IdeaRefinementResponse(
+                String.valueOf(entity.getId()),
+                "Assistant response ready.",
+                valueOrEmpty(entity.getAiResponse()),
+                valueOrEmpty(output),
+                false,
+                getSteps(entity.getId())
+        );
     }
 
     @Override
@@ -187,9 +246,67 @@ public class IdeaServiceImpl implements IdeaService {
         if (idea == null || idea.title() == null || idea.title().isBlank()) {
             throw new IllegalArgumentException("Idea title is required.");
         }
-        if (idea.description() == null || idea.description().isBlank()) {
-            throw new IllegalArgumentException("Idea description is required.");
+        if (!hasIdeaContent(idea)) {
+            throw new IllegalArgumentException("Add idea notes or fill in at least one brief field.");
         }
+    }
+
+    private IdeaRecord normalizeIdea(IdeaRecord idea) {
+        return new IdeaRecord(
+                idea.title().trim(),
+                normalizeText(idea.description()),
+                normalizeText(idea.problem()),
+                normalizeText(idea.goal()),
+                normalizeText(idea.targetUsers()),
+                normalizeText(idea.mustHaveFeatures()),
+                normalizeText(idea.constraints()),
+                normalizeText(idea.techPreferences()),
+                normalizeText(idea.unknowns())
+        );
+    }
+
+    private void applyIdea(IdeaEntity entity, IdeaRecord idea) {
+        entity.setTitle(idea.title());
+        entity.setDescription(idea.description());
+        entity.setProblem(idea.problem());
+        entity.setGoal(idea.goal());
+        entity.setTargetUsers(idea.targetUsers());
+        entity.setMustHaveFeatures(idea.mustHaveFeatures());
+        entity.setConstraints(idea.constraints());
+        entity.setTechPreferences(idea.techPreferences());
+        entity.setUnknowns(idea.unknowns());
+    }
+
+    private boolean hasIdeaContent(IdeaRecord idea) {
+        return hasText(idea.description())
+                || hasText(idea.problem())
+                || hasText(idea.goal())
+                || hasText(idea.targetUsers())
+                || hasText(idea.mustHaveFeatures())
+                || hasText(idea.constraints())
+                || hasText(idea.techPreferences())
+                || hasText(idea.unknowns());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String normalizeText(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String normalizeAction(String action) {
+        if (action == null || action.isBlank()) {
+            throw new IllegalArgumentException("Refinement action is required.");
+        }
+
+        String normalized = action.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+        if (!PLAN_UPDATE_ACTIONS.contains(normalized) && !ASSISTANT_ONLY_ACTIONS.contains(normalized)) {
+            throw new IllegalArgumentException("Unknown refinement action.");
+        }
+
+        return normalized;
     }
 
     private IdeaEntity findIdea(Long ideaId) {
@@ -211,6 +328,13 @@ public class IdeaServiceImpl implements IdeaService {
                 String.valueOf(idea.getId()),
                 idea.getTitle(),
                 idea.getDescription(),
+                valueOrEmpty(idea.getProblem()),
+                valueOrEmpty(idea.getGoal()),
+                valueOrEmpty(idea.getTargetUsers()),
+                valueOrEmpty(idea.getMustHaveFeatures()),
+                valueOrEmpty(idea.getConstraints()),
+                valueOrEmpty(idea.getTechPreferences()),
+                valueOrEmpty(idea.getUnknowns()),
                 valueOrEmpty(idea.getCreatedBy()),
                 format(idea.getCreatedAt()),
                 format(idea.getModifiedAt()),
@@ -263,10 +387,19 @@ public class IdeaServiceImpl implements IdeaService {
         List<Integer> starts = new ArrayList<>();
         List<Integer> ends = new ArrayList<>();
         List<String> titles = new ArrayList<>();
+        List<String> headingPriorities = new ArrayList<>();
         while (matcher.find()) {
             starts.add(matcher.start());
             ends.add(matcher.end());
-            titles.add(cleanTitle(matcher.group(2)));
+            String headingPriority = matcher.group(2);
+            String title = cleanTitle(matcher.group(3));
+            Matcher headingPriorityMatcher = HEADING_PRIORITY.matcher(title);
+            if ((headingPriority == null || headingPriority.isBlank()) && headingPriorityMatcher.matches()) {
+                headingPriority = headingPriorityMatcher.group(1).toUpperCase(Locale.ROOT);
+                title = cleanTitle(headingPriorityMatcher.group(2));
+            }
+            titles.add(title);
+            headingPriorities.add(headingPriority);
         }
 
         List<StepDraft> steps = new ArrayList<>();
@@ -274,15 +407,25 @@ public class IdeaServiceImpl implements IdeaService {
             int bodyEnd = index + 1 < starts.size() ? starts.get(index + 1) : section.length();
             String body = section.substring(ends.get(index), bodyEnd).trim();
             Matcher priorityMatcher = PRIORITY_LINE.matcher(body);
-            String priority = priorityMatcher.find() ? priorityMatcher.group(1).toUpperCase(Locale.ROOT) : "P1";
-            String details = PRIORITY_LINE.matcher(body).replaceAll("").trim();
+            String priority = valueOrDefault(headingPriorities.get(index), "");
+            if (priority.isBlank() && priorityMatcher.find()) {
+                priority = priorityMatcher.group(1).toUpperCase(Locale.ROOT);
+            }
+            if (priority.isBlank()) {
+                priority = "P1";
+            }
+            String details = cleanMarkdown(PRIORITY_LINE.matcher(body).replaceAll("")).trim();
             steps.add(new StepDraft(titles.get(index), details, priority));
         }
         return steps;
     }
 
     private String cleanTitle(String title) {
-        return title.replace("**", "").replaceAll("\\s+-\\s*$", "").trim();
+        return cleanMarkdown(title).replaceAll("\\s+-\\s*$", "").trim();
+    }
+
+    private String cleanMarkdown(String value) {
+        return value.replace("**", "").trim();
     }
 
     private String normalizePriority(String priority) {

@@ -1,3 +1,5 @@
+name: novaflow-production
+
 services:
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:15}

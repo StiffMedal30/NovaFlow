@@ -10,6 +10,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:BUILDKIT_PROGRESS = if ($env:BUILDKIT_PROGRESS) { $env:BUILDKIT_PROGRESS } else { "plain" }
+$env:DOCKER_CLI_HINTS = if ($env:DOCKER_CLI_HINTS) { $env:DOCKER_CLI_HINTS } else { "false" }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $GradleWrapper = Join-Path $RepoRoot "gradlew.bat"
