@@ -19,8 +19,8 @@ esac
 
 GRADLE_WRAPPER="$REPO_ROOT/gradlew"
 if [ ! -x "$GRADLE_WRAPPER" ]; then
-    if [ -f "$REPO_ROOT/gradlew.bat" ]; then
-        GRADLE_WRAPPER="$REPO_ROOT/gradlew.bat"
+    if [ -f "$REPO_ROOT/gradlew" ]; then
+        GRADLE_WRAPPER="$REPO_ROOT/gradlew"
     else
         echo "Could not find a Gradle wrapper in $REPO_ROOT." >&2
         exit 1
