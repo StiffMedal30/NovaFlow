@@ -1,6 +1,4 @@
-import config from "../src/appconfig.json";
-
-const API_BASE_URL = config.API_BASE_URL_DEV;
+import { API_BASE_URL } from "./apiBase";
 
 export interface RegistrationRequest {
   email: string;

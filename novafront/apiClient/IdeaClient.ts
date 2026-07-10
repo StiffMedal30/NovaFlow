@@ -10,9 +10,7 @@ import type {
     TranscriptionResponse,
 } from "../src/app/Types";
 import { getAuthHeaders } from "../src/store/authStore";
-import config from "../src/appconfig.json";
-
-const API_BASE_URL = config.API_BASE_URL_DEV;
+import { API_BASE_URL } from "./apiBase";
 
 export const fetchIdeas = async (): Promise<Idea[]> => {
     const response = await fetch(`${API_BASE_URL}/api/idea`, {

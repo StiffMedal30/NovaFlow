@@ -14,6 +14,11 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     strictPort: true,
+    proxy: {
+      '/api': 'http://localhost:8081',
+      '/oauth2': 'http://localhost:8081',
+      '/login/oauth2': 'http://localhost:8081',
+    },
   },
   resolve: {
     alias: {

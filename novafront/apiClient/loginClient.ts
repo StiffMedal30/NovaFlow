@@ -1,7 +1,4 @@
-import config from "../src/appconfig.json";
-
-//For local testing obviously
-const API_BASE_URL = config.API_BASE_URL_DEV;
+import { API_BASE_URL } from "./apiBase";
 
 // Types for login
 export interface LoginRequest {
@@ -20,24 +17,20 @@ export interface ApiError {
 }
 
 export const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/user/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
+  const response = await fetch(`${API_BASE_URL}/api/user/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  });
 
-    const data = await response.json();
+  const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
-    }
-    return data;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(data.message || data.error || 'Login failed');
   }
+
+  return data;
 };
 

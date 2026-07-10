@@ -69,6 +69,9 @@ Examples:
   sh deploy-stack.sh user-service
   sh deploy-stack.sh user-service idea-service
   sh deploy-stack.sh postgres rabbitmq mailpit eureka config-server
+
+On a remote host such as EC2, either run build-images.sh on that host first,
+or set IMAGE_PREFIX/CONFIG_SERVER_IMAGE to images that were pushed to a registry.
 EOF
 }
 
@@ -301,7 +304,36 @@ wait_service_ready() {
     return 1
 }
 
-should_pull_images() {
+is_custom_image_service() {
+    service=$1
+
+    if [ "$service" = "config-server" ] || list_contains "$service" "$APP_RELEASE_SERVICES"; then
+        return 0
+    fi
+
+    return 1
+}
+
+service_image() {
+    case "$1" in
+        config-server) printf '%s' "$CONFIG_SERVER_IMAGE" ;;
+        api-gateway|user-service|idea-service|ai-service|chat-service|email-service|novafront)
+            printf '%s' "${IMAGE_PREFIX}$1:${IMAGE_TAG}"
+            ;;
+        *) printf '%s' "" ;;
+    esac
+}
+
+looks_remote_image() {
+    case "$1" in
+        */*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+should_pull_service_image() {
+    service=$1
+
     if [ "$SKIP_PULL" = "1" ]; then
         return 1
     fi
@@ -310,11 +342,52 @@ should_pull_images() {
         return 0
     fi
 
-    if [ "$PULL_IMAGES" = "auto" ] && [ -n "$IMAGE_PREFIX" ]; then
+    if [ "$PULL_IMAGES" != "auto" ]; then
+        return 1
+    fi
+
+    image=$(service_image "$service")
+    [ -n "$image" ] && looks_remote_image "$image"
+}
+
+ensure_custom_image_available() {
+    service=$1
+
+    if ! is_custom_image_service "$service"; then
         return 0
     fi
 
-    return 1
+    image=$(service_image "$service")
+
+    if docker image inspect "$image" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    cat >&2 <<EOF
+Missing Docker image '$image' for service '$service'.
+
+This is a NovaFlow image, not a public Docker Hub image. On EC2 you have two options:
+1. Build it on this host:
+   sh builder/production-release/build-images.sh $service
+   sh builder/production-release/deploy-stack.sh $service
+
+2. Or push images from CI/local to a registry, then deploy with:
+   IMAGE_PREFIX=your-registry/novaflow IMAGE_TAG=$IMAGE_TAG sh builder/production-release/deploy-stack.sh $service
+
+For config-server specifically you can also set:
+   CONFIG_SERVER_IMAGE=your-registry/novaflow/config-server:$IMAGE_TAG
+EOF
+    exit 1
+}
+
+prepare_service_image() {
+    service=$1
+
+    if should_pull_service_image "$service"; then
+        run_compose pull "$service"
+    fi
+
+    ensure_custom_image_available "$service"
 }
 
 service_url() {
@@ -364,6 +437,7 @@ ensure_dependency_running() {
     url=$(service_url "$service")
 
     echo "Ensuring dependency $service is running..."
+    prepare_service_image "$service"
     run_compose up -d --no-build "$service"
     wait_service_ready "$service" "$url"
 }
@@ -372,10 +446,7 @@ release_service() {
     service=$1
     url=$(service_url "$service")
 
-    if should_pull_images; then
-        run_compose pull "$service"
-    fi
-
+    prepare_service_image "$service"
     run_compose stop "$service"
     run_compose rm -f "$service"
     run_compose up -d --no-deps --no-build --force-recreate "$service"

@@ -1,7 +1,5 @@
-import config from "../src/appconfig.json";
+import { API_BASE_URL } from "./apiBase";
 import { getAuthHeaders } from "../src/store/authStore";
-
-const API_BASE_URL = config.API_BASE_URL_DEV;
 
 export interface ChatServiceResponse {
     message: string;
