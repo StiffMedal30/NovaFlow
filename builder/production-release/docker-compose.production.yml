@@ -41,6 +41,16 @@ services:
       retries: 12
     restart: always
 
+  mailpit:
+    image: ${MAILPIT_IMAGE:-axllent/mailpit:v1.30.1}
+    container_name: mailpit
+    ports:
+      - "${MAILPIT_SMTP_HOST_PORT:-1025}:1025"
+      - "${MAILPIT_UI_HOST_PORT:-8025}:8025"
+    networks:
+      - app-network
+    restart: always
+
   eureka:
     image: ${EUREKA_IMAGE:-steeltoeoss/eureka-server}
     container_name: eureka-server
@@ -108,6 +118,7 @@ services:
       - eureka
       - config-server
       - rabbitmq
+      - mailpit
     ports:
       - "${EMAIL_SERVICE_HOST_PORT:-8050}:8050"
     environment:
@@ -119,15 +130,15 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-novaflow}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a production secret}
-      - EMAIL_HOST=${EMAIL_HOST:?Set EMAIL_HOST for production SMTP}
-      - EMAIL_PORT=${EMAIL_PORT:-587}
-      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
-      - EMAIL_SMTP_AUTH=${EMAIL_SMTP_AUTH:-true}
-      - EMAIL_STARTTLS=${EMAIL_STARTTLS:-true}
-      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:?Set EMAIL_FROM_ADDRESS for production email}
-      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NovaFlow}
-      - PUBLIC_API_URL=${PUBLIC_API_URL:?Set PUBLIC_API_URL for production links}
+      - EMAIL_HOST=${PRODUCTION_EMAIL_HOST:-mailpit}
+      - EMAIL_PORT=${PRODUCTION_EMAIL_PORT:-1025}
+      - EMAIL_USERNAME=${PRODUCTION_EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${PRODUCTION_EMAIL_PASSWORD:-}
+      - EMAIL_SMTP_AUTH=${PRODUCTION_EMAIL_SMTP_AUTH:-false}
+      - EMAIL_STARTTLS=${PRODUCTION_EMAIL_STARTTLS:-false}
+      - EMAIL_FROM_ADDRESS=${PRODUCTION_EMAIL_FROM_ADDRESS:-no-reply@novaflow.local}
+      - EMAIL_FROM_NAME=${PRODUCTION_EMAIL_FROM_NAME:-NovaFlow}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8081}
     networks:
       - app-network
     restart: always

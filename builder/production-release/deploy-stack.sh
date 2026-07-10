@@ -1,12 +1,18 @@
 #!/usr/bin/env sh
 set -eu
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+SCRIPT_PATH=$0
+case "$SCRIPT_PATH" in
+    */*) SCRIPT_DIR=${SCRIPT_PATH%/*} ;;
+    *) SCRIPT_DIR=. ;;
+esac
+SCRIPT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 COMPOSE_FILE=${COMPOSE_FILE:-"$SCRIPT_DIR/docker-compose.production.yml"}
 ENV_FILE=${ENV_FILE:-}
 IMAGE_PREFIX=${IMAGE_PREFIX:-}
 IMAGE_TAG=${IMAGE_TAG:-}
+CONFIG_SERVER_IMAGE=${CONFIG_SERVER_IMAGE:-}
 WAIT_TIMEOUT=${WAIT_TIMEOUT:-180}
 PULL_IMAGES=${PULL_IMAGES:-auto}
 SKIP_PULL=${SKIP_PULL:-0}
@@ -17,6 +23,63 @@ export COMPOSE_PROGRESS=${COMPOSE_PROGRESS:-plain}
 export COMPOSE_MENU=${COMPOSE_MENU:-false}
 export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-novaflow-production}
 export DOCKER_CLI_HINTS=${DOCKER_CLI_HINTS:-false}
+
+APP_RELEASE_SERVICES="
+api-gateway
+user-service
+idea-service
+ai-service
+chat-service
+email-service
+novafront
+"
+
+INFRA_RELEASE_SERVICES="
+postgres
+rabbitmq
+mailpit
+eureka
+config-server
+"
+
+ROLLING_RELEASE_ORDER="
+postgres
+rabbitmq
+mailpit
+eureka
+config-server
+user-service
+idea-service
+ai-service
+chat-service
+email-service
+api-gateway
+novafront
+"
+
+usage() {
+    cat <<EOF
+Usage:
+  sh deploy-stack.sh [service...]
+
+Without parameters, rolls the full production release set:
+  postgres rabbitmq mailpit eureka config-server user-service idea-service ai-service chat-service email-service api-gateway novafront
+
+Examples:
+  sh deploy-stack.sh user-service
+  sh deploy-stack.sh user-service idea-service
+  sh deploy-stack.sh postgres rabbitmq mailpit eureka config-server
+EOF
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+    esac
+done
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     echo "Could not find Docker Compose file: $COMPOSE_FILE" >&2
@@ -42,6 +105,37 @@ if [ -n "$ENV_FILE" ]; then
 else
     echo "No .env file found. Docker Compose will use the current process environment."
 fi
+
+list_contains() {
+    needle=$1
+    list=$2
+
+    for item in $list; do
+        [ "$item" = "$needle" ] && return 0
+    done
+
+    return 1
+}
+
+add_selected_service() {
+    service=$1
+
+    if ! list_contains "$service" "$SELECTED_SERVICES"; then
+        SELECTED_SERVICES="$SELECTED_SERVICES $service"
+    fi
+}
+
+validate_service() {
+    service=$1
+
+    if list_contains "$service" "$APP_RELEASE_SERVICES" || list_contains "$service" "$INFRA_RELEASE_SERVICES"; then
+        return 0
+    fi
+
+    echo "Unknown service '$service'." >&2
+    echo "Valid services: api-gateway user-service idea-service ai-service chat-service email-service novafront postgres rabbitmq mailpit eureka config-server" >&2
+    exit 1
+}
 
 dotenv_get() {
     key=$1
@@ -78,7 +172,15 @@ case "$IMAGE_PREFIX" in
     *) IMAGE_PREFIX="${IMAGE_PREFIX}/" ;;
 esac
 
-export IMAGE_PREFIX IMAGE_TAG
+if [ -z "$CONFIG_SERVER_IMAGE" ]; then
+    CONFIG_SERVER_IMAGE=$(dotenv_get CONFIG_SERVER_IMAGE || true)
+fi
+
+if [ -z "$CONFIG_SERVER_IMAGE" ]; then
+    CONFIG_SERVER_IMAGE="${IMAGE_PREFIX}config-server:${IMAGE_TAG}"
+fi
+
+export IMAGE_PREFIX IMAGE_TAG CONFIG_SERVER_IMAGE
 
 compose_stack() {
     if [ -n "$ENV_FILE" ]; then
@@ -215,7 +317,92 @@ should_pull_images() {
     return 1
 }
 
+service_url() {
+    case "$1" in
+        postgres) printf '%s' "" ;;
+        rabbitmq) printf '%s' "" ;;
+        mailpit) printf '%s' "$MAILPIT_URL" ;;
+        eureka) printf '%s' "$EUREKA_URL" ;;
+        config-server) printf '%s' "$CONFIG_SERVER_HEALTH_URL" ;;
+        user-service) printf '%s' "$USER_SERVICE_URL" ;;
+        idea-service) printf '%s' "$IDEA_SERVICE_URL" ;;
+        ai-service) printf '%s' "$AI_SERVICE_URL" ;;
+        chat-service) printf '%s' "$CHAT_SERVICE_URL" ;;
+        email-service) printf '%s' "$EMAIL_SERVICE_URL" ;;
+        api-gateway) printf '%s' "$API_GATEWAY_URL" ;;
+        novafront) printf '%s' "$FRONTEND_URL" ;;
+        *)
+            echo "No readiness URL mapping exists for '$1'." >&2
+            exit 1
+            ;;
+    esac
+}
+
+dependencies_for_service() {
+    case "$1" in
+        config-server) printf '%s\n' "eureka" ;;
+        user-service) printf '%s\n' "postgres rabbitmq eureka config-server" ;;
+        idea-service) printf '%s\n' "postgres eureka config-server" ;;
+        ai-service) printf '%s\n' "postgres eureka config-server" ;;
+        chat-service) printf '%s\n' "eureka config-server" ;;
+        email-service) printf '%s\n' "rabbitmq mailpit eureka config-server" ;;
+        api-gateway) printf '%s\n' "eureka config-server" ;;
+        *) printf '%s\n' "" ;;
+    esac
+}
+
+ordered_selected_services() {
+    for service in $ROLLING_RELEASE_ORDER; do
+        if list_contains "$service" "$SELECTED_SERVICES"; then
+            printf '%s\n' "$service"
+        fi
+    done
+}
+
+ensure_dependency_running() {
+    service=$1
+    url=$(service_url "$service")
+
+    echo "Ensuring dependency $service is running..."
+    run_compose up -d --no-build "$service"
+    wait_service_ready "$service" "$url"
+}
+
+release_service() {
+    service=$1
+    url=$(service_url "$service")
+
+    if should_pull_images; then
+        run_compose pull "$service"
+    fi
+
+    run_compose stop "$service"
+    run_compose rm -f "$service"
+    run_compose up -d --no-deps --no-build --force-recreate "$service"
+    wait_service_ready "$service" "$url"
+}
+
+SELECTED_SERVICES=""
+
+if [ "$#" -eq 0 ]; then
+    for service in $ROLLING_RELEASE_ORDER; do
+        add_selected_service "$service"
+    done
+else
+    for service in "$@"; do
+        case "$service" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+        esac
+        validate_service "$service"
+        add_selected_service "$service"
+    done
+fi
+
 EUREKA_URL="http://localhost:$(env_or_default EUREKA_HOST_PORT 8761)"
+MAILPIT_URL="http://localhost:$(env_or_default MAILPIT_UI_HOST_PORT 8025)"
 CONFIG_SERVER_URL="http://localhost:$(env_or_default CONFIG_SERVER_HOST_PORT 7090)"
 CONFIG_SERVER_HEALTH_URL="$CONFIG_SERVER_URL/actuator/health"
 USER_SERVICE_URL="http://localhost:$(env_or_default USER_SERVICE_HOST_PORT 7010)/actuator/health"
@@ -242,42 +429,27 @@ else
     exit 1
 fi
 
-echo "Ensuring production dependencies are running..."
-while IFS='|' read -r service url; do
-    [ -z "$service" ] && continue
-    run_compose up -d --no-build "$service"
-    wait_service_ready "$service" "$url"
-done <<EOF
-postgres|
-rabbitmq|
-eureka|$EUREKA_URL
-config-server|$CONFIG_SERVER_HEALTH_URL
-EOF
+ORDERED_SELECTED_SERVICES=$(ordered_selected_services)
+ENSURED_DEPENDENCIES=""
+
+echo "Selected production services:$ORDERED_SELECTED_SERVICES"
+
+for service in $ORDERED_SELECTED_SERVICES; do
+    for dependency in $(dependencies_for_service "$service"); do
+        if ! list_contains "$dependency" "$SELECTED_SERVICES" && ! list_contains "$dependency" "$ENSURED_DEPENDENCIES"; then
+            ensure_dependency_running "$dependency"
+            ENSURED_DEPENDENCIES="$ENSURED_DEPENDENCIES $dependency"
+        fi
+    done
+done
 
 echo
-echo "Rolling application services one at a time..."
-while IFS='|' read -r service url; do
-    [ -z "$service" ] && continue
-
-    if should_pull_images; then
-        run_compose pull "$service"
-    fi
-
-    run_compose stop "$service"
-    run_compose rm -f "$service"
-    run_compose up -d --no-deps --no-build --force-recreate "$service"
-    wait_service_ready "$service" "$url"
-done <<EOF
-user-service|$USER_SERVICE_URL
-idea-service|$IDEA_SERVICE_URL
-ai-service|$AI_SERVICE_URL
-chat-service|$CHAT_SERVICE_URL
-email-service|$EMAIL_SERVICE_URL
-api-gateway|$API_GATEWAY_URL
-novafront|$FRONTEND_URL
-EOF
+echo "Rolling selected services one at a time..."
+for service in $ORDERED_SELECTED_SERVICES; do
+    release_service "$service"
+done
 
 echo
 run_compose ps
 echo
-echo "Production rollout complete."
+echo "Production rollout complete for:$ORDERED_SELECTED_SERVICES"
