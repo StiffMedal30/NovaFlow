@@ -35,6 +35,7 @@ spring:
     properties:
       mail.smtp.auth: ${EMAIL_SMTP_AUTH:false}
       mail.smtp.starttls.enable: ${EMAIL_STARTTLS:false}
+      mail.smtp.ssl.enable: ${EMAIL_SSL_ENABLE:false}
 
 app:
   messaging:

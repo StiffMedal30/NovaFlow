@@ -141,12 +141,13 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-novaflow}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD from a GitHub secret or environment variable}
-      - EMAIL_HOST=mailpit
+      - EMAIL_HOST=${EMAIL_HOST:-mailpit}
       - EMAIL_PORT=${EMAIL_PORT:-1025}
       - EMAIL_USERNAME=${EMAIL_USERNAME:-}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
       - EMAIL_SMTP_AUTH=${EMAIL_SMTP_AUTH:-true}
       - EMAIL_STARTTLS=${EMAIL_STARTTLS:-true}
+      - EMAIL_SSL_ENABLE=${EMAIL_SSL_ENABLE:-false}
       - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-no-reply@novaflow.local}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NovaFlow}
       - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8081}
