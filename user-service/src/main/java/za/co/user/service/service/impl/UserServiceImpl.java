@@ -110,10 +110,9 @@ public class UserServiceImpl implements UserService {
         }
 
         String normalizedEmail = request.email().trim().toLowerCase();
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException(
-                    "An account already exists for this email. Sign in using its original method."
-            );
+        Optional<AppUserEntity> existingEmailAccount = userRepository.findByEmail(normalizedEmail);
+        if (existingEmailAccount.isPresent()) {
+            return linkExistingAccountToGoogle(existingEmailAccount.get(), request);
         }
 
         AppUserEntity user = new AppUserEntity();
@@ -125,6 +124,32 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         sendActivationEmail(user);
         return OAuthAccountResponse.pending(user.getUsername());
+    }
+
+    private OAuthAccountResponse linkExistingAccountToGoogle(
+            AppUserEntity user,
+            GoogleOAuthRequest request
+    ) {
+        if (!isBlank(user.getProviderSubject())
+                && !Objects.equals(user.getProviderSubject(), request.providerSubject())) {
+            throw new IllegalArgumentException(
+                    "An account already exists for this email. Sign in using its original method."
+            );
+        }
+
+        user.setAuthProvider(AuthProvider.GOOGLE);
+        user.setProviderSubject(request.providerSubject());
+        userRepository.save(user);
+
+        if (!user.isEnabled()) {
+            sendActivationEmail(user);
+            return OAuthAccountResponse.pending(user.getUsername());
+        }
+
+        return OAuthAccountResponse.active(
+                user.getUsername(),
+                jwtProvider.generateToken(user.getUsername(), user.getAuthorities())
+        );
     }
 
     private boolean isBlank(String value) {

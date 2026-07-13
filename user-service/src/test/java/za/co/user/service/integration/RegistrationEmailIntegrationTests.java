@@ -200,6 +200,85 @@ class RegistrationEmailIntegrationTests {
         assertThat(receiveEmail().recipient()).isEqualTo(email);
     }
 
+    @Test
+    void googleLoginLinksExistingPendingLocalAccountAndPublishesActivationEmail() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String username = "local-google-" + suffix;
+        String email = username + "@example.com";
+        register(username, email);
+        receiveEmail();
+
+        Map<String, Object> request = Map.of(
+                "providerSubject", "google-subject-" + suffix,
+                "email", email,
+                "name", "Linked Google User",
+                "emailVerified", true
+        );
+
+        String response = mockMvc.perform(post("/api/user/oauth/google")
+                        .header("X-Internal-Service-Key", "integration-internal-key")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(request)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(objectMapper.readTree(response).path("status").asText())
+                .isEqualTo("PENDING_ACTIVATION");
+        assertThat(userRepository.findByEmail(email))
+                .isPresent()
+                .get()
+                .satisfies(user -> {
+                    assertThat(user.isEnabled()).isFalse();
+                    assertThat(user.getAuthProvider()).isEqualTo(AuthProvider.GOOGLE);
+                    assertThat(user.getProviderSubject()).isEqualTo("google-subject-" + suffix);
+                });
+        assertThat(receiveEmail().recipient()).isEqualTo(email);
+    }
+
+    @Test
+    void googleLoginLinksExistingActiveLocalAccountAndReturnsToken() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String username = "active-google-" + suffix;
+        String email = username + "@example.com";
+        register(username, email);
+        EmailNotification activationEmail = receiveEmail();
+        mockMvc.perform(get("/api/link/redirect/activate")
+                        .queryParam("t", activationEmail.token()))
+                .andExpect(status().isOk());
+
+        Map<String, Object> request = Map.of(
+                "providerSubject", "google-subject-" + suffix,
+                "email", email,
+                "name", "Linked Active User",
+                "emailVerified", true
+        );
+
+        String response = mockMvc.perform(post("/api/user/oauth/google")
+                        .header("X-Internal-Service-Key", "integration-internal-key")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(request)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(objectMapper.readTree(response).path("status").asText())
+                .isEqualTo("ACTIVE");
+        assertThat(objectMapper.readTree(response).path("token").asText())
+                .isNotBlank();
+        assertThat(userRepository.findByEmail(email))
+                .isPresent()
+                .get()
+                .satisfies(user -> {
+                    assertThat(user.isEnabled()).isTrue();
+                    assertThat(user.getAuthProvider()).isEqualTo(AuthProvider.GOOGLE);
+                    assertThat(user.getProviderSubject()).isEqualTo("google-subject-" + suffix);
+                });
+        assertThat(rabbitTemplate.receiveAndConvert(EMAIL_QUEUE, 500)).isNull();
+    }
+
     private void register(String username, String email) throws Exception {
         Map<String, Object> request = Map.of(
                 "username", username,

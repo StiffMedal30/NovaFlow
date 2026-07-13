@@ -19,12 +19,12 @@ public class LoggingAspect {
     private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
 
     // Log all methods inside service package
-    @Pointcut("execution(* za.co.auth.service..*(..))")
+    @Pointcut("execution(* za.co.user.service.service..*(..))")
     public void serviceMethods() {
 
     }
 
-    @AfterThrowing(pointcut = "execution(* za.co.auth..*(..))", throwing = "ex")
+    @AfterThrowing(pointcut = "execution(* za.co.user.service..*(..))", throwing = "ex")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable ex) {
         logger.error("Exception in {}.{}() with cause = '{}'",
                 joinPoint.getSignature().getDeclaringTypeName(),
