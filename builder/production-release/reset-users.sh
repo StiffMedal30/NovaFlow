@@ -11,6 +11,7 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 COMPOSE_FILE=${COMPOSE_FILE:-"$SCRIPT_DIR/docker-compose.production.yml"}
 ENV_FILE=${ENV_FILE:-}
 CONFIRMED=${CONFIRM_RESET_USERS:-}
+RESET_USERS_DATABASE=${RESET_USERS_DATABASE:-user_service_db}
 
 usage() {
     cat <<EOF
@@ -25,6 +26,7 @@ Environment overrides:
   COMPOSE_FILE=/path/to/docker-compose.production.yml
   ENV_FILE=/path/to/.env
   CONFIRM_RESET_USERS=yes
+  RESET_USERS_DATABASE=user_service_db
 EOF
 }
 
@@ -97,8 +99,8 @@ compose_stack() {
     fi
 }
 
-echo "Resetting NovaFlow users in PostgreSQL..."
-compose_stack exec -T postgres sh -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-postgres}"' <<'SQL'
+echo "Resetting NovaFlow users in PostgreSQL database '$RESET_USERS_DATABASE'..."
+compose_stack exec -T -e RESET_USERS_DATABASE="$RESET_USERS_DATABASE" postgres sh -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$RESET_USERS_DATABASE"' <<'SQL'
 \echo 'Users before reset:'
 SELECT count(*) AS app_user_count FROM public.app_user;
 
