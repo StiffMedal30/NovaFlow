@@ -182,6 +182,60 @@ Local `.env` files are ignored by Git. Their values are supplied at runtime and 
 not copied into Docker images. Local email is captured by Mailpit, so SMTP
 credentials are not required for development.
 
+### Automated production deployment
+
+The production deployment workflow builds NovaFlow images in GitHub Actions,
+pushes them to GitHub Container Registry, then connects to the EC2 checkout,
+checks out the exact commit that built those images, and runs the existing
+rolling deployment script. The EC2 host keeps the real runtime configuration in
+its ignored `builder/.env` file; the workflow does not upload database, Google,
+SMTP, or JWT secrets.
+
+Prepare the EC2 host once:
+
+1. Install Docker and make sure the deploy user can run `docker` without `sudo`.
+2. Clone this repository on the host, for example at `/opt/novaflow`.
+3. Put the production runtime values in `/opt/novaflow/builder/.env`.
+4. Confirm the manual deploy scripts work on the host:
+
+```sh
+cd /opt/novaflow
+sh builder/production-release/build-images.sh novafront
+sh builder/production-release/deploy-stack.sh novafront
+```
+
+Create these GitHub Actions secrets for the repository or the `production`
+environment:
+
+| Secret | Purpose |
+| --- | --- |
+| `PRODUCTION_SSH_HOST` | EC2 hostname or IP, for example `novaflow.dotze.co.za`. |
+| `PRODUCTION_SSH_USER` | Linux user used for deployment, for example `ubuntu` or `ec2-user`. |
+| `PRODUCTION_SSH_KEY` | Private SSH key that can connect to the EC2 deploy user. |
+| `PRODUCTION_SSH_PORT` | Optional SSH port. Defaults to `22` when omitted. |
+| `PRODUCTION_GHCR_USERNAME` | GitHub username used by EC2 to pull container images. |
+| `PRODUCTION_GHCR_TOKEN` | GitHub token with `read:packages` access for pulling images from GHCR. |
+
+Create this GitHub Actions variable if the checkout is not at `/opt/novaflow`:
+
+| Variable | Purpose |
+| --- | --- |
+| `PRODUCTION_DEPLOY_PATH` | Absolute path to the EC2 checkout. |
+
+The workflow runs automatically on pushes to `main` or `master`, and can also be
+started manually from the Actions tab. The manual run accepts a space-separated
+service list such as:
+
+```text
+novafront api-gateway
+```
+
+Use `all`, or leave the input unchanged, to deploy the normal app release set:
+
+```text
+config-server user-service idea-service ai-service chat-service email-service api-gateway novafront
+```
+
 ## Start with IntelliJ
 
 Open the repository root in one IntelliJ window and import the root

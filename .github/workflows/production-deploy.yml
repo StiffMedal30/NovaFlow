@@ -1,0 +1,158 @@
+name: Production deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Space-separated services to deploy, or all for the app release set."
+        required: false
+        default: "all"
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, publish, and deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://novaflow.dotze.co.za
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Prepare deployment metadata
+        id: meta
+        shell: bash
+        run: |
+          set -eu
+
+          default_services="config-server user-service idea-service ai-service chat-service email-service api-gateway novafront"
+          requested="${{ github.event.inputs.services }}"
+
+          if [ -z "$requested" ] || [ "$requested" = "all" ]; then
+            services="$default_services"
+          else
+            services="$requested"
+          fi
+
+          allowed_services=" api-gateway user-service idea-service ai-service chat-service email-service novafront config-server "
+          for service in $services; do
+            case "$allowed_services" in
+              *" $service "*) ;;
+              *)
+                echo "::error title=Unknown service::$service is not deployable by this workflow."
+                exit 1
+                ;;
+            esac
+          done
+
+          repository="${GITHUB_REPOSITORY,,}"
+          image_prefix="ghcr.io/$repository"
+          image_tag="${GITHUB_SHA::12}"
+
+          {
+            echo "services=$services"
+            echo "image_prefix=$image_prefix"
+            echo "image_tag=$image_tag"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Services: $services"
+          echo "Image prefix: $image_prefix"
+          echo "Image tag: $image_tag"
+
+      - name: Validate required deployment secrets
+        shell: bash
+        env:
+          PRODUCTION_SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+          PRODUCTION_SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+          PRODUCTION_GHCR_USERNAME: ${{ secrets.PRODUCTION_GHCR_USERNAME }}
+          PRODUCTION_GHCR_TOKEN: ${{ secrets.PRODUCTION_GHCR_TOKEN }}
+        run: |
+          set -eu
+          missing=0
+
+          for name in PRODUCTION_SSH_HOST PRODUCTION_SSH_USER PRODUCTION_SSH_KEY PRODUCTION_GHCR_USERNAME PRODUCTION_GHCR_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing production secret::$name is not configured."
+              missing=1
+            fi
+          done
+
+          exit "$missing"
+
+      - name: Log in to GitHub Container Registry
+        shell: bash
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Make release scripts executable
+        run: chmod +x ./gradlew builder/production-release/build-images.sh builder/production-release/deploy-stack.sh
+
+      - name: Build and publish production images
+        shell: bash
+        env:
+          IMAGE_PREFIX: ${{ steps.meta.outputs.image_prefix }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+          PUSH_IMAGES: "1"
+          PULL_EXTERNAL_IMAGES: "0"
+          SKIP_GIT_PULL: "1"
+        run: sh builder/production-release/build-images.sh ${{ steps.meta.outputs.services }}
+
+      - name: Install SSH key
+        shell: bash
+        env:
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+        run: |
+          set -eu
+          mkdir -p ~/.ssh
+          printf '%s\n' "$PRODUCTION_SSH_KEY" | tr -d '\r' > ~/.ssh/novaflow_production
+          chmod 600 ~/.ssh/novaflow_production
+
+      - name: Deploy on EC2
+        shell: bash
+        env:
+          PRODUCTION_SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+          PRODUCTION_SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+          PRODUCTION_SSH_PORT: ${{ secrets.PRODUCTION_SSH_PORT }}
+          PRODUCTION_DEPLOY_PATH: ${{ vars.PRODUCTION_DEPLOY_PATH }}
+          PRODUCTION_GHCR_USERNAME: ${{ secrets.PRODUCTION_GHCR_USERNAME }}
+          PRODUCTION_GHCR_TOKEN: ${{ secrets.PRODUCTION_GHCR_TOKEN }}
+          IMAGE_PREFIX: ${{ steps.meta.outputs.image_prefix }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+          DEPLOY_SERVICES: ${{ steps.meta.outputs.services }}
+          DEPLOY_REF: ${{ github.ref_name }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+
+          ssh_port="${PRODUCTION_SSH_PORT:-22}"
+          deploy_path="${PRODUCTION_DEPLOY_PATH:-/opt/novaflow}"
+
+          remote_command="cd '$deploy_path' && git fetch --prune origin '$DEPLOY_REF' && git checkout -f '$DEPLOY_SHA' && docker login ghcr.io -u '$PRODUCTION_GHCR_USERNAME' --password-stdin && IMAGE_PREFIX='$IMAGE_PREFIX' IMAGE_TAG='$IMAGE_TAG' PULL_IMAGES=1 SKIP_PULL=0 GIT_PULL_MODE=none sh builder/production-release/deploy-stack.sh $DEPLOY_SERVICES"
+
+          printf '%s\n' "$PRODUCTION_GHCR_TOKEN" | ssh \
+            -i ~/.ssh/novaflow_production \
+            -p "$ssh_port" \
+            -o StrictHostKeyChecking=accept-new \
+            "$PRODUCTION_SSH_USER@$PRODUCTION_SSH_HOST" \
+            "$remote_command"
