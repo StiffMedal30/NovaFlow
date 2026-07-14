@@ -58,9 +58,13 @@ export default function LoginPage() {
         navigate(destination, { replace: true });
       }, 1000);
 
-    } catch {
+    } catch (error) {
       loginFailure();
-      toast.error("Login failed. Please check your credentials.");
+      console.error("Login failed", error);
+      const message = error instanceof Error && error.message
+        ? error.message
+        : "Login failed. Please check your credentials.";
+      toast.error(message);
     }
   };
 
