@@ -185,18 +185,49 @@ credentials are not required for development.
 ### Automated production deployment
 
 The production deployment workflow builds NovaFlow images in GitHub Actions,
-pushes them to GitHub Container Registry, then connects to the EC2 checkout,
-checks out the exact commit that built those images, and runs the existing
-rolling deployment script. The EC2 host keeps the real runtime configuration in
-its ignored `builder/.env` file; the workflow does not upload database, Google,
-SMTP, or JWT secrets.
+pushes them to GitHub Container Registry, then asks AWS Systems Manager to run
+the deployment command on EC2. The EC2 host checks out the exact commit that
+built those images and runs the existing rolling deployment script. The EC2 host
+keeps the real runtime configuration in its ignored `builder/.env` file; the
+workflow does not upload database, Google, SMTP, or JWT secrets.
 
 Prepare the EC2 host once:
 
 1. Install Docker and make sure the deploy user can run `docker` without `sudo`.
 2. Clone this repository on the host, for example at `/opt/novaflow`.
 3. Put the production runtime values in `/opt/novaflow/builder/.env`.
-4. Confirm the manual deploy scripts work on the host:
+4. Install the AWS CLI on the host so the deploy can read registry credentials
+   from AWS Systems Manager Parameter Store.
+5. Attach an EC2 IAM role with `AmazonSSMManagedInstanceCore`.
+6. Add permission for the EC2 IAM role to read the GHCR credential parameters:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ],
+      "Resource": [
+        "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/ghcr/username",
+        "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/ghcr/token"
+      ]
+    }
+  ]
+}
+```
+
+7. Store the GHCR pull credentials in Parameter Store:
+
+| Parameter | Type | Purpose |
+| --- | --- | --- |
+| `/novaflow/production/ghcr/username` | `String` | GitHub username used by EC2 to pull container images. |
+| `/novaflow/production/ghcr/token` | `SecureString` | GitHub token with `read:packages` access for pulling images from GHCR. |
+
+8. Confirm the manual deploy scripts work on the host:
 
 ```sh
 cd /opt/novaflow
@@ -204,23 +235,71 @@ sh builder/production-release/build-images.sh novafront
 sh builder/production-release/deploy-stack.sh novafront
 ```
 
-Create these GitHub Actions secrets for the repository or the `production`
+Create an AWS IAM role for GitHub Actions using GitHub OIDC. Because the
+workflow uses the `production` GitHub environment, scope the trust policy to the
+environment subject:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:OWNER/REPOSITORY:environment:production"
+        }
+      }
+    }
+  ]
+}
+```
+
+Attach a policy that allows the GitHub role to send and inspect SSM commands for
+the production instance:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ssm:us-east-1::document/AWS-RunShellScript",
+        "arn:aws:ec2:us-east-1:ACCOUNT_ID:instance/INSTANCE_ID"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetCommandInvocation",
+        "ssm:ListCommandInvocations",
+        "ssm:ListCommands"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+Create these GitHub Actions variables for the repository or the `production`
 environment:
-
-| Secret | Purpose |
-| --- | --- |
-| `PRODUCTION_SSH_HOST` | EC2 hostname or IP, for example `novaflow.dotze.co.za`. |
-| `PRODUCTION_SSH_USER` | Linux user used for deployment, for example `ubuntu` or `ec2-user`. |
-| `PRODUCTION_SSH_KEY` | Private SSH key that can connect to the EC2 deploy user. |
-| `PRODUCTION_SSH_PORT` | Optional SSH port. Defaults to `22` when omitted. |
-| `PRODUCTION_GHCR_USERNAME` | GitHub username used by EC2 to pull container images. |
-| `PRODUCTION_GHCR_TOKEN` | GitHub token with `read:packages` access for pulling images from GHCR. |
-
-Create this GitHub Actions variable if the checkout is not at `/opt/novaflow`:
 
 | Variable | Purpose |
 | --- | --- |
-| `PRODUCTION_DEPLOY_PATH` | Absolute path to the EC2 checkout. |
+| `PRODUCTION_AWS_ROLE_ARN` | IAM role ARN that GitHub Actions assumes through OIDC. May be stored as a secret instead. |
+| `PRODUCTION_SSM_INSTANCE_ID` | EC2 instance ID for the production host. May be stored as a secret instead. |
+| `PRODUCTION_AWS_REGION` | AWS region. Defaults to `us-east-1` when omitted. |
+| `PRODUCTION_DEPLOY_PATH` | Absolute path to the EC2 checkout. Defaults to `/opt/novaflow` when omitted. |
+| `PRODUCTION_DEPLOY_USER` | Linux user that owns the checkout and runs Docker. Defaults to `ubuntu` when omitted. |
+| `PRODUCTION_GHCR_USERNAME_PARAMETER` | Optional Parameter Store name for the GHCR username. |
+| `PRODUCTION_GHCR_TOKEN_PARAMETER` | Optional Parameter Store name for the GHCR token. |
 
 The workflow runs automatically on pushes to `main` or `master`, and can also be
 started manually from the Actions tab. The manual run accepts a space-separated
