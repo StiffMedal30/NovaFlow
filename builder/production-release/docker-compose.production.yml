@@ -1,5 +1,13 @@
 name: novaflow-production
 
+x-cloudwatch-logging: &cloudwatch-logging
+  driver: awslogs
+  options:
+    awslogs-region: "${CLOUDWATCH_LOG_REGION:-us-east-1}"
+    awslogs-group: "${CLOUDWATCH_LOG_GROUP:-/novaflow/production}"
+    awslogs-create-group: "${CLOUDWATCH_LOG_CREATE_GROUP:-true}"
+    tag: "{{.Name}}-{{.ID}}"
+
 services:
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:15}
@@ -19,6 +27,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    logging: *cloudwatch-logging
     restart: always
 
   rabbitmq:
@@ -39,6 +48,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    logging: *cloudwatch-logging
     restart: always
 
   mailpit:
@@ -49,6 +59,7 @@ services:
       - "${MAILPIT_UI_HOST_PORT:-8025}:8025"
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   eureka:
@@ -63,6 +74,7 @@ services:
       SPRING_APPLICATION_NAME: discovery-server
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   config-server:
@@ -81,6 +93,7 @@ services:
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   user-service:
@@ -109,6 +122,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:7090/
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   email-service:
@@ -142,6 +156,7 @@ services:
       - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8081}
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   idea-service:
@@ -162,6 +177,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:7090/
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   ai-service:
@@ -187,6 +203,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:7090/
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   api-gateway:
@@ -211,6 +228,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:7090/
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   chat-service:
@@ -228,6 +246,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:7090/
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
   novafront:
@@ -237,6 +256,7 @@ services:
       - "${FRONTEND_HOST_PORT:-3000}:80"
     networks:
       - app-network
+    logging: *cloudwatch-logging
     restart: always
 
 networks:

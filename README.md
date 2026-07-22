@@ -227,7 +227,44 @@ Prepare the EC2 host once:
 | `/novaflow/production/ghcr/username` | `String` | GitHub username used by EC2 to pull container images. |
 | `/novaflow/production/ghcr/token` | `SecureString` | GitHub token with `read:packages` access for pulling images from GHCR. |
 
-8. Confirm the manual deploy scripts work on the host:
+8. Add permission for the EC2 IAM role to write Docker container logs to
+   CloudWatch Logs:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:aws:logs:us-east-1:ACCOUNT_ID:log-group:/novaflow/production",
+        "arn:aws:logs:us-east-1:ACCOUNT_ID:log-group:/novaflow/production:*"
+      ]
+    }
+  ]
+}
+```
+
+The production Compose file sends container logs to `/novaflow/production` by
+default. These optional values can be added to the production `.env` file when
+you want different names or regions:
+
+```properties
+CLOUDWATCH_LOG_REGION=us-east-1
+CLOUDWATCH_LOG_GROUP=/novaflow/production
+CLOUDWATCH_LOG_CREATE_GROUP=true
+```
+
+Create the log group yourself and set a retention period, such as 14 or 30 days,
+if you do not want CloudWatch Logs to keep production logs forever.
+
+9. Confirm the manual deploy scripts work on the host:
 
 ```sh
 cd /opt/novaflow
