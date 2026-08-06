@@ -187,19 +187,23 @@ credentials are not required for development.
 The production deployment workflow builds NovaFlow images in GitHub Actions,
 pushes them to GitHub Container Registry, then asks AWS Systems Manager to run
 the deployment command on EC2. The EC2 host checks out the exact commit that
-built those images and runs the existing rolling deployment script. The EC2 host
-keeps the real runtime configuration in its ignored `builder/.env` file; the
-workflow does not upload database, Google, SMTP, or JWT secrets.
+built those images and runs the existing rolling deployment script. Production
+runtime configuration comes from AWS Systems Manager Parameter Store. The deploy
+script renders those parameters into a temporary Docker Compose env file on EC2,
+uses it for the release, and removes it afterwards. The workflow does not upload
+database, Google, SMTP, OpenAI, RabbitMQ, or JWT secrets.
 
 Prepare the EC2 host once:
 
 1. Install Docker and make sure the deploy user can run `docker` without `sudo`.
 2. Clone this repository on the host, for example at `/opt/novaflow`.
-3. Put the production runtime values in `/opt/novaflow/builder/.env`.
+3. Store production runtime values in Parameter Store under
+   `/novaflow/production/env`.
 4. Install the AWS CLI on the host so the deploy can read registry credentials
-   from AWS Systems Manager Parameter Store.
+   and runtime configuration from AWS Systems Manager Parameter Store.
 5. Attach an EC2 IAM role with `AmazonSSMManagedInstanceCore`.
-6. Add permission for the EC2 IAM role to read the GHCR credential parameters:
+6. Add permission for the EC2 IAM role to read GHCR credentials and production
+   runtime configuration:
 
 ```json
 {
@@ -209,16 +213,21 @@ Prepare the EC2 host once:
       "Effect": "Allow",
       "Action": [
         "ssm:GetParameter",
-        "ssm:GetParameters"
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
       ],
       "Resource": [
         "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/ghcr/username",
-        "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/ghcr/token"
+        "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/ghcr/token",
+        "arn:aws:ssm:us-east-1:ACCOUNT_ID:parameter/novaflow/production/env/*"
       ]
     }
   ]
 }
 ```
+
+If the `SecureString` parameters use a customer-managed KMS key instead of the
+default AWS managed key, also grant the EC2 role `kms:Decrypt` for that key.
 
 7. Store the GHCR pull credentials in Parameter Store:
 
@@ -227,7 +236,79 @@ Prepare the EC2 host once:
 | `/novaflow/production/ghcr/username` | `String` | GitHub username used by EC2 to pull container images. |
 | `/novaflow/production/ghcr/token` | `SecureString` | GitHub token with `read:packages` access for pulling images from GHCR. |
 
-8. Add permission for the EC2 IAM role to write Docker container logs to
+8. Store production runtime values in Parameter Store.
+
+Use one parameter per environment variable. Parameter names must be direct
+children of `/novaflow/production/env` and must end in the exact env var name:
+
+```text
+/novaflow/production/env/DB_HOST
+/novaflow/production/env/DB_PASSWORD
+/novaflow/production/env/JWT_SECRET
+```
+
+Use `SecureString` for values that must stay secret:
+
+```text
+DB_PASSWORD
+RABBITMQ_PASSWORD
+JWT_SECRET
+INTERNAL_SERVICE_KEY
+OPENAI_API_KEY
+GOOGLE_CLIENT_SECRET
+PRODUCTION_EMAIL_PASSWORD
+```
+
+Use `String` for non-secret runtime settings:
+
+```text
+DB_HOST
+DB_PORT
+DB_USERNAME
+USER_SERVICE_DB_NAME
+IDEA_SERVICE_DB_NAME
+AI_SERVICE_DB_NAME
+USE_EXTERNAL_POSTGRES
+RABBITMQ_USERNAME
+JWT_EXPIRATION
+FRONTEND_BASE_URL
+PUBLIC_API_URL
+OPENAI_BASE_URL
+OPENAI_MODEL
+OPENAI_REFINEMENT_MODEL
+OPENAI_TRANSCRIPTION_MODEL
+GOOGLE_OAUTH_ENABLED
+GOOGLE_CLIENT_ID
+PRODUCTION_EMAIL_HOST
+PRODUCTION_EMAIL_PORT
+PRODUCTION_EMAIL_USERNAME
+PRODUCTION_EMAIL_SMTP_AUTH
+PRODUCTION_EMAIL_STARTTLS
+PRODUCTION_EMAIL_SSL_ENABLE
+PRODUCTION_EMAIL_FROM_ADDRESS
+PRODUCTION_EMAIL_FROM_NAME
+CLOUDWATCH_LOG_REGION
+CLOUDWATCH_LOG_GROUP
+CLOUDWATCH_LOG_CREATE_GROUP
+```
+
+Example:
+
+```sh
+aws ssm put-parameter \
+  --name /novaflow/production/env/DB_HOST \
+  --type String \
+  --value novaflow-postgres.xxxxxx.us-east-1.rds.amazonaws.com \
+  --overwrite
+
+aws ssm put-parameter \
+  --name /novaflow/production/env/DB_PASSWORD \
+  --type SecureString \
+  --value 'replace-with-rds-password' \
+  --overwrite
+```
+
+9. Add permission for the EC2 IAM role to write Docker container logs to
    CloudWatch Logs:
 
 ```json
@@ -252,8 +333,8 @@ Prepare the EC2 host once:
 ```
 
 The production Compose file sends container logs to `/novaflow/production` by
-default. These optional values can be added to the production `.env` file when
-you want different names or regions:
+default. These optional values can be added to Parameter Store when you want
+different names or regions:
 
 ```properties
 CLOUDWATCH_LOG_REGION=us-east-1
@@ -264,12 +345,49 @@ CLOUDWATCH_LOG_CREATE_GROUP=true
 Create the log group yourself and set a retention period, such as 14 or 30 days,
 if you do not want CloudWatch Logs to keep production logs forever.
 
-9. Confirm the manual deploy scripts work on the host:
+10. Optional: move PostgreSQL to Amazon RDS.
+
+NovaFlow can keep using the Docker PostgreSQL container, or it can connect to an
+external PostgreSQL host such as Amazon RDS. When using RDS, create these
+databases before restarting the services:
+
+```sql
+CREATE DATABASE user_service_db;
+CREATE DATABASE idea_service_db;
+CREATE DATABASE ai_service_db;
+```
+
+Then store these values in Parameter Store:
+
+```properties
+DB_HOST=novaflow-postgres.xxxxxx.us-east-1.rds.amazonaws.com
+DB_PORT=5432
+DB_USERNAME=novaflow_admin
+DB_PASSWORD=replace-with-rds-password
+USER_SERVICE_DB_NAME=user_service_db
+IDEA_SERVICE_DB_NAME=idea_service_db
+AI_SERVICE_DB_NAME=ai_service_db
+USE_EXTERNAL_POSTGRES=1
+```
+
+`USE_EXTERNAL_POSTGRES=1` tells the deploy script not to start the Docker
+`postgres` service as an application dependency. Keep the old Docker volume
+until RDS has been tested and backed up.
+
+The production admin scripts also support RDS mode when `psql` is installed on
+the EC2 host:
+
+```sh
+sudo apt install -y postgresql-client
+SEED_PASSWORD='change-me' SSM_ENV_PATH=/novaflow/production/env sh builder/production-release/seed-admin-user.sh
+```
+
+11. Confirm the manual deploy scripts work on the host:
 
 ```sh
 cd /opt/novaflow
 sh builder/production-release/build-images.sh novafront
-sh builder/production-release/deploy-stack.sh novafront
+SSM_ENV_PATH=/novaflow/production/env sh builder/production-release/deploy-stack.sh novafront
 ```
 
 Create an AWS IAM role for GitHub Actions using GitHub OIDC. Because the
@@ -337,6 +455,7 @@ environment:
 | `PRODUCTION_DEPLOY_USER` | Linux user that owns the checkout and runs Docker. Defaults to `ubuntu` when omitted. |
 | `PRODUCTION_GHCR_USERNAME_PARAMETER` | Optional Parameter Store name for the GHCR username. |
 | `PRODUCTION_GHCR_TOKEN_PARAMETER` | Optional Parameter Store name for the GHCR token. |
+| `PRODUCTION_SSM_ENV_PATH` | Optional Parameter Store path for production env values. Defaults to `/novaflow/production/env`. |
 
 The workflow runs automatically on pushes to `main` or `master`, and can also be
 started manually from the Actions tab. The manual run accepts a space-separated

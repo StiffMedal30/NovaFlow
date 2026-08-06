@@ -110,7 +110,7 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Make release scripts executable
-        run: chmod +x ./gradlew builder/production-release/build-images.sh builder/production-release/deploy-stack.sh
+        run: chmod +x ./gradlew builder/production-release/build-images.sh builder/production-release/deploy-stack.sh builder/production-release/render-env-from-ssm.sh
 
       - name: Build and publish production images
         shell: bash
@@ -131,6 +131,7 @@ jobs:
           PRODUCTION_DEPLOY_PATH: ${{ vars.PRODUCTION_DEPLOY_PATH }}
           PRODUCTION_GHCR_USERNAME_PARAMETER: ${{ vars.PRODUCTION_GHCR_USERNAME_PARAMETER }}
           PRODUCTION_GHCR_TOKEN_PARAMETER: ${{ vars.PRODUCTION_GHCR_TOKEN_PARAMETER }}
+          PRODUCTION_SSM_ENV_PATH: ${{ vars.PRODUCTION_SSM_ENV_PATH }}
           IMAGE_PREFIX: ${{ steps.meta.outputs.image_prefix }}
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
           DEPLOY_SERVICES: ${{ steps.meta.outputs.services }}
@@ -143,8 +144,9 @@ jobs:
           deploy_user="${PRODUCTION_DEPLOY_USER:-ubuntu}"
           ghcr_username_parameter="${PRODUCTION_GHCR_USERNAME_PARAMETER:-/novaflow/production/ghcr/username}"
           ghcr_token_parameter="${PRODUCTION_GHCR_TOKEN_PARAMETER:-/novaflow/production/ghcr/token}"
+          ssm_env_path="${PRODUCTION_SSM_ENV_PATH:-/novaflow/production/env}"
 
-          export deploy_path deploy_user ghcr_username_parameter ghcr_token_parameter
+          export deploy_path deploy_user ghcr_username_parameter ghcr_token_parameter ssm_env_path
 
           python3 <<'PY'
           import json
@@ -168,6 +170,7 @@ jobs:
           image_tag={quoted("IMAGE_TAG")}
           ghcr_username_parameter={quoted("ghcr_username_parameter")}
           ghcr_token_parameter={quoted("ghcr_token_parameter")}
+          ssm_env_path={quoted("ssm_env_path")}
 
           if ! command -v aws >/dev/null 2>&1; then
               echo "AWS CLI is required on EC2 so the deploy can read GHCR credentials from Parameter Store." >&2
@@ -184,7 +187,7 @@ jobs:
           ghcr_token=$(aws ssm get-parameter --name "$ghcr_token_parameter" --with-decryption --query 'Parameter.Value' --output text --region "$aws_region")
           printf '%s\\n' "$ghcr_token" | docker login ghcr.io -u "$ghcr_username" --password-stdin
 
-          IMAGE_PREFIX="$image_prefix" IMAGE_TAG="$image_tag" PULL_IMAGES=1 SKIP_PULL=0 GIT_PULL_MODE=none sh builder/production-release/deploy-stack.sh {service_args}
+          IMAGE_PREFIX="$image_prefix" IMAGE_TAG="$image_tag" SSM_ENV_PATH="$ssm_env_path" SSM_ENV_REGION="$aws_region" PULL_IMAGES=1 SKIP_PULL=0 GIT_PULL_MODE=none sh builder/production-release/deploy-stack.sh {service_args}
           """
 
           command = f"""set -eu

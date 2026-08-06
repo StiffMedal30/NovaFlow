@@ -13,11 +13,14 @@ ENV_FILE=${ENV_FILE:-}
 IMAGE_PREFIX=${IMAGE_PREFIX:-}
 IMAGE_TAG=${IMAGE_TAG:-}
 CONFIG_SERVER_IMAGE=${CONFIG_SERVER_IMAGE:-}
+SSM_ENV_PATH=${SSM_ENV_PATH:-}
+SSM_ENV_REGION=${SSM_ENV_REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}}
 WAIT_TIMEOUT=${WAIT_TIMEOUT:-180}
 PULL_IMAGES=${PULL_IMAGES:-auto}
 SKIP_PULL=${SKIP_PULL:-0}
 SKIP_GIT_PULL=${SKIP_GIT_PULL:-0}
 GIT_PULL_MODE=${GIT_PULL_MODE:-ff-only}
+USE_EXTERNAL_POSTGRES=${USE_EXTERNAL_POSTGRES:-}
 export COMPOSE_ANSI=${COMPOSE_ANSI:-never}
 export COMPOSE_PROGRESS=${COMPOSE_PROGRESS:-plain}
 export COMPOSE_MENU=${COMPOSE_MENU:-false}
@@ -72,6 +75,14 @@ Examples:
 
 On a remote host such as EC2, either run build-images.sh on that host first,
 or set IMAGE_PREFIX/CONFIG_SERVER_IMAGE to images that were pushed to a registry.
+
+Set SSM_ENV_PATH=/novaflow/production/env to render the production environment
+from AWS Systems Manager Parameter Store before deploying. This avoids a
+hand-maintained production env file on EC2.
+
+Set USE_EXTERNAL_POSTGRES=1 in the environment or env file after moving
+PostgreSQL to RDS. This keeps the Docker postgres service available for
+fallback, but stops the deploy script from starting it as an app dependency.
 EOF
 }
 
@@ -87,6 +98,29 @@ done
 if [ ! -f "$COMPOSE_FILE" ]; then
     echo "Could not find Docker Compose file: $COMPOSE_FILE" >&2
     exit 1
+fi
+
+RENDERED_ENV_FILE=""
+
+cleanup_rendered_env_file() {
+    if [ -n "$RENDERED_ENV_FILE" ]; then
+        rm -f "$RENDERED_ENV_FILE"
+    fi
+}
+trap cleanup_rendered_env_file EXIT HUP INT TERM
+
+if [ -n "$SSM_ENV_PATH" ]; then
+    if [ -n "$ENV_FILE" ]; then
+        echo "Both SSM_ENV_PATH and ENV_FILE are set. Refusing to choose between them." >&2
+        exit 1
+    fi
+
+    RENDERED_ENV_FILE=$(mktemp)
+    SSM_ENV_PATH="$SSM_ENV_PATH" \
+        SSM_ENV_REGION="$SSM_ENV_REGION" \
+        OUTPUT_ENV_FILE="$RENDERED_ENV_FILE" \
+        sh "$SCRIPT_DIR/render-env-from-ssm.sh"
+    ENV_FILE="$RENDERED_ENV_FILE"
 fi
 
 if [ -z "$ENV_FILE" ]; then
@@ -182,6 +216,12 @@ fi
 if [ -z "$CONFIG_SERVER_IMAGE" ]; then
     CONFIG_SERVER_IMAGE="${IMAGE_PREFIX}config-server:${IMAGE_TAG}"
 fi
+
+if [ -z "$USE_EXTERNAL_POSTGRES" ]; then
+    USE_EXTERNAL_POSTGRES=$(dotenv_get USE_EXTERNAL_POSTGRES || true)
+fi
+
+USE_EXTERNAL_POSTGRES=${USE_EXTERNAL_POSTGRES:-0}
 
 export IMAGE_PREFIX IMAGE_TAG CONFIG_SERVER_IMAGE
 
@@ -411,12 +451,27 @@ service_url() {
     esac
 }
 
+uses_external_postgres() {
+    case "$USE_EXTERNAL_POSTGRES" in
+        1|true|TRUE|True|yes|YES|Yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+postgres_dependency() {
+    if uses_external_postgres; then
+        printf '%s' ""
+    else
+        printf '%s' "postgres "
+    fi
+}
+
 dependencies_for_service() {
     case "$1" in
         config-server) printf '%s\n' "eureka" ;;
-        user-service) printf '%s\n' "postgres rabbitmq eureka config-server" ;;
-        idea-service) printf '%s\n' "postgres eureka config-server" ;;
-        ai-service) printf '%s\n' "postgres eureka config-server" ;;
+        user-service) printf '%s\n' "$(postgres_dependency)rabbitmq eureka config-server" ;;
+        idea-service) printf '%s\n' "$(postgres_dependency)eureka config-server" ;;
+        ai-service) printf '%s\n' "$(postgres_dependency)eureka config-server" ;;
         chat-service) printf '%s\n' "eureka config-server" ;;
         email-service) printf '%s\n' "rabbitmq mailpit eureka config-server" ;;
         api-gateway) printf '%s\n' "eureka config-server" ;;
@@ -457,6 +512,9 @@ SELECTED_SERVICES=""
 
 if [ "$#" -eq 0 ]; then
     for service in $ROLLING_RELEASE_ORDER; do
+        if [ "$service" = "postgres" ] && uses_external_postgres; then
+            continue
+        fi
         add_selected_service "$service"
     done
 else
@@ -486,6 +544,10 @@ FRONTEND_URL="http://localhost:$(env_or_default FRONTEND_HOST_PORT 3000)"
 
 echo "Updating repository..."
 git_pull
+
+if uses_external_postgres; then
+    echo "USE_EXTERNAL_POSTGRES is enabled. Docker postgres will not be started as an app dependency."
+fi
 
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     compose() {
