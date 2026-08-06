@@ -14,7 +14,7 @@ services:
     container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-${DB_USERNAME:-sa}}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD or DB_PASSWORD from a production secret}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-${DB_PASSWORD:?Set POSTGRES_PASSWORD or DB_PASSWORD from a production secret}}
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     networks:
@@ -107,6 +107,9 @@ services:
     ports:
       - "${USER_SERVICE_HOST_PORT:-7010}:8082"
     environment:
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - USER_SERVICE_DB_NAME=${USER_SERVICE_DB_NAME:-user_service_db}
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
       - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
       - RABBITMQ_HOST=rabbitmq
@@ -169,6 +172,9 @@ services:
     ports:
       - "${IDEA_SERVICE_HOST_PORT:-7020}:8083"
     environment:
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - IDEA_SERVICE_DB_NAME=${IDEA_SERVICE_DB_NAME:-idea_service_db}
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
       - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
       - SPRING_PROFILES_ACTIVE=prod
@@ -190,6 +196,9 @@ services:
     ports:
       - "${AI_SERVICE_HOST_PORT:-7030}:8084"
     environment:
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - AI_SERVICE_DB_NAME=${AI_SERVICE_DB_NAME:-ai_service_db}
       - DB_USERNAME=${DB_USERNAME:-${POSTGRES_USER:-sa}}
       - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:?Set DB_PASSWORD or POSTGRES_PASSWORD from a production secret}}
       - OPENAI_API_KEY=${OPENAI_API_KEY:?Set OPENAI_API_KEY from a production secret}
