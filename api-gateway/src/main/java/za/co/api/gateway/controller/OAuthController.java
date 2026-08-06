@@ -21,8 +21,6 @@ public class OAuthController {
 
     @GetMapping("/google/status")
     public Map<String, Boolean> googleStatus() {
-        throw new RuntimeException("Test message");
-
-//        return Map.of("enabled", googleOAuthProperties.enabled());
+        return Map.of("enabled", googleOAuthProperties.enabled());
     }
 }
