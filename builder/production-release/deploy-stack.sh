@@ -21,6 +21,7 @@ SKIP_PULL=${SKIP_PULL:-0}
 SKIP_GIT_PULL=${SKIP_GIT_PULL:-0}
 GIT_PULL_MODE=${GIT_PULL_MODE:-ff-only}
 USE_EXTERNAL_POSTGRES=${USE_EXTERNAL_POSTGRES:-}
+USE_MAILPIT=${USE_MAILPIT:-}
 export COMPOSE_ANSI=${COMPOSE_ANSI:-never}
 export COMPOSE_PROGRESS=${COMPOSE_PROGRESS:-plain}
 export COMPOSE_MENU=${COMPOSE_MENU:-false}
@@ -65,7 +66,9 @@ usage() {
 Usage:
   sh deploy-stack.sh [service...]
 
-Without parameters, rolls the full production release set:
+Without parameters, rolls the full production release set. Docker PostgreSQL is
+skipped when USE_EXTERNAL_POSTGRES=1, and Mailpit is skipped when real SMTP is
+configured:
   postgres rabbitmq mailpit eureka config-server user-service idea-service ai-service chat-service email-service api-gateway novafront
 
 Examples:
@@ -222,6 +225,16 @@ if [ -z "$USE_EXTERNAL_POSTGRES" ]; then
 fi
 
 USE_EXTERNAL_POSTGRES=${USE_EXTERNAL_POSTGRES:-0}
+
+if [ -z "$USE_MAILPIT" ]; then
+    EMAIL_HOST_VALUE=$(dotenv_get PRODUCTION_EMAIL_HOST || dotenv_get EMAIL_HOST || true)
+    case "$EMAIL_HOST_VALUE" in
+        ""|mailpit|localhost|127.0.0.1) USE_MAILPIT=1 ;;
+        *) USE_MAILPIT=0 ;;
+    esac
+fi
+
+USE_MAILPIT=${USE_MAILPIT:-1}
 
 export IMAGE_PREFIX IMAGE_TAG CONFIG_SERVER_IMAGE
 
@@ -458,11 +471,26 @@ uses_external_postgres() {
     esac
 }
 
+uses_mailpit() {
+    case "$USE_MAILPIT" in
+        1|true|TRUE|True|yes|YES|Yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 postgres_dependency() {
     if uses_external_postgres; then
         printf '%s' ""
     else
         printf '%s' "postgres "
+    fi
+}
+
+mailpit_dependency() {
+    if uses_mailpit; then
+        printf '%s' "mailpit "
+    else
+        printf '%s' ""
     fi
 }
 
@@ -473,7 +501,7 @@ dependencies_for_service() {
         idea-service) printf '%s\n' "$(postgres_dependency)eureka config-server" ;;
         ai-service) printf '%s\n' "$(postgres_dependency)eureka config-server" ;;
         chat-service) printf '%s\n' "eureka config-server" ;;
-        email-service) printf '%s\n' "rabbitmq mailpit eureka config-server" ;;
+        email-service) printf '%s\n' "rabbitmq $(mailpit_dependency)eureka config-server" ;;
         api-gateway) printf '%s\n' "eureka config-server" ;;
         *) printf '%s\n' "" ;;
     esac
@@ -515,6 +543,9 @@ if [ "$#" -eq 0 ]; then
         if [ "$service" = "postgres" ] && uses_external_postgres; then
             continue
         fi
+        if [ "$service" = "mailpit" ] && ! uses_mailpit; then
+            continue
+        fi
         add_selected_service "$service"
     done
 else
@@ -547,6 +578,10 @@ git_pull
 
 if uses_external_postgres; then
     echo "USE_EXTERNAL_POSTGRES is enabled. Docker postgres will not be started as an app dependency."
+fi
+
+if ! uses_mailpit; then
+    echo "External email host is configured. Docker mailpit will not be started as an app dependency."
 fi
 
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then

@@ -371,8 +371,9 @@ USE_EXTERNAL_POSTGRES=1
 ```
 
 `USE_EXTERNAL_POSTGRES=1` tells the deploy script not to start the Docker
-`postgres` service as an application dependency. Keep the old Docker volume
-until RDS has been tested and backed up.
+`postgres` service as an application dependency. When
+`PRODUCTION_EMAIL_HOST` points at a real SMTP host instead of `mailpit`, the
+deploy script also skips Mailpit as an application dependency.
 
 After the services have been tested against RDS, migrate the existing Docker
 PostgreSQL data into RDS from the EC2 host. The migration script stops app
@@ -384,6 +385,22 @@ the app services again:
 cd /home/ubuntu/apps/novaflow
 sudo apt install -y postgresql-client
 SSM_ENV_PATH=/novaflow/production/env sh builder/production-release/migrate-postgres-to-rds.sh --yes
+```
+
+After the migration has been verified, clean up the EC2 host:
+
+```sh
+cd /home/ubuntu/apps/novaflow
+sh builder/production-release/cleanup-ec2-after-aws-migration.sh --yes
+```
+
+This archives active `.env` files, removes unused `postgres`, `mailpit`, and
+`pgadmin` containers, and prunes dangling Docker images/build cache. It keeps
+the old Docker PostgreSQL volume as a rollback backup by default. To remove that
+volume too after you are fully comfortable with RDS, rerun cleanup with:
+
+```sh
+sh builder/production-release/cleanup-ec2-after-aws-migration.sh --yes --delete-postgres-volume
 ```
 
 The production admin scripts also support RDS mode when `psql` is installed on
