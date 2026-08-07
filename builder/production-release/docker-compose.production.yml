@@ -102,7 +102,6 @@ services:
     depends_on:
       - eureka
       - config-server
-      - postgres
       - rabbitmq
     ports:
       - "${USER_SERVICE_HOST_PORT:-7010}:8082"
@@ -135,7 +134,6 @@ services:
       - eureka
       - config-server
       - rabbitmq
-      - mailpit
     ports:
       - "${EMAIL_SERVICE_HOST_PORT:-8050}:8050"
     environment:
@@ -168,7 +166,6 @@ services:
     depends_on:
       - eureka
       - config-server
-      - postgres
     ports:
       - "${IDEA_SERVICE_HOST_PORT:-7020}:8083"
     environment:
@@ -192,7 +189,6 @@ services:
     depends_on:
       - eureka
       - config-server
-      - postgres
     ports:
       - "${AI_SERVICE_HOST_PORT:-7030}:8084"
     environment:

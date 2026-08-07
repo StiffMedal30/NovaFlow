@@ -250,6 +250,8 @@ start_app_services() {
         1|true|TRUE|True|yes|YES|Yes)
             echo "Starting app services with deploy-stack.sh..."
             ENV_FILE="$ENV_FILE" \
+                SSM_ENV_PATH= \
+                SSM_ENV_REGION= \
                 SKIP_GIT_PULL=1 \
                 GIT_PULL_MODE=none \
                 SKIP_PULL=1 \
