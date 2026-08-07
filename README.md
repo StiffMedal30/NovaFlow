@@ -374,6 +374,18 @@ USE_EXTERNAL_POSTGRES=1
 `postgres` service as an application dependency. Keep the old Docker volume
 until RDS has been tested and backed up.
 
+After the services have been tested against RDS, migrate the existing Docker
+PostgreSQL data into RDS from the EC2 host. The migration script stops app
+services, dumps the old Docker databases, backs up the current RDS databases,
+recreates the target `public` schemas, restores the dumps into RDS, and starts
+the app services again:
+
+```sh
+cd /home/ubuntu/apps/novaflow
+sudo apt install -y postgresql-client
+SSM_ENV_PATH=/novaflow/production/env sh builder/production-release/migrate-postgres-to-rds.sh --yes
+```
+
 The production admin scripts also support RDS mode when `psql` is installed on
 the EC2 host:
 
