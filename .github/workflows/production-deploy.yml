@@ -110,7 +110,7 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Make release scripts executable
-        run: chmod +x ./gradlew builder/production-release/build-images.sh builder/production-release/deploy-stack.sh builder/production-release/render-env-from-ssm.sh
+        run: chmod +x ./gradlew builder/production-release/build-images.sh builder/production-release/deploy-stack.sh builder/production-release/render-env-from-ssm.sh builder/production-release/migrate-postgres-to-rds.sh
 
       - name: Build and publish production images
         shell: bash
