@@ -468,7 +468,7 @@ and send/inspect SSM commands for the production instance:
         "ecr:PutImage",
         "ecr:UploadLayerPart"
       ],
-      "Resource": "arn:aws:ecr:us-east-1:ACCOUNT_ID:repository/novaflow/*"
+      "Resource": "arn:aws:ecr:us-east-1:ACCOUNT_ID:repository/ECR_NAMESPACE/*"
     },
     {
       "Sid": "SendProductionDeployCommand",
@@ -493,6 +493,9 @@ and send/inspect SSM commands for the production instance:
 }
 ```
 
+Replace `ECR_NAMESPACE` with the value of `PRODUCTION_ECR_NAMESPACE`. If
+`PRODUCTION_ECR_NAMESPACE` is omitted, use `novaflow`.
+
 Create these GitHub Actions variables for the repository or the `production`
 environment:
 
@@ -503,7 +506,7 @@ environment:
 | `PRODUCTION_AWS_REGION` | AWS region. Defaults to `us-east-1` when omitted. |
 | `PRODUCTION_DEPLOY_PATH` | Absolute path to the EC2 checkout. Defaults to `/opt/novaflow` when omitted. |
 | `PRODUCTION_DEPLOY_USER` | Linux user that owns the checkout and runs Docker. Defaults to `ubuntu` when omitted. |
-| `PRODUCTION_ECR_NAMESPACE` | Optional ECR repository namespace. Defaults to `novaflow`, producing repositories such as `novaflow/user-service`. |
+| `PRODUCTION_ECR_NAMESPACE` | Optional ECR repository namespace. Defaults to `novaflow`, producing repositories such as `novaflow/user-service`. Keep this synchronized with the ECR namespace in the GitHub IAM role policy. |
 | `PRODUCTION_SSM_ENV_PATH` | Optional Parameter Store path for production env values. Defaults to `/novaflow/production/env`. |
 
 The workflow creates missing private ECR repositories automatically. With the
