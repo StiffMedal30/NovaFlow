@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-add-last-login
+      author: codex
+      changes:
+        - addColumn:
+            tableName: app_user
+            columns:
+              - column:
+                  name: last_login_at
+                  type: timestamp

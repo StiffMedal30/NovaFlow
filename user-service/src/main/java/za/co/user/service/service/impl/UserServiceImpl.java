@@ -25,15 +25,19 @@ import za.co.user.service.service.UserService;
 import za.co.user.service.utilities.Converter;
 import za.co.user.service.records.CheckUserRequest;   
 import za.co.user.service.records.CheckUserResponse;
+import za.co.user.service.records.RegisteredUserSummary;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final String REGISTRATION_DASHBOARD_EMAIL = "christiaandotze@gmail.com";
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -103,6 +107,7 @@ public class UserServiceImpl implements UserService {
                 }
                 return OAuthAccountResponse.pending(user.getUsername());
             }
+            recordLogin(user);
             return OAuthAccountResponse.active(
                     user.getUsername(),
                     jwtProvider.generateToken(user.getUsername(), user.getAuthorities())
@@ -146,6 +151,7 @@ public class UserServiceImpl implements UserService {
             return OAuthAccountResponse.pending(user.getUsername());
         }
 
+        recordLogin(user);
         return OAuthAccountResponse.active(
                 user.getUsername(),
                 jwtProvider.generateToken(user.getUsername(), user.getAuthorities())
@@ -183,6 +189,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public String authenticate(AppUserRecord dto) {
         // 1. Attempt authentication (will throw if user doesn't exist or password is wrong)
         authenticationManager.authenticate(
@@ -191,6 +198,10 @@ public class UserServiceImpl implements UserService {
 
         // 2. Load user details
         UserDetails userDetails = customUserService.loadUserByUsername(dto.username());
+
+        AppUserEntity user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        recordLogin(user);
 
         // 3. Generate JWT token for authenticated user
         return jwtProvider.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
@@ -281,6 +292,26 @@ public class UserServiceImpl implements UserService {
             usernameExists, 
             message
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RegisteredUserSummary> getRegisteredUsers(String requestingUsername) {
+        AppUserEntity requester = userRepository.findByUsername(requestingUsername)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Access denied"));
+
+        if (!REGISTRATION_DASHBOARD_EMAIL.equalsIgnoreCase(requester.getEmail())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
+        }
+
+        return userRepository.findAllNewestFirst().stream()
+                .map(user -> new RegisteredUserSummary(user.getEmail(), user.getCreatedAt(), user.getLastLoginAt()))
+                .toList();
+    }
+
+    private void recordLogin(AppUserEntity user) {
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     private void initializeNewAccount(AppUserEntity user, AuthProvider authProvider, String providerSubject) {

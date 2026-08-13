@@ -6,6 +6,8 @@ databaseChangeLog:
       file: db/changelog/create/002-password-reset-token.yml
   - include:
       file: db/changelog/create/003-account-activation.yml
+  - include:
+      file: db/changelog/create/004-add-last-login.yml
 
 # - CONSTRAINTS YML
 #  - include:

@@ -22,6 +22,7 @@ import za.co.user.service.enums.AuthProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "app_user")
@@ -41,6 +42,8 @@ public class AppUserEntity extends BaseEntity implements UserDetails {
     private AuthProvider authProvider = AuthProvider.LOCAL;
     @Column(name = "provider_subject")
     private String providerSubject;
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
