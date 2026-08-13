@@ -1,0 +1,685 @@
+{
+  "family": "novaflow-backend-ec2",
+  "networkMode": "bridge",
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "executionRoleArn": "arn:aws:iam::270023013144:role/ecsTaskExecutionRole",
+  "volumes": [
+    {
+      "name": "common-config",
+      "host": {
+        "sourcePath": "/home/ubuntu/apps/novaflow/common-config"
+      }
+    },
+    {
+      "name": "rabbitmq-data",
+      "host": {
+        "sourcePath": "/home/ubuntu/apps/novaflow/ecs-data/rabbitmq"
+      }
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "rabbitmq",
+      "hostname": "rabbitmq",
+      "image": "rabbitmq:3.13-management",
+      "essential": true,
+      "memoryReservation": 128,
+      "mountPoints": [
+        {
+          "sourceVolume": "rabbitmq-data",
+          "containerPath": "/var/lib/rabbitmq",
+          "readOnly": false
+        }
+      ],
+      "secrets": [
+        {
+          "name": "RABBITMQ_DEFAULT_USER",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_USERNAME"
+        },
+        {
+          "name": "RABBITMQ_DEFAULT_PASS",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_PASSWORD"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "rabbitmq-diagnostics -q ping"
+        ],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 10,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "rabbitmq"
+        }
+      }
+    },
+    {
+      "name": "eureka",
+      "hostname": "eureka",
+      "image": "steeltoeoss/eureka-server",
+      "essential": true,
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "EUREKA_CLIENT_REGISTERWITH_EUREKA",
+          "value": "false"
+        },
+        {
+          "name": "EUREKA_CLIENT_FETCHREGISTRY",
+          "value": "false"
+        },
+        {
+          "name": "EUREKA_SERVER_ENABLESELFPRESERVATION",
+          "value": "false"
+        },
+        {
+          "name": "SPRING_APPLICATION_NAME",
+          "value": "discovery-server"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "eureka"
+        }
+      }
+    },
+    {
+      "name": "config-server",
+      "hostname": "config-server",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/config-server:a170b0197787",
+      "essential": true,
+      "memoryReservation": 128,
+      "links": [
+        "eureka:eureka"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "eureka",
+          "condition": "START"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "common-config",
+          "containerPath": "/config",
+          "readOnly": true
+        }
+      ],
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "native"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS",
+          "value": "file:/config/{application},file:/config"
+        },
+        {
+          "name": "JWT_EXPIRATION",
+          "value": "3600000"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/JWT_SECRET"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/localhost/7090'"
+        ],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 10,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "config-server"
+        }
+      }
+    },
+    {
+      "name": "user-service",
+      "hostname": "user-service",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/user-service:a170b0197787",
+      "essential": true,
+      "memoryReservation": 128,
+      "links": [
+        "rabbitmq:rabbitmq",
+        "eureka:eureka",
+        "config-server:config-server"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "rabbitmq",
+          "condition": "HEALTHY"
+        },
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "USER_SERVICE_DB_NAME",
+          "value": "user_service_db"
+        },
+        {
+          "name": "RABBITMQ_HOST",
+          "value": "rabbitmq"
+        },
+        {
+          "name": "RABBITMQ_PORT",
+          "value": "5672"
+        },
+        {
+          "name": "JWT_EXPIRATION",
+          "value": "3600000"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_HOST"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_USERNAME"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_PASSWORD"
+        },
+        {
+          "name": "RABBITMQ_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_USERNAME"
+        },
+        {
+          "name": "RABBITMQ_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_PASSWORD"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/JWT_SECRET"
+        },
+        {
+          "name": "INTERNAL_SERVICE_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/INTERNAL_SERVICE_KEY"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "user-service"
+        }
+      }
+    },
+    {
+      "name": "idea-service",
+      "hostname": "idea-service",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/idea-service:a170b0197787",
+      "essential": true,
+      "links": [
+        "eureka:eureka",
+        "config-server:config-server"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        }
+      ],
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "IDEA_SERVICE_DB_NAME",
+          "value": "idea_service_db"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_HOST"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_USERNAME"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_PASSWORD"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "idea-service"
+        }
+      }
+    },
+    {
+      "name": "ai-service",
+      "hostname": "ai-service",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/ai-service:a170b0197787",
+      "essential": true,
+      "links": [
+        "eureka:eureka",
+        "config-server:config-server"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        }
+      ],
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "AI_SERVICE_DB_NAME",
+          "value": "ai_service_db"
+        },
+        {
+          "name": "OPENAI_BASE_URL",
+          "value": "https://api.openai.com/v1"
+        },
+        {
+          "name": "OPENAI_MODEL",
+          "value": "gpt-5.2"
+        },
+        {
+          "name": "OPENAI_REFINEMENT_MODEL",
+          "value": "gpt-5.2"
+        },
+        {
+          "name": "OPENAI_TRANSCRIPTION_MODEL",
+          "value": "gpt-4o-mini-transcribe"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_HOST"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_USERNAME"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/DB_PASSWORD"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/OPENAI_API_KEY"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "ai-service"
+        }
+      }
+    },
+    {
+      "name": "chat-service",
+      "hostname": "chat-service",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/chat-service:a170b0197787",
+      "essential": true,
+      "links": [
+        "eureka:eureka",
+        "config-server:config-server"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        }
+      ],
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "chat-service"
+        }
+      }
+    },
+    {
+      "name": "email-service",
+      "hostname": "email-service",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/email-service:a170b0197787",
+      "essential": true,
+      "links": [
+        "rabbitmq:rabbitmq",
+        "eureka:eureka",
+        "config-server:config-server"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "rabbitmq",
+          "condition": "HEALTHY"
+        },
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        }
+      ],
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "RABBITMQ_HOST",
+          "value": "rabbitmq"
+        },
+        {
+          "name": "RABBITMQ_PORT",
+          "value": "5672"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "RABBITMQ_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_USERNAME"
+        },
+        {
+          "name": "RABBITMQ_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/RABBITMQ_PASSWORD"
+        },
+        {
+          "name": "EMAIL_HOST",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_HOST"
+        },
+        {
+          "name": "EMAIL_PORT",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_PORT"
+        },
+        {
+          "name": "EMAIL_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_USERNAME"
+        },
+        {
+          "name": "EMAIL_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_PASSWORD"
+        },
+        {
+          "name": "EMAIL_SMTP_AUTH",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_SMTP_AUTH"
+        },
+        {
+          "name": "EMAIL_STARTTLS",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_STARTTLS"
+        },
+        {
+          "name": "EMAIL_SSL_ENABLE",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_SSL_ENABLE"
+        },
+        {
+          "name": "EMAIL_FROM_ADDRESS",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_FROM_ADDRESS"
+        },
+        {
+          "name": "EMAIL_FROM_NAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PRODUCTION_EMAIL_FROM_NAME"
+        },
+        {
+          "name": "PUBLIC_API_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/PUBLIC_API_URL"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "email-service"
+        }
+      }
+    },
+    {
+      "name": "api-gateway",
+      "hostname": "api-gateway",
+      "image": "270023013144.dkr.ecr.us-east-1.amazonaws.com/novaflow/api-gateway:a170b0197787",
+      "essential": true,
+      "memoryReservation": 128,
+      "links": [
+        "eureka:eureka",
+        "config-server:config-server",
+        "user-service:user-service",
+        "idea-service:idea-service",
+        "ai-service:ai-service",
+        "chat-service:chat-service"
+      ],
+      "dependsOn": [
+        {
+          "containerName": "config-server",
+          "condition": "HEALTHY"
+        },
+        {
+          "containerName": "user-service",
+          "condition": "START"
+        },
+        {
+          "containerName": "idea-service",
+          "condition": "START"
+        },
+        {
+          "containerName": "ai-service",
+          "condition": "START"
+        },
+        {
+          "containerName": "chat-service",
+          "condition": "START"
+        }
+      ],
+      "portMappings": [
+        {
+          "containerPort": 8081,
+          "hostPort": 0,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "JWT_EXPIRATION",
+          "value": "3600000"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_CONFIG_IMPORT",
+          "value": "configserver:http://config-server:7090/"
+        },
+        {
+          "name": "SPRING_CLOUD_CONFIG_URI",
+          "value": "http://config-server:7090"
+        },
+        {
+          "name": "CONFIG_SERVER_URL",
+          "value": "http://config-server:7090/"
+        },
+        {
+          "name": "EUREKA_INSTANCE_PREFER_IP_ADDRESS",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/JWT_SECRET"
+        },
+        {
+          "name": "INTERNAL_SERVICE_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/INTERNAL_SERVICE_KEY"
+        },
+        {
+          "name": "GOOGLE_OAUTH_ENABLED",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/GOOGLE_OAUTH_ENABLED"
+        },
+        {
+          "name": "GOOGLE_CLIENT_ID",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/GOOGLE_CLIENT_ID"
+        },
+        {
+          "name": "GOOGLE_CLIENT_SECRET",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/GOOGLE_CLIENT_SECRET"
+        },
+        {
+          "name": "FRONTEND_BASE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:270023013144:parameter/novaflow/production/env/FRONTEND_BASE_URL"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/novaflow/production",
+          "awslogs-stream-prefix": "api-gateway"
+        }
+      }
+    }
+  ]
+}

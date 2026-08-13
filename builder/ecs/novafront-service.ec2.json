@@ -1,0 +1,24 @@
+{
+  "cluster": "novaflow-production",
+  "serviceName": "novaflow-novafront",
+  "taskDefinition": "novaflow-novafront-ec2",
+  "desiredCount": 1,
+  "launchType": "EC2",
+  "schedulingStrategy": "REPLICA",
+  "healthCheckGracePeriodSeconds": 60,
+  "deploymentConfiguration": {
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100,
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": true
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "FRONTEND_TARGET_GROUP_ARN",
+      "containerName": "novafront",
+      "containerPort": 80
+    }
+  ]
+}
