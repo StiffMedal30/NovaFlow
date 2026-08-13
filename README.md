@@ -537,6 +537,19 @@ Use `all`, or leave the input unchanged, to deploy the normal app release set:
 config-server user-service idea-service ai-service chat-service email-service api-gateway novafront
 ```
 
+### ECS migration
+
+The ECS migration steps are documented in
+[`builder/ecs/README.md`](builder/ecs/README.md). The migration starts with
+`novafront`, then moves the backend group that still depends on RabbitMQ,
+Eureka, and config-server names. This proves ECS service deployment, ALB target
+registration, ECR image pulls, CloudWatch logs, and rollback behavior before
+moving to Fargate or splitting services further.
+
+The completed AWS learning recap and teardown checklist are documented in
+[`docs/aws-recap-and-teardown.md`](docs/aws-recap-and-teardown.md), with a Word
+copy at [`docs/aws-recap-and-teardown.docx`](docs/aws-recap-and-teardown.docx).
+
 ## Start with IntelliJ
 
 Open the repository root in one IntelliJ window and import the root

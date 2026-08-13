@@ -1,0 +1,25 @@
+{
+  "cluster": "novaflow-production",
+  "serviceName": "novaflow-backend",
+  "taskDefinition": "novaflow-backend-ec2",
+  "desiredCount": 1,
+  "launchType": "EC2",
+  "schedulingStrategy": "REPLICA",
+  "healthCheckGracePeriodSeconds": 180,
+  "deploymentConfiguration": {
+    "minimumHealthyPercent": 0,
+    "maximumPercent": 100,
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": true
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "API_GATEWAY_TARGET_GROUP_ARN",
+      "containerName": "api-gateway",
+      "containerPort": 8081
+    }
+  ],
+  "enableECSManagedTags": true
+}

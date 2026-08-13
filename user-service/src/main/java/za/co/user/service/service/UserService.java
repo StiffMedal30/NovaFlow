@@ -10,6 +10,8 @@ import za.co.user.service.records.OAuthAccountResponse;
 import za.co.user.service.records.RegisterUserRequest;
 
 import java.security.Principal;
+import java.util.List;
+import za.co.user.service.records.RegisteredUserSummary;
 
 public interface UserService {
     void registerUser(RegisterUserRequest dto);
@@ -34,4 +36,5 @@ public interface UserService {
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
     CheckUserResponse checkUserAvailability(CheckUserRequest request);
+    List<RegisteredUserSummary> getRegisteredUsers(String requestingUsername);
 }

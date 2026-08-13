@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 import jakarta.validation.Valid;
 import za.co.api.gateway.records.CheckUserRequest;
 import za.co.api.gateway.records.LoginRequest;
@@ -17,6 +18,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/user")
 public class UserController extends BaseController {
+
+    @GetMapping("/registrations")
+    public ResponseEntity<?> registrations() {
+        return forwardGetRequest(userService + "/registrations");
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest credentials) {

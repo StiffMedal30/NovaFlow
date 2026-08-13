@@ -26,6 +26,10 @@ import java.security.MessageDigest;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.GetMapping;
+import java.security.Principal;
+import java.util.List;
+import za.co.user.service.records.RegisteredUserSummary;
 
 @RestController
 @RequestMapping("/api/user")
@@ -107,6 +111,11 @@ public class UserController {
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    @GetMapping("/registrations")
+    public ResponseEntity<List<RegisteredUserSummary>> registrations(Principal principal) {
+        return ResponseEntity.ok(userService.getRegisteredUsers(principal.getName()));
     }
 }
 

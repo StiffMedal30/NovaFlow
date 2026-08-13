@@ -7,6 +7,7 @@ import za.co.user.service.enums.AuthProvider;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Sort;
 
 @Repository
 public interface UserRepository extends JpaRepository<AppUserEntity, Long> {
@@ -25,4 +26,8 @@ public interface UserRepository extends JpaRepository<AppUserEntity, Long> {
     // Checking if user exists by email or username
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
+
+    default List<AppUserEntity> findAllNewestFirst() {
+        return findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
 }
