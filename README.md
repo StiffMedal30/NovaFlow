@@ -1,5 +1,23 @@
 # NovaFlow
 
+NovaFlow is a multi-service idea planning application with a React frontend, Spring Boot backend services, asynchronous email notifications, AI integrations, and an AWS learning deployment path.
+
+## Documentation
+
+The detailed project docs live in [docs/README.md](docs/README.md).
+
+| Topic | Document |
+| --- | --- |
+| System design and service map | [docs/architecture.md](docs/architecture.md) |
+| Local setup and common local issues | [docs/local-development.md](docs/local-development.md) |
+| Environment variables and SSM Parameter Store | [docs/configuration.md](docs/configuration.md) |
+| GitHub Actions, ECR, SSM, ECS, and releases | [docs/deployment.md](docs/deployment.md) |
+| Production checks, logs, admin users, and cleanup | [docs/operations.md](docs/operations.md) |
+| Build, test, and CI commands | [docs/testing.md](docs/testing.md) |
+| Actual AWS names and inventory | [docs/aws-resource-inventory.md](docs/aws-resource-inventory.md) |
+| AWS recap and teardown checklist | [docs/aws-recap-and-teardown.md](docs/aws-recap-and-teardown.md) |
+| Handoff-friendly Word version | [docs/novaflow-documentation.docx](docs/novaflow-documentation.docx) |
+
 ## Custom Gradle commands
 
 Run these commands from the repository root. On macOS or Linux, replace
