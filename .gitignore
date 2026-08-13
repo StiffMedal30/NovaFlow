@@ -42,6 +42,11 @@ novafront/out-tsc/
 
 # Local runtime files
 .runlogs/
+backups/
+*.dump
+builder/local-data/rds-export.config.psd1
+backups/
+*.dump
 
 # Operating system files
 .DS_Store
